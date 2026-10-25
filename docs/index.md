@@ -34,6 +34,12 @@ features:
   - icon: 🔐
     title: 安全能力
     details: 摘要、对称与非对称加解密、令牌一应俱全；1.x 密文可经 LegacyCipher 平滑迁移，不必一次性重刷数据。
+  - icon: ✍️
+    title: 文本与时间
+    details: 字符串切割与拼装、编码转换、IP 换算、时间戳与粒度、UUID 生成，日常处理不必再各写一份。
+  - icon: 📁
+    title: 文件与路径
+    details: 目录读写、路径归一与拼接、MIME 识别，上传与静态资源场景无需另找实现。
   - icon: 🌐
     title: HTTP 与视图
     details: 统一响应信封、请求与服务器上下文、Cookie、视图渲染，并可按需接入 PSR-18 客户端发起外部请求。
