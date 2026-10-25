@@ -36,20 +36,37 @@ final class Path
     /**
      * 拼接路径片段。
      *
+     * 首段保留前导斜杠与盘符、协议头，绝对路径拼接后仍是绝对路径。
+     *
      * @param string ...$segments 路径片段
      * @return string 拼接并规范化后的路径
      */
     public static function join(string ...$segments): string
     {
         $parts = [];
-        foreach ($segments as $segment) {
-            $segment = trim(str_replace('\\', '/', $segment), '/');
+        $absolute = false;
+        foreach ($segments as $index => $segment) {
+            $segment = str_replace('\\', '/', $segment);
+            // 首段保留前导斜杠（绝对路径、盘符、协议头），其余段两端都去，避免拼出双斜杠
+            if (0 === $index) {
+                $absolute = str_starts_with($segment, '/');
+                $segment = rtrim($segment, '/');
+            } else {
+                $segment = trim($segment, '/');
+            }
+
             if ('' !== $segment) {
                 $parts[] = $segment;
             }
         }
 
-        return self::normalize(implode('/', $parts));
+        $joined = implode('/', $parts);
+        // normalize() 摘掉前缀后才判断绝对性，首段为空时前导斜杠会丢，需在此补回
+        if ($absolute && !str_starts_with($joined, '/')) {
+            $joined = '/' . $joined;
+        }
+
+        return self::normalize($joined);
     }
 
     /**

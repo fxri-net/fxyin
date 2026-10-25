@@ -40,7 +40,7 @@ echo PHP_EOL;
 var_export(Filesystem::listFiles($root));
 echo PHP_EOL;
 
-// var/www/config：每段首尾斜杠被 trim，结果不带前导斜杠
+// /var/www/config：首段前导斜杠保留，.. 由 normalize 消解
 echo Path::join('/var/www', 'app', '..', 'config') . PHP_EOL;
 
 // index / png：filename 去掉目录与扩展名，extension 统一小写
@@ -79,7 +79,7 @@ echo PHP_EOL;
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `join(string ...$segments)` | 逐段把反斜杠换成正斜杠、trim 首尾 `/`、丢弃空段，再用 `/` 连接并交给 `normalize()` | `string` |
+| `join(string ...$segments)` | 逐段把反斜杠换成正斜杠；首段保留前导 `/` 与盘符、协议头，其余段两端去 `/`；丢弃空段后用 `/` 连接并交给 `normalize()` | `string` |
 | `normalize(string $path)` | 归一化路径：保留 `scheme://` 与 `C:/` 前缀，折叠 `.`、消解 `..`，保留绝对路径的前导 `/` | `string` |
 | `filename(string $path)` | 取不含目录与扩展名的文件名，`pathinfo` 语义 | `string` |
 | `extension(string $path)` | 取小写扩展名，无扩展名返回空串 | `string` |
@@ -123,7 +123,7 @@ echo PHP_EOL;
 
 ## 注意事项
 
-- ⚠️ `Path::join()` 会 trim 掉每一段首尾的 `/`，所以 `Path::join('/tmp', 'a')` 得到 `tmp/a`（相对路径）。需要绝对路径时不要把希望寄托在第一段的斜杠上，直接用 `sys_get_temp_dir()` 等原值拼接，或先 `normalize()` 后再补前缀。
+- ⚠️ `Path::join()` 只保留**首段**的前导 `/` 与盘符、协议头：`Path::join('/tmp', 'a')` 得 `/tmp/a`，而 `Path::join('', '/tmp')` 仍是 `tmp`（相对路径）。后续段的斜杠一律当作分隔符，要绝对路径就把绝对前缀放在首段。
 - ⚠️ `Path::normalize()` 对超出根目录的 `..` 直接丢弃且不报错：`a/../../b` 归一化为 `b`，无法据此发现路径穿越，安全校验要单独做。
 - ⚠️ `normalize()` 只保留协议头与盘符两种前缀；`file://`、`phar://` 这类形式按 `scheme://` 处理，其余自定义前缀（如 `~`）不识别。
 - ⚠️ `Path::filename()` 只去掉最后一段扩展名：`/a/b.tar.gz` 得到 `b.tar`；`extension()` 同理得到 `gz`。
