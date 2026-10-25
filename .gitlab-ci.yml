@@ -29,7 +29,11 @@ pages:
   script:
     # 站点参数优先取 CI/CD 变量；未定义时按 GitLab Pages 的默认形态推导，避免把路径写死在仓库里
     - export VITEPRESS_BASE="${VITEPRESS_BASE:-/$CI_PROJECT_NAME/}"
-    - export SITE_URL="${SITE_URL:-$CI_PAGES_URL}"
+    # 站点实际挂在 /<项目名>/ 下，而 $CI_PAGES_URL 带完整命名空间路径、且不带尾斜杠：
+    # 取其协议与主机作为站点根，再按项目名拼接并补尾斜杠。VitePress 的 sitemap/canonical
+    # 按 hostname 相对拼接，路径或尾斜杠不对都会拼出访问不到的地址
+    - export PAGES_ORIGIN="$(printf '%s' "$CI_PAGES_URL" | cut -d/ -f1-3)"
+    - export SITE_URL="${SITE_URL:-$PAGES_ORIGIN/$CI_PROJECT_NAME/}"
     - export REPO_URL="${REPO_URL:-$CI_PROJECT_URL}"
     - npm install -g pnpm@10.34.4
     - pnpm install --frozen-lockfile
