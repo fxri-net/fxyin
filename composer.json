@@ -2,12 +2,26 @@
     "name": "fxri/fxyin",
     "description": "风音框架：可被任意 PHP 框架无缝接入的辅助框架",
     "type": "library",
-    "license": "Apache-2.0",
     "keywords": [
         "fxri",
         "helper",
         "framework"
     ],
+    "homepage": "https://fxri.net:444/",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "唐启云",
+            "email": "tqy@fxri.net",
+            "homepage": "https://fxri.net:444/",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/fxri-net/fxyin/issues",
+        "source": "https://github.com/fxri-net/fxyin",
+        "docs": "https://fxri-net.github.io/fxyin/"
+    },
     "require": {
         "ext-mbstring": "*",
         "ext-openssl": "*",
