@@ -1,0 +1,58 @@
+name: Deploy Docs
+
+# 默认分支每次推送都重建：站点输入不止 docs/（config.mts 引用 public 资源与根 CHANGELOG 同步产物），
+# 枚举路径过滤必然漏项，故不设 paths 约束
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只保留最新一次部署，取消进行中的旧部署
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 完整克隆：文档站 lastUpdated 依赖 git 提交时间，浅克隆会失真
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.34.4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+      # 显式注入部署身份：GitHub Pages 子路径为 /fxyin/，站点规范地址与编辑回链都指向本仓
+      # （VitePress 配置内虽有默认值，此处显式声明以免默认值随仓库名调整而漂移）
+      - name: 构建文档站
+        env:
+          VITEPRESS_BASE: /fxyin/
+          SITE_URL: https://fxri-net.github.io/fxyin/
+          REPO_URL: https://github.com/fxri-net/fxyin
+        run: pnpm docs:build
+      - name: 上传 Pages 产物
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

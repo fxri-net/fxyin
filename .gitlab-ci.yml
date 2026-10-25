@@ -1,0 +1,44 @@
+# 自建托管平台一侧的流水线：与 GitHub 共用 scripts/verify.mjs 这一份验收步骤清单，
+# 本文件只负责准备运行环境、声明产物路径与部署规则
+
+stages:
+  - test
+  - pages
+
+test:
+  stage: test
+  image: node:20-bookworm
+  variables:
+    COMPOSER_ALLOW_SUPERUSER: "1"
+  before_script:
+    # Node 镜像不含 PHP：补装 8.2（本仓最低支持版本与硬性扩展），PHP 8.2–8.5 的版本矩阵由 GitHub 流水线覆盖
+    - apt-get update && apt-get install -y --no-install-recommends php8.2-cli php8.2-mbstring php8.2-xml git unzip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  script:
+    # 仓库不提交 composer.lock，由当前 PHP 版本自行解析依赖
+    - composer update --no-interaction --prefer-dist --no-progress
+    # 文档站构建在 pages 阶段单独执行，此处跳过
+    - node scripts/verify.mjs --skip-docs
+
+pages:
+  stage: pages
+  image: node:20-bookworm
+  # 完整克隆：文档站 lastUpdated 依赖 git 提交时间，浅克隆会失真
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    # 站点参数优先取 CI/CD 变量；未定义时按 GitLab Pages 的默认形态推导，避免把路径写死在仓库里
+    - export VITEPRESS_BASE="${VITEPRESS_BASE:-/$CI_PROJECT_NAME/}"
+    - export SITE_URL="${SITE_URL:-$CI_PAGES_URL}"
+    - export REPO_URL="${REPO_URL:-$CI_PROJECT_URL}"
+    - npm install -g pnpm@10.34.4
+    - pnpm install --frozen-lockfile
+    - pnpm docs:build
+    # GitLab Pages 只发布 public/ 目录，构建产物在此归位
+    - rm -rf public
+    - mv docs/.vitepress/dist public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

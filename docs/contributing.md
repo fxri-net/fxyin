@@ -50,9 +50,9 @@ pnpm install
 | `pnpm docs:build` | 构建文档站，同时校验站内链接 |
 | `pnpm docs:preview` | 预览已构建的文档站产物 |
 | `pnpm sync:changelog-doc` | 把根 `CHANGELOG.md` 同步为 `docs/changelog.md` |
-| `pnpm verify` | 聚合门禁：`composer check` 加 `pnpm docs:build` |
+| `pnpm verify` | 聚合门禁：`composer check` 加 `pnpm docs:build`；`--skip-code` / `--skip-docs` 可跳过其中一段 |
 
-日常提交前至少跑一次 `composer check`；改动文档或 `CHANGELOG.md` 时再加跑 `pnpm docs:build`。`pnpm verify` 是本地与流水线的统一入口，不要只挑其中几步执行。
+日常提交前至少跑一次 `composer check`；改动文档或 `CHANGELOG.md` 时再加跑 `pnpm docs:build`。`pnpm verify` 是本地与流水线的统一入口，步骤清单只此一份，不要只挑其中几步执行。
 
 ## 代码约定
 
