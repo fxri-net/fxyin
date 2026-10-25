@@ -1,3 +1,7 @@
+---
+title: 2.0 迁移说明
+---
+
 # 风音框架 2.0 迁移说明
 
 2.0 是一次不保留 API 兼容层的大版本改版。旧的门面层、全局函数、点分模式号与数字码配置全部移除，改由具名类与具名枚举承担。本文逐项列出旧写法与新写法的对应关系，供接入方按表改造。
@@ -480,3 +484,8 @@ return Envelope::success($data, '请求成功');
 - 编码转换助手（`letters` / `letter` / `convert` / `strEncodeMerge` / `strDecodeMerge`）。
 - 应用目录约定式启动（`\fxyin\App::init()` 扫描 `function/`、`config/`、`language/`、`store/`）。
 - 内置路由分发（`\fxyin\App::run()`）。
+
+## 十一、相关文档
+
+- [快速开始](./getting-started)：从零安装、装配与最小可运行示例。
+- [更新日志](./changelog)：各版本完整变更条目，含 2.0 的分组说明。
