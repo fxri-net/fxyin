@@ -7,3 +7,12 @@
 /.php-cs-fixer.dist.php export-ignore
 /phpstan.neon export-ignore
 /phpunit.xml.dist export-ignore
+
+# 发版与文档站工具链不随包分发
+/docs export-ignore
+/scripts export-ignore
+/package.json export-ignore
+/pnpm-lock.yaml export-ignore
+/.changeset export-ignore
+/.gitlab-ci.yml export-ignore
+/.node-version export-ignore

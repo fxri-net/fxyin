@@ -10,3 +10,9 @@
 # 工具缓存
 /.php-cs-fixer.cache
 /.phpunit.cache/
+
+# 发版与文档站工具链
+/node_modules/
+/docs/.vitepress/cache/
+/docs/.vitepress/dist/
+/public/
