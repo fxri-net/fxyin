@@ -9,6 +9,7 @@
         "framework"
     ],
     "require": {
+        "ext-mbstring": "*",
         "php": "^8.2",
         "psr/log": "^3.0",
         "symfony/translation-contracts": "^3.0"
