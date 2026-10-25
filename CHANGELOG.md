@@ -56,3 +56,165 @@
 
 - 新增 2.0 迁移说明，逐项列出类映射、数字码对照、门面方法对照与不再提供的能力
 - README 改写为 Composer 安装与最小装配说明
+
+## 1.6.0
+
+> 2024-03-09 发布
+
+> 追溯整理，未单独发版
+
+### 🔧 功能调整
+
+- HTTP 请求按方法分流，GET 数据经 `\fxapp\Param::url(['type' => '1.2', ...])` 并入查询串，仅 POST、PUT、PATCH、DELETE 才经 `strEncode()` 写入请求体
+- 协议识别兼容 `$_SERVER['SCRIPT_URI']`，缺少 `REQUEST_SCHEME` 时从 `SCRIPT_URI` 拆出 scheme，反向代理下不再误判为 http
+
+### 📝 文档更新
+
+- README 项目定位改写为「可以接入任意 PHP 项目，内置诸多实用方法，是一款轻量级 PHP 开发辅助框架」
+
+## 1.5.0
+
+> 2023-12-09 发布
+
+> 追溯整理，未单独发版
+
+### ✨ 新增功能
+
+- `\fxapp\Base::echo($message, $code = null, $data = [], $extend = [])` 与全局助手 `fxy_echo()`，按统一结构输出响应，为 2.0 `Http\Envelope` 的雏形（2.0 移除）
+- `\fxapp\Service::http()` 增加 `$option = []` 请求选项，可透传 curl 参数
+- `\fxapp\Safe::rsapem($data)`，为缺少头尾标记的密钥内容补齐 PEM 格式
+- 校验方法 `is_time()`、`is_ipv4()`、`is_ipv6()`、`is_url()`、`is_ip()`（2.0 归入 `Support\Type`）
+
+### 🔧 功能调整
+
+- CLI 入参前缀由 `-` 改为 `@`，避免与 PHP 自身选项混淆
+- curl 请求默认限定 IPv4，规避双栈环境下 IPv6 不可达导致的超时
+
+### ⚡ 优化改进
+
+- 应用初始化拆分为 load 与 start 两段，加载期不再直接执行业务
+- 语言包改为启动时统一加载，避免首次翻译时即时读盘
+- 适配 PHP 8，修正 8.0 起收紧的类型与函数签名告警
+
+### 🐛 问题修复
+
+- SQL 条件构造支持写入 null 值，此前 null 会被当作占位符拼接
+- 大小写敏感的字段过滤未生效，`whereFilter()` 的 case 参数在部分分支被忽略
+- 条件搭建在空值与嵌套数组场景下拼接顺序错乱
+
+## 1.4.0
+
+> 2022-10-17 发布
+
+> 追溯整理，未单独发版
+
+### 🚨 重大变更
+
+- 通知与第三方服务层整体下线，`notify()`、`third()` 门面与 `app/config/notify.php`、`app/config/third.php` 一并移除（2.0 同样不提供）
+- 移除服务驱动 Email、Sms、Push、Flashsms 与第三方驱动 Alibaba、Baidu、Cma、Cup、Sina、Tencent、Tool、Yahoo
+
+### ✨ 新增功能
+
+- `\fxapp\Data::fieldAlias($data, $alias, $delimiter = '.')`，按别名层级重排字段
+- `\fxapp\Data::fieldEscape($data, $delimiter = '.')`，批量转义字段值
+- 全局助手 `is_function()`，判定回调可调用性
+- `\fxapp\Base::load($file, $type = null)`，可按类型加载配置文件
+
+### 🔧 功能调整
+
+- `merge()`、`cover()` 增加 `$cover`、`$type` 参数，合并时可按目标类型转换
+- `implode()`、`explode()` 增加 `$unique` 去重，`explode()` 另加 `$limit` 限长，`implode()` 支持 `$explode` 反向拆分
+- `timeFormat()` 改为 `timeFormat($time, $param = [])`，格式化规则由参数传入而非固定
+
+## 1.3.0
+
+> 2021-12-27 发布
+
+> 追溯整理，未单独发版
+
+### ✨ 新增功能
+
+- `\fxapp\Data::whereFilter($value, $method, $case)`，按方法名与大小写拼装过滤条件
+- `\fxapp\Data::whereAssemble($data)`，将条件数组拼装为 SQL 片段
+- `\fxapp\Data::storeUpperLevel()`、`storeLowerLevel()`，递归取上下级数据
+- `\fxapp\Data::fieldDivision($dividend, $divisor)`，按字段做除法并保留精度
+- 门面补充 `env()`、`branch()`，读取环境与分支配置
+- `app/config/branch.php`、`app/config/facade.php` 两个配置文件
+- `\fxapp\Server` 门面补充 URL 设置与获取方法
+
+### 🔧 功能调整
+
+- `fieldJson()`、`fieldText()`、`fieldDate()` 的模式参数统一为 `$param`（原 `$mode`、`$type`），模式位改由数组表达
+- `array()`、`object()` 增加 `$filter` 参数，可在转换时过滤键
+- `json()` 改为 `json($data, $type, $param)`，编码行为由参数控制
+- `\fxapp\Data` 门面大幅调整，条件与字段方法统一走 `whereFilter()` 组装
+
+### 🧹 清理移除
+
+- 删除 `updateCase()`、`updateParam()`，更新条件统一由 `whereAssemble()` 承担
+
+## 1.2.0
+
+> 2020-10-02 发布
+
+> 追溯整理，未单独发版
+
+### 🚨 重大变更
+
+- 门面方法签名改为变参透传，`config(...$vars)`、`env(...$vars)`、`cookie(...$vars)` 不再固定参数个数
+
+### ✨ 新增功能
+
+- `\fxapp\Data::where($data, $param)` 通用条件构造
+- `\fxapp\Data::whereSafe($value, &$method, $case)` 安全条件构造
+- `\fxapp\Data::insert()` 插入语句构造
+- `\fxapp\Param::paramRepair()`、`paramEmpty($param, $type)` 参数补全与空值判定
+- `\fxapp\Text::timeRange()` 时间区间解析
+- `\fxapp\Text::strEncode()`、`strEncodeMerge()`、`strDecode()`、`strDecodeMerge()` 编解码
+- `\fxapp\File::moveDirectory($oldpath, $newpath)` 目录移动
+- `\fxapp\View` 控制器与门面，承接模板渲染
+- `frame/Cookie.php`、`app/config/env.php`、`app/store/common.php`
+- 全局助手 `fxy_config()`、`fxy_cookie()`、`fxy_env()`、`fxy_dump()`、`fxy_json()`、`fxy_lang()` 与判定 `is_json()`、`is_blank()`
+- `\fxapp\Param::url($data)` 与 `\fxapp\View::echo($data, $type = '')`，后者由 `return()` 更名而来
+
+### 🔧 功能调整
+
+- `array()`、`object()` 改为 `array($param, $limit)`、`object($param, $limit)`，可限制转换层级
+- `merge($limit, ...$args)`、`cover($args, $limit)` 增补层级控制
+- 语言包更名，`lang-core` 改 `base`、`lang-list` 改 `env`、`lang-phrase` 改 `phrase`
+
+## 1.1.0
+
+> 2020-05-24 发布
+
+### 🚨 重大变更
+
+- 全局函数改为类与门面，`app/core/function/` 下 74 个带前缀函数（`dqa_`、`dsc_`、`dso_`、`fcc_`、`fcf_`、`fco_`、`fcs_`、`fmf_`、`fmo_`、`fsi_`、`fss_`、`ftc_`、`fts_`）改为 `app/controller/*` 控制器与 `facade/*` 门面（2.0 移除）
+- 目录结构重排，`app/core/` 并入 `app/`，内核迁至 `frame/` 与 `frame/fxyin/`
+- 移除 `Cache`、`Cookie`、`Db`、`Debug`、`Exception`、`Log`、`Request`、`Response`、`Session` 内核类，配套缓存、配置、数据库、响应、文件驱动一并删除（2.0 不恢复）
+- 移除 `frame/fxyin/vendor/convention.php`、`frame/fxyin/vendor/helper.php` 与 `base.php` 入口，改由 `autoload.php` 与 `\fxyin\App::init()` 启动
+
+### ✨ 新增功能
+
+- `app/controller/` 控制器 `Base`、`Client`、`Data`、`File`、`Math`、`Param`、`Safe`、`Server`、`Service`、`Text`
+- 门面层 `app/controller/facade/`，`Data`、`Text`、`Param`、`Safe` 为主要承载
+- `frame/App`、`Config`、`Dir`、`Env`、`Facade`、`Lang`、`Loader`、`Service`
+- `autoload.php` 自动加载与 `config.php` 全局配置
+
+## 1.0.0
+
+> 2020-05-24 发布
+
+### ✨ 新增功能
+
+- `app/core/function/` 74 个全局函数，按前缀分组（`dqa_`、`dsc_`、`dso_`、`fcc_`、`fcf_`、`fco_`、`fcs_`、`fmf_`、`fmo_`、`fsi_`、`fss_`、`ftc_`、`fts_`）
+- `fsi_result()`、`fsi_param()` 统一返回结构与参数取值，`dqa_where()`、`dqa_make()`、`dqa_build()`、`dqa_safe()` 条件构造
+- `fcf_json()`、`fcf_crypt()`、`fcf_md()`、`fcf_rsapri()`、`fcf_rsapub()`、`fcf_token()`、`fcf_ipv()` 加解密与令牌
+- `fco_thumb()`、`fco_authcode()` 图片缩略与授权码
+- `ftc_system()`、`fts_ip()` 系统信息与 IP 归属
+- `fmo_merge()`、`fmo_cover()`、`fmo_pick()`、`fmo_append()` 数组处理
+- `frame/fxyin/` 内核，含 `App`、`Cache`、`Config`、`Cookie`、`Db`、`Debug`、`Dir`、`Exception`、`File`、`Lang`、`Loader`、`Log`、`Request`、`Response`、`Service`、`Session`（2.0 移除）
+- 缓存驱动 `File`、`Redis`，配置驱动 `Ini`、`Json`、`Xml`，数据库驱动 `Mongodb`，响应驱动 `Json`、`Xml`，文件驱动 `Image`
+- 通知服务 `Email`、`Sms`、`Push`、`Flashsms` 与第三方服务 `Alibaba`、`Baidu`、`Cma`、`Cup`、`Sina`、`Tencent`、`Tool`、`Yahoo`（1.4 起移除）
+- 中英双语语言包与 `app/core/config/app.php`、`notify.php`、`third.php`
+- `base.php`、`start.php` 入口文件
