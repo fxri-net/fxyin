@@ -10,6 +10,7 @@
     ],
     "require": {
         "ext-mbstring": "*",
+        "ext-openssl": "*",
         "php": "^8.2",
         "psr/log": "^3.0",
         "symfony/translation-contracts": "^3.0"
@@ -24,7 +25,8 @@
         "psr/http-client": "需要以 PSR-18 客户端发起外部请求时安装",
         "psr/http-factory": "需要构造 PSR-7 请求与响应时安装",
         "psr/http-message": "需要 HTTP 消息对象时安装",
-        "symfony/http-client": "可直接作为 PSR-18 客户端实现注入"
+        "symfony/http-client": "可直接作为 PSR-18 客户端实现注入",
+        "topthink/framework": "需要 ThinkPHP 容器适配与异常映射时安装"
     },
     "autoload": {
         "psr-4": {

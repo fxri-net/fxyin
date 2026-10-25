@@ -5,6 +5,3 @@ parameters:
     phpVersion: 80200
     paths:
         - src
-    # 仅纳入本任务起的 src/，旧 frame/、app/ 由第 8 项任务统一移除后再议
-    excludePaths:
-        - src/Integration/*
