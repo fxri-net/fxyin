@@ -22,6 +22,9 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          # 矩阵内不装 node 依赖、也不跑 pnpm 步骤，关掉自动缓存；
+          # 否则 v5 会按 packageManager 字段自行选 pnpm 缓存，调用未安装的 pnpm 直接报 ENOENT
+          package-manager-cache: false
       # 仓库不提交 composer.lock，交由各 PHP 版本自行解析，才能覆盖 8.2 与 8.3+ 的依赖差异
       - run: composer update --no-interaction --prefer-dist --no-progress
       # 文档站构建由 deploy-docs.yml 单独承担，矩阵内跳过以省时
