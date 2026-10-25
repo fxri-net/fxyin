@@ -1,0 +1,59 @@
+{
+    "name": "fxri/fxyin",
+    "description": "风音框架：可被任意 PHP 框架无缝接入的辅助框架",
+    "type": "library",
+    "license": "Apache-2.0",
+    "keywords": [
+        "fxri",
+        "helper",
+        "framework"
+    ],
+    "require": {
+        "php": "^8.2",
+        "psr/log": "^3.0",
+        "symfony/translation-contracts": "^3.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.5.50 || ^12.5.8"
+    },
+    "suggest": {
+        "nyholm/psr7": "轻量 PSR-7 实现，配合 PSR-18 客户端使用",
+        "psr/http-client": "需要以 PSR-18 客户端发起外部请求时安装",
+        "psr/http-factory": "需要构造 PSR-7 请求与响应时安装",
+        "psr/http-message": "需要 HTTP 消息对象时安装",
+        "symfony/http-client": "可直接作为 PSR-18 客户端实现注入"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fxri\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Fxri\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "2.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "check": [
+            "@composer validate --strict",
+            "@cs",
+            "@stan",
+            "@test",
+            "@scan"
+        ],
+        "cs": "php-cs-fixer fix --dry-run --diff",
+        "stan": "phpstan analyse --no-progress",
+        "test": "phpunit",
+        "scan": "@php tools/no-numeric-code.php"
+    }
+}

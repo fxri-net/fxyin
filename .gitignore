@@ -2,3 +2,11 @@
 # 不想改团队 .gitignore 者，可把这些忽略行写进 .git/info/exclude（本地排除、不进版本控制）
 .archive.lock
 .toolkitrc.local.json
+
+# 2.0 起改为 Composer 包：依赖与依赖锁不入库，由各环境自行解析
+/vendor/
+/composer.lock
+
+# 工具缓存
+/.php-cs-fixer.cache
+/.phpunit.cache/
