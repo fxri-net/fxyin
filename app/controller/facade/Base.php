@@ -123,7 +123,7 @@ class Base
     {
         $vars[0] = $vars[0] ?? null;
         if (!is_array($vars[0]) && !array_key_exists(1, $vars)) {
-            return 0 === strpos($vars[0], '?') ? \fxyin\Config::has(substr($vars[0], 1)) : \fxyin\Config::get($vars[0]);
+            return 0 === strpos($vars[0] ?? '', '?') ? \fxyin\Config::has(substr($vars[0], 1)) : \fxyin\Config::get($vars[0]);
         } else {
             $vars[1] = $vars[1] ?? null;
             return \fxyin\Config::set($vars[0], $vars[1]);

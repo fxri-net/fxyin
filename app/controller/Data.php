@@ -34,8 +34,8 @@ namespace fxapp;
  * @method static string fieldDate(string $field, string $replace = '', int|string $param = 1) 处理字段-日期
  * @method static string fieldAlias(string $data, string $alias, string $delimiter = '.') 处理字段-别名
  * @method static string fieldEscape(string $data, string $delimiter = '.') 处理字段-转义
- * @method static mixed htmlFilter(mixed $data, string $flags = null) 处理HTML-过滤
- * @method static mixed htmlRemove(mixed $data, string $flags = null) 处理HTML-移除
+ * @method static mixed htmlFilter(mixed $data, ?string $flags = null) 处理HTML-过滤
+ * @method static mixed htmlRemove(mixed $data, ?string $flags = null) 处理HTML-移除
  * @method static array listToTree(array $list, int $parent_id = 0, string $parnet_name = 'parent_id', string $index = 'id', string $child_name = '_child') 列表格式树
  * @method static array paramRepair(array $param) 处理参数-补全
  * @method static array paramFilter(array $param) 处理参数-过滤

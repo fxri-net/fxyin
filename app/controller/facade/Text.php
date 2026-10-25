@@ -178,7 +178,7 @@ class Text
     {
         // 初始化变量
         $echo = \fxapp\Server::echo();
-        $length = mb_strlen($string, 'utf-8');
+        $length = is_string($string) ? mb_strlen($string, 'utf-8') : 0;
         $end == 0 && $end = $length;
         $start > $end && $start = $end;
         if (!is_string($string)) {
@@ -582,7 +582,7 @@ class Text
         switch ($type) {
             case 'encode':
                 // 编码
-                $data = explode('.', $data);
+                $data = explode('.', strval($data));
                 foreach ($data as $key => $value) {
                     $value = ltrim($value, 0);
                     if ($value === '') {

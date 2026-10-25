@@ -228,7 +228,7 @@ class Server
     public function branch()
     {
         // 载入分支
-        $tray['branch'] = fxy_env('base.host');
+        $tray['branch'] = strval(fxy_env('base.host'));
         $tray['store'] = fxy_config('branch.store');
         $tray['store'] = array_reverse($tray['store']);
         foreach ($tray['store'] as $index => $elem) {
@@ -277,7 +277,7 @@ class Server
         // 基础分支
         $tray['base'] = $tray['store']['base'] ?? [];
         // 匹配分支
-        $tray['echo'] = $tray['store'][$data['full'][$tray['echo']]] ?? [];
+        $tray['echo'] = $tray['store'][$data['full'][$tray['echo']] ?? null] ?? [];
         // 合并分支
         $tray['echo'] = array_merge($tray['base'], $tray['echo']);
         // 配置分支

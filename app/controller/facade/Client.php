@@ -51,7 +51,7 @@ class Client
     public function browser($type = -1)
     {
         // 初始化变量
-        $echo = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower($_SERVER['HTTP_USER_AGENT']) : null;
+        $echo = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower($_SERVER['HTTP_USER_AGENT']) : '';
         // 开始检测
         if (strpos($echo, strtolower('MicroMessenger'))) {
             // 微信内置浏览器
@@ -108,7 +108,7 @@ class Client
     public function system($type = -1)
     {
         // 初始化变量
-        $echo = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower($_SERVER['HTTP_USER_AGENT']) : null;
+        $echo = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower($_SERVER['HTTP_USER_AGENT']) : '';
         // 开始检测
         if (preg_match('/win/i', $echo) && preg_match('/95/i', $echo)) {
             $echo = 'Windows 95';

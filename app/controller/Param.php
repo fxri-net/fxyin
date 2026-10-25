@@ -16,7 +16,7 @@ namespace fxapp;
  * @see \fxapp\facade\Param
  * @package fxapp\facade
  * @method static mixed init() 初始化配置
- * @method static array define(array $param, int $mode = null) 定义参数
+ * @method static array define(array $param, ?int $mode = null) 定义参数
  * @method static array array(array $param, int $limit = -1, bool $filter = true) 数组填充空值
  * @method static mixed object(array $param, int $limit = -1, bool $filter = true) 空数组转对象
  * @method static array pick(array $base, array $data) 提取数组

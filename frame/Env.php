@@ -63,7 +63,7 @@ class Env
     public static function has($name)
     {
         // 解析名称
-        $name = explode('.', $name);
+        $name = explode('.', strval($name));
         $data = self::$data;
         foreach ($name as $elem) {
             $elem = str_replace('/_', '.', $elem);
