@@ -112,11 +112,11 @@ php tools/upgrade-inspect.php baseline --root=/path/to/project --write --baselin
   "generatedAt": "2026-10-28 03:30",
   "root": "/path/to/project",
   "directories": {
-    "app": 1512,
+    "app": 120,
     "extend/fxri/data": 46,
     "public": 1
   },
-  "total": 1559
+  "total": 167
 }
 ```
 

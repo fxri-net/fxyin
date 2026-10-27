@@ -71,6 +71,7 @@
         "cs": "php-cs-fixer fix --dry-run --diff",
         "stan": "phpstan analyse --no-progress",
         "test": "phpunit",
-        "scan": "@php tools/no-numeric-code.php"
+        "scan": "@php tools/no-numeric-code.php",
+        "upgrade:inspect": "@php tools/upgrade-inspect.php"
     }
 }
