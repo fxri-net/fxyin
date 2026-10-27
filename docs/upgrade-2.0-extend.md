@@ -1,0 +1,353 @@
+---
+title: 升级 2.0：扩展目录迁移
+outline: [2, 3]
+---
+
+# 升级 2.0：扩展目录迁移
+
+1.x 的扩展目录通常位于 `extend/fxri/data`，负责注册扩展应用、追加门面方法、覆盖配置、加载语言包与执行启动钩子。2.0 没有对应的扩展机制，这些职责需要拆成「项目配置」「项目服务」「项目引导」三类落点。
+
+> 本页只覆盖 `extend/fxri/base` 与 `extend/fxri/data`。`extend/fxri/safe`、`safe_local` 等独立模块不属于 fxyin，不在本页范围。
+
+## 一、目录职责对照
+
+| 1.x 位置 | 职责 | 2.0 落点 |
+| --- | --- | --- |
+| `extend/fxri/base` | 解压的框架本体 | Composer 包 `fxri/fxyin`，整目录删除 |
+| `extend/fxri/bootstrap.php` | 引导入口 | 并入项目入口，见[接入形态](./upgrade-2.0-runtime) |
+| `extend/fxri/data/config.php` | 注册扩展应用、门面目录、加载器目录 | 项目 PSR-4、项目服务、Composer 自动加载 |
+| `data/app/config/*` | 扩展配置 | 项目 `config/`，必须是纯数组 |
+| `data/app/controller/*` | 扩展控制器与门面 | 项目服务类，或项目内过渡门面 |
+| `data/app/controller/facade_ext/*` | 追加到框架门面的方法 | 项目服务类，或过渡门面提供者 |
+| `data/app/controller/oracle/*` | 服务定位器 | 项目工厂或宿主容器 |
+| `data/app/function/common.php` | 启动时加载的全局函数 | Composer `autoload.files` 或项目类方法 |
+| `data/app/language/*` | 语言词条 | `Translation\ArrayTranslator` / `PhpFileLoader` |
+| `data/app/store/common.php` | 启动钩子 | 构建内核后的项目引导脚本与中间件 |
+
+## 二、参考样本的共性
+
+对使用 1.x 的接入方做只读盘点后，`data` 目录的结构高度同构，差异集中在规模：
+
+| 维度 | 常见形态 |
+| --- | --- |
+| 配置文件 | 6–10 个，`app.php`、`env.php`、`facade.php`、`frame.php`、`branch.php`、`safe.php`、`third.php` 等 |
+| 控制器 | 14–27 个，多数只是 `extends \fxyin\Facade` 的门面声明 |
+| `facade_ext` | 10–12 个，追加项目方法 |
+| `oracle` | 0–4 个，服务定位器 |
+| 语言包 | 2–6 个文件，按语言目录组织 |
+| 应用目录名 | `app/`、`application/`、`apps/` 三种写法 |
+| 入口 | 根 `index.php` 与 `public/index.php` 两种 |
+| 启动引导 | 少数项目有 `bootstrap.php`，多数在入口直接 `require autoload.php` |
+
+共性意味着可以按同一张表逐项处理；规模差异只影响路线是 S 还是 M/L。
+
+## 三、逐项迁移表
+
+| 1.x 写法 | 2.0 写法 | 注意 |
+| --- | --- | --- |
+| `env.app` 注册多个应用目录 | 项目 PSR-4 命名空间 | 不再有「多应用目录按优先级加载」 |
+| `env.facade[-1]` 注册门面扩展目录 | 项目服务类或过渡门面 | 2.0 没有门面层 |
+| `loader.fxapp[1]` 注册控制器目录 | Composer `autoload` | 删除旧加载器配置 |
+| `env.base.root` / `env.base.app` | 项目常量或配置项 | 路径在运行时解析，不写进配置数组 |
+| `Param::define(..., '1.2.3')` | `Shape` / `Pipeline` | 见 [API 对照](./migration-2.0) |
+| `Data::where([...])` 八元数组 | `WhereBuilder` | 条件与绑定值由对象携带 |
+| `Server::echo()` 六元数组 | `Envelope` + 项目 `LegacyResponse` | 对外协议由项目保持 |
+| `Server::format($echo, 2)` | `Envelope::toArray()` 或项目序列化 | 键名不再可配置 |
+| `Base::lang([$a, $b])` | `$kernel->trans()` | 旧的列表拼接语义需项目侧补 |
+| `Lang::get()` / `Lang::detect()` | `ArrayTranslator` + 项目 `Context` | 语言列表与自动侦测改为项目服务 |
+| `Base::oracle($name)` | 项目工厂或容器 | 定位器不再由框架提供 |
+| `View::log()` | PSR-3 日志 | 通过 `KernelBuilder::withLogger()` 注入 |
+| `Env::init()` / `Server::branch()` | `ServerContext` / `RequestContext` + 中间件 | 分支选择回到项目 |
+| `Text::throwable($e, '1.2')` | 抛异常 + 统一异常映射 | 见[接入形态](./upgrade-2.0-runtime) |
+
+## 四、配置纯度三条硬规则
+
+2.0 的配置加载器按文件名顺序读取**纯数组**。1.x 的配置允许在加载时执行代码，迁移时必须先拆掉三类副作用：
+
+1. 不得调用 `\fxapp\*`、`fxy_*`、`\fxyin\*`。
+2. 不得读取 `$_SERVER`、`$_COOKIE`、`$_GET`、`$_POST` 等请求态。
+3. 不得依赖其他配置文件的加载结果。
+
+### 4.1 请求态配置改为运行时服务
+
+1.x 的 `env.php` 常在加载时读取请求头、Cookie 与语言：
+
+```php
+$param = \fxapp\Client::param();
+$param['base'] = \fxapp\Base::json($param['base'] ?? null, 'decode');
+\fxyin\Lang::setLangCookieName(\fxapp\Base::config('app.lang.name'));
+```
+
+2.0 把这段逻辑移到内核构建之后：
+
+```php
+final class Context
+{
+    public function __construct(
+        private readonly \Fxri\Http\RequestContext $request,
+        private readonly \Fxri\Http\ServerContext $server,
+        private readonly \Fxri\Http\Cookie\CookieJar $cookies,
+        private readonly \Fxri\Kernel $kernel,
+    ) {
+    }
+
+    public function language(): string
+    {
+        $config = $this->kernel->config()->get('app.lang', []);
+
+        return $config['default'] ?? 'zh-cn';
+    }
+}
+```
+
+原 `env.php` 只保留纯数据：
+
+```php
+return [
+    'lang' => [
+        'default' => 'zh-cn',
+        'list' => ['zh-cn', 'en-us'],
+    ],
+    'skin' => [
+        'default' => 'elementui',
+        'list' => ['base', 'layui', 'elementui'],
+    ],
+];
+```
+
+### 4.2 路径拼接改为运行时解析
+
+1.x 的 `safe.php`、`third.php` 会在数组里调用 `\fxapp\Base::config()` 拼路径：
+
+```php
+'crypt_private' => \fxapp\Base::config('app.base.app') . 'elven/misc/pem/rsa_private.pem',
+```
+
+2.0 的配置只存相对路径或占位符，运行时用 `File\Path::join()` 解析：
+
+```php
+use Fxri\File\Path;
+
+$private = Path::join($kernel->config()->get('app.base.app'), 'elven/misc/pem/rsa_private.pem');
+```
+
+### 4.3 条件与响应配置改为对象
+
+- `facade.data.where` 的数字键配置直接删除，条件改用 `Sql\WhereBuilder`。
+- `server.echo.template` 与 `server.echo.format` 删除，内部改用 `Http\Envelope`；对外字段由项目 `LegacyResponse` 保持。
+- `letter.email` 等邮件配置属于项目业务，2.0 不提供邮件能力，迁到项目自己的配置分组。
+
+## 五、门面扩展的三种替代
+
+1.x 的门面扩展依赖 `\fxyin\Facade` 的 `__callStatic`：按 `env.facade` 的目录优先级查找方法，项目方法放在 `facade_ext`。2.0 不再提供门面层，按项目体量选一种：
+
+### 方案一：项目内过渡门面（推荐给 M/L）
+
+在项目里保留 `\fxapp\` 命名空间，Composer 映射到 `app/legacy/fxapp/`；旧调用点不动，门面内部改调 `Fxri\*`。
+
+```json
+{
+  "autoload": {
+    "psr-4": {
+      "app\\": "app/",
+      "fxapp\\": "app/legacy/fxapp/"
+    }
+  }
+}
+```
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace fxapp;
+
+use App\Support\KernelHolder;
+
+abstract class LegacyFacade
+{
+    public static function __callStatic(string $name, array $arguments): mixed
+    {
+        $provider = static::provider();
+        if (!is_callable([$provider, $name])) {
+            throw new \BadMethodCallException(static::class . '::' . $name . '() 尚未迁移');
+        }
+
+        return $provider->{$name}(...$arguments);
+    }
+
+    abstract protected static function provider(): object;
+}
+
+final class Base extends LegacyFacade
+{
+    protected static function provider(): object
+    {
+        return new \App\Support\Legacy\BaseProvider(KernelHolder::get());
+    }
+}
+```
+
+提供者只承接旧方法，内部换成 2.0 入口：
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Support\Legacy;
+
+use Fxri\Kernel;
+
+final class BaseProvider
+{
+    public function __construct(private readonly Kernel $kernel)
+    {
+    }
+
+    public function config(string $name, mixed $default = null): mixed
+    {
+        return $this->kernel->config()->get($name, $default);
+    }
+
+    public function lang(string|array $name, array $vars = []): string
+    {
+        return $this->kernel->trans(is_array($name) ? implode('', $name) : $name, $vars);
+    }
+}
+```
+
+### 方案二：显式静态类（推荐给 S）
+
+调用量小的项目直接删除 `\fxapp\` 命名空间，把每个门面改成显式类，调用点同步替换：
+
+```php
+namespace App\Support;
+
+use Fxri\Kernel;
+
+final class Config
+{
+    public static function get(Kernel $kernel, string $name, mixed $default = null): mixed
+    {
+        return $kernel->config()->get($name, $default);
+    }
+}
+```
+
+### 方案三：宿主容器绑定
+
+宿主有容器时，把内核与项目服务绑进容器，调用点改为容器解析。ThinkPHP 用 `ThinkPHPAdapter::bind()`，其他容器用各自的 `instance` / `set` 入口。
+
+### oracle 与自定义定位器
+
+`Base::oracle($name)` 是项目自己的服务定位器，与 fxyin 无关。迁移时保留实现，改成显式工厂：
+
+```php
+final class OracleFactory
+{
+    public static function make(string $name): object
+    {
+        $class = '\\App\\Oracle\\' . ucfirst(strtolower($name));
+        if (!class_exists($class)) {
+            throw new \InvalidArgumentException('未定义的 oracle：' . $name);
+        }
+
+        return new $class();
+    }
+}
+```
+
+有容器时优先用容器管理单例，避免继续维护静态缓存。
+
+## 六、启动钩子拆分
+
+1.x 的 `data/app/store/common.php` 固定做两件事：
+
+```php
+\fxyin\Env::init();
+\fxapp\Server::branch();
+```
+
+2.0 拆成两部分：
+
+1. **构建内核后执行**的项目引导脚本：初始化环境变量、语言、日志。
+2. **请求进入后执行**的中间件：根据请求头选择分支、格式、语言、皮肤，写入项目上下文。
+
+```php
+// bootstrap/context.php：构建内核之后执行
+$environment = \Fxri\Config\Environment::fromFile(__DIR__ . '/../.env');
+$server = \Fxri\Http\ServerContext::fromGlobals();
+$request = \Fxri\Http\RequestContext::fromServer($server);
+$cookies = \Fxri\Http\Cookie\CookieJar::fromGlobals();
+```
+
+## 七、语言与全局函数
+
+- 语言词条是纯数据，目录整体迁到项目 `language/{locale}/`，用 `ArrayTranslator::fromDirectory()` 或 `Translation\Loader\PhpFileLoader` 加载。
+- `function/common.php` 若为空直接删除；若非空，迁到 Composer `autoload.files`，或改成项目类方法。函数体里的旧 API 仍需按 [API 对照](./migration-2.0) 替换。
+- 旧的 `langList()`、`langParse()` 列表拼接语义没有等价实现，由项目 `BaseProvider::lang()` 按实际业务保留。
+
+## 八、响应协议的保持
+
+旧代码大量使用 `$echo[2]`、`$echo[3]`，对外协议还包含 `extend` 与 `time`。迁移时不要让框架升级顺带改协议：
+
+```php
+final class LegacyResponse
+{
+    /** @return array{0: bool, 1: int, 2: string, 3: mixed, 4: array<array-key, mixed>, 5: string} */
+    public static function envelope(\Fxri\Http\Envelope $envelope, array $extend = []): array
+    {
+        return [
+            $envelope->isOk(),
+            $envelope->isOk() ? 200 : 500,
+            $envelope->message(),
+            $envelope->data(),
+            $extend,
+            (string) time(),
+        ];
+    }
+
+    /** @return array{code: int, message: string, data: mixed, extend: array<array-key, mixed>, time: string} */
+    public static function wire(array $echo): array
+    {
+        return [
+            'code' => (int) ($echo[1] ?? 0),
+            'message' => (string) ($echo[2] ?? ''),
+            'data' => $echo[3] ?? null,
+            'extend' => is_array($echo[4] ?? null) ? $echo[4] : [],
+            'time' => (string) ($echo[5] ?? ''),
+        ];
+    }
+}
+```
+
+内部新代码用 `Envelope`，旧代码继续取六元数组；协议变更单独排期。
+
+## 九、删除顺序
+
+1. 备份 `extend/fxri` 与部署包，记录当前 PHP 与宿主版本。
+2. 补 `composer.json` 与自动加载，装入 `fxri/fxyin:^2.0`。
+3. 迁移配置：先拆副作用，再把纯数组放进 `config/`。
+4. 迁移语言与全局函数。
+5. 迁移门面、`facade_ext` 与 `oracle`。
+6. 拆 `store/common.php` 为项目引导与中间件。
+7. 删除 `extend/fxri/base`、`extend/fxri/data` 与 `extend/fxri/bootstrap.php`。
+8. 清理 Composer 里为旧目录保留的映射。
+9. 运行基线，确认 `\fxapp\` 与点分模式号归零。
+
+## 十、验收
+
+1. 全仓检索 `extend/fxri/base`、`\fxapp\`、`\fxyin\`、`fxy_`、点分模式号，除过渡层外归零。
+2. `config/` 下每个文件只返回数组，不调用函数、不读超全局变量。
+3. 启动冒烟与 HTTP 冒烟通过，异常映射返回失败信封。
+4. `upgrade-inspect.php baseline --check` 零新增。
+5. 过渡层调用量持续下降；归零后删除 `\fxapp\` 命名空间与映射。
+
+## 十一、红线
+
+1. 不把 `safe` / `safe_local` 混进 fxyin 的删除与迁移。
+2. 不在同一提交里既删旧目录又改对外响应协议。
+3. 不保留 1.x `autoload.php` 与 Composer 双加载。
+4. 不把真实密钥、数据库口令、服务器地址写进文档或示例配置。

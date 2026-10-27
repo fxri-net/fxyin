@@ -63,6 +63,7 @@ pnpm install
 - 模式一律用具名枚举或链式方法表达，禁止数字枚举与数字 `type` 参数，`composer scan` 会拦截新增写法。
 - 注释写中文，只解释「为什么这么做」，不复述代码本身。
 - 新增类要同时补 `tests/` 用例与文档站对应参考页，避免代码与文档脱节。
+- 版本号以 `package.json` 为工具链真源，`src/Package.php` 的 `VERSION` 必须与之一致，测试会做校验。
 
 ## 提交信息规范
 
@@ -101,7 +102,14 @@ toolkit tasks check      # 校验任务档案结构，必须零错误
 4. 归一格式：执行 `toolkit changelog --history format`，统一历史版本块的标题与日期行。⚠️ 该命令会连带扫描并改写 `vendor/**/CHANGELOG.md`，`vendor` 是 `composer install` 的再生产物且不入库，格式化后不要提交这些变更。
 5. 同步文档站：执行 `pnpm sync:changelog-doc`，把根 `CHANGELOG.md` 转成 `docs/changelog.md`。
 6. 执行验收：`pnpm verify`。
-7. 提交并打标签：按提交规范提交，再打 `vX.Y.Z` 标签；推送标签（`git push origin vX.Y.Z`）需维护者确认后执行。
+7. 提交并打标签：按提交规范提交，再打附注标签 `vX.Y.Z`；推送标签（`git push origin vX.Y.Z`）需维护者确认后执行。
+
+### 标签规则
+
+- 标签一律用附注标签（`git tag -a`），说明写中文；已推送的标签不回移、不覆盖。
+- 补打历史标签时，按更新日志的日期边界选提交，并在日志标注「标签补打」及补打日期。
+- 1.x 只补标不发版，`v1.6.1` 仅作终点标记；正式发版从 2.0.0 起。
+- 发版后同步 `src/Package.php` 的 `VERSION`，`tests/PackageTest.php` 会校验它与 `package.json` 一致。
 
 ## 文档站维护
 

@@ -44,6 +44,16 @@ export default defineConfig({
     nav: [
       { text: '指南', link: '/getting-started' },
       {
+        text: '升级',
+        items: [
+          { text: '1.x 升级 2.0', link: '/upgrade-2.0' },
+          { text: '接入形态', link: '/upgrade-2.0-runtime' },
+          { text: '扩展目录', link: '/upgrade-2.0-extend' },
+          { text: 'API 对照', link: '/migration-2.0' },
+          { text: '检查清单', link: '/upgrade-2.0-checklist' },
+        ],
+      },
+      {
         text: '参考',
         items: [
           { text: '内核与装配', link: '/kernel' },
@@ -75,7 +85,16 @@ export default defineConfig({
         items: [
           { text: '首页', link: '/' },
           { text: '快速开始', link: '/getting-started' },
-          { text: '2.0 迁移', link: '/migration-2.0' },
+        ],
+      },
+      {
+        text: '升级 2.0',
+        items: [
+          { text: '升级总览', link: '/upgrade-2.0' },
+          { text: '接入形态', link: '/upgrade-2.0-runtime' },
+          { text: '扩展目录', link: '/upgrade-2.0-extend' },
+          { text: 'API 对照', link: '/migration-2.0' },
+          { text: '检查清单', link: '/upgrade-2.0-checklist' },
         ],
       },
       {

@@ -1,10 +1,12 @@
 ---
-title: 2.0 迁移说明
+title: 2.0 API 对照
 ---
 
-# 风音框架 2.0 迁移说明
+# 风音框架 2.0 API 对照
 
-2.0 是一次不保留 API 兼容层的大版本改版。旧的门面层、全局函数、点分模式号与数字码配置全部移除，改由具名类与具名枚举承担。本文逐项列出旧写法与新写法的对应关系，供接入方按表改造。
+2.0 是一次不保留 API 兼容层的大版本改版。旧的门面层、全局函数、点分模式号与数字码配置全部移除，改由具名类与具名枚举承担。本文是 API 对照附录，逐项列出旧写法与新写法的对应关系。
+
+> 升级步骤、接入形态与扩展目录迁移见[1.x 升级 2.0 指南](./upgrade-2.0)；本页只回答「旧写法对应什么新写法」。
 
 ## 一、改动概览
 
@@ -485,7 +487,57 @@ return Envelope::success($data, '请求成功');
 - 应用目录约定式启动（`\fxyin\App::init()` 扫描 `function/`、`config/`、`language/`、`store/`）。
 - 内置路由分发（`\fxyin\App::run()`）。
 
-## 十一、相关文档
+## 十一、高频调用与行为差异
 
+### 11.1 高频调用对照
+
+以下条目来自对多个 1.x 接入方的只读统计，按出现频次排序；项目自有方法（如 `oracle()`、`Elven::echo()`）需要项目侧保留实现。
+
+| 旧写法 | 新写法 | 说明 |
+| --- | --- | --- |
+| `Base::lang($name, $vars)` | `$kernel->trans($id, $parameters)` | 旧的列表拼接与按语言切换连接符需项目侧保留 |
+| `Base::oracle($name)` | 项目工厂或容器 | 项目自有定位器，fxyin 不提供 |
+| `Param::define([$data, $keys], '1.2.3')` | `Shape` / `Pipeline` | 点分码逐一对照见第四节 |
+| `View::echo($data, 'json')` | `Responder`、`JsonFormatter` | XML 与视图类型由项目渲染器承接 |
+| `Server::format($echo, 2)` | `Envelope::toArray()` 或项目序列化 | 键名固定，不再由配置映射 |
+| `Base::config($name)` | `$kernel->config()->get($name, $default)` | 配置不再支持运行期写入 |
+| `Param::json($data, 'encode')` | `Param\Json::encode()`、`Json::decode()` | 模式改为方法 |
+| `Param::merge($limit, ...$args)` | `Merger::merge()`、`Merger::mergeKeepBlank()` | 深度与空值语义显式化 |
+| `Server::echo()` | `Envelope::make()`、`Envelope::success()` | 六元数组改为四字段信封 |
+| `Text::throwable($e)` | 抛异常，由接入层映射 | 不再直接终止进程 |
+| `Data::paramEmpty($data, $type)` | `Data\Param::missing($data, NullPolicy::Blank)` | 空值策略改为枚举 |
+| `Data::fieldJson(...)` | `Field::json(...)` | 见 7.3 |
+| `View::log($data, $type)` | PSR-3 `LoggerInterface` | 通过 `KernelBuilder::withLogger()` 注入 |
+| `Service::http(...)` | `Http\HttpClient\Client::send()` | 需要 PSR-18 客户端实现 |
+| `File::getList($path, $ext)` | `Filesystem::listFiles($directory)` | 扩展名过滤由调用方处理 |
+| `Data::whereMake($data, $type)` | `WhereBuilder::build()`、`Expression` | 条件与绑定值对象化 |
+| `Data::fieldEscape(...)` | 无等价实现 | 项目侧用 `Expression` 书写 |
+| `Service::httpDown(...)` | 无等价实现 | 项目侧用 `HttpClient\Client` 落盘 |
+| `Math::rand($length, $type)` | `Random::string($length, RandomCharset::Alnum)` | 字符集改为枚举 |
+| `Text::timeMilli($mtime)` | `Time::milli()` | 见 7.10 |
+| `Text::explode()`、`Text::implode()` | `Text\Str::explode()`、`Str::implode()` | 去重与限长参数调整 |
+| `Client::ip($type)` | `ClientInfo::ip()`、`Text\Ip::toLong()` | 整型地址由 `Ip` 转换 |
+| `Db::startTrans()` 等 | 项目数据库层 | fxyin 不接管连接与事务 |
+
+### 11.2 行为差异
+
+| 维度 | 1.x | 2.0 |
+| --- | --- | --- |
+| 响应结构 | 配置驱动的六元位置数组 | `Envelope` 固定 `ok`、`code`、`message`、`data` |
+| 业务码类型 | 整型（如 `200`） | 字符串（成功为 `ok`） |
+| 扩展位与时间位 | `extend`、`time` 两个位置 | 移除，由接入方自行追加 |
+| 错误处理 | 返回数组或直接 `exit` | 抛异常，由接入层映射 |
+| 条件构造 | 字符串片段与白名单过滤 | 绑定参数与 `Sql` 对象 |
+| 配置 | 允许加载期执行代码 | 只接受纯数组 |
+| 门面 | `__callStatic` 按目录优先级查找 | 无门面层，改用显式类与内核 |
+| 安装 | 解压到 `extend/fxri/base` | Composer 包 |
+| PHP | 7.1–8.4 | 8.2 起 |
+
+## 十二、相关文档
+
+- [1.x 升级 2.0 指南](./upgrade-2.0)：升级路线、阶段与回滚。
+- [接入形态手册](./upgrade-2.0-runtime)：ThinkPHP 6、ThinkPHP 5、非 ThinkPHP、无 Composer。
+- [扩展目录迁移](./upgrade-2.0-extend)：`extend/fxri/data` 的逐项处理。
+- [升级检查清单](./upgrade-2.0-checklist)：阶段清单与基线模板。
 - [快速开始](./getting-started)：从零安装、装配与最小可运行示例。
 - [更新日志](./changelog)：各版本完整变更条目，含 2.0 的分组说明。
