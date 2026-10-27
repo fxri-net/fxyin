@@ -60,7 +60,12 @@ function scanCode(string $path, string $code): array
 
     $lines = preg_split('/\R/', $code);
     foreach (false === $lines ? [] : $lines as $index => $line) {
+        // 版本号常量是语义版本，不是模式码，dotted-literal 规则对其放行
+        $versionConstant = 1 === preg_match('/\bconst\s+VERSION\b/', $line);
         foreach ($lineRules as $name => [$pattern, $remark]) {
+            if ('dotted-literal' === $name && $versionConstant) {
+                continue;
+            }
             if (1 === preg_match($pattern, $line)) {
                 $violations[] = sprintf('%s:%d [%s] %s', $path, $index + 1, $name, $remark);
             }

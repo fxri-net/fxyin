@@ -27,4 +27,22 @@ final class PackageTest extends TestCase
     {
         self::assertStringStartsWith('2.', Package::VERSION);
     }
+
+    /**
+     * 版本号与工具链清单保持一致，避免发版后两处漂移。
+     */
+    public function testVersionMatchesToolchain(): void
+    {
+        $raw = file_get_contents(dirname(__DIR__) . '/package.json');
+        if (false === $raw) {
+            self::fail('无法读取 package.json');
+        }
+
+        $manifest = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        $version = is_array($manifest) && isset($manifest['version']) && is_string($manifest['version'])
+            ? $manifest['version']
+            : '';
+
+        self::assertSame($version, Package::VERSION);
+    }
 }
