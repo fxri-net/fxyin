@@ -35,6 +35,7 @@ final class EncodingTest extends TestCase
                 self::assertIsString($contents, $file->getPathname());
                 self::assertStringNotContainsString("\r", $contents, $file->getPathname());
                 self::assertStringStartsNotWith("\xEF\xBB\xBF", $contents, $file->getPathname());
+                self::assertTrue(mb_check_encoding($contents, 'UTF-8'), $file->getPathname() . ' 不是合法 UTF-8');
             }
         }
     }
