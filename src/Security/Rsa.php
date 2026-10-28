@@ -18,9 +18,6 @@ final class Rsa
     /** 最小密钥位数 */
     private const MIN_BITS = 2048;
 
-    /** PKCS#1 填充占用字节 */
-    private const PADDING_BYTES = 11;
-
     /**
      * 解密。
      *
@@ -69,10 +66,7 @@ final class Rsa
             return '';
         }
 
-        $size = self::size($key) - self::PADDING_BYTES;
-        if ($size < 1) {
-            throw new RuntimeException('密钥长度不足以分块');
-        }
+        $size = self::blockSize(self::size($key), RsaPadding::Pkcs1);
 
         $result = '';
         foreach (str_split($data, $size) as $chunk) {
@@ -156,6 +150,84 @@ final class Rsa
     }
 
     /**
+     * 私钥加密。
+     *
+     * 用于「私钥加密、公钥解密」的原始 RSA 场景；按密钥字节数分块，`NoPadding`
+     * 时先用 `$pad` 左补齐到块大小，解密端对应剥离。
+     *
+     * @param string $data 明文
+     * @param string $privateKey 私钥
+     * @param RsaPadding $padding 填充模式
+     * @param string $pad 无填充时的补齐字符
+     * @return string 密文原始字节
+     */
+    public static function privateEncrypt(#[\SensitiveParameter] string $data, #[\SensitiveParameter] string $privateKey, RsaPadding $padding = RsaPadding::Pkcs1, string $pad = "\0"): string
+    {
+        if ('' === $data) {
+            return '';
+        }
+
+        $key = self::privateKey($privateKey);
+        $size = self::size($key);
+        $block = self::blockSize($size, $padding);
+
+        $result = '';
+        foreach (str_split($data, $block) as $chunk) {
+            if (RsaPadding::NoPadding === $padding) {
+                $chunk = str_pad($chunk, $size, $pad, STR_PAD_LEFT);
+            }
+
+            $cipher = '';
+            $encrypted = openssl_private_encrypt($chunk, $cipher, $key, $padding->constant());
+            if (!$encrypted || !is_string($cipher)) {
+                throw new RuntimeException('RSA 私钥加密失败');
+            }
+
+            $result .= $cipher;
+        }
+
+        return $result;
+    }
+
+    /**
+     * 公钥解密。
+     *
+     * 与 `privateEncrypt()` 对应，输入为原始密文字节；`NoPadding` 时剥离左侧补齐字符。
+     *
+     * @param string $payload 密文原始字节
+     * @param string $publicKey 公钥
+     * @param RsaPadding $padding 填充模式
+     * @param string $pad 无填充时的补齐字符
+     * @return string 明文
+     */
+    public static function publicDecrypt(string $payload, string $publicKey, RsaPadding $padding = RsaPadding::Pkcs1, string $pad = "\0"): string
+    {
+        if ('' === $payload) {
+            return '';
+        }
+
+        $key = self::publicKey($publicKey);
+        $size = self::size($key);
+
+        $result = '';
+        foreach (str_split($payload, $size) as $chunk) {
+            $plain = '';
+            $decrypted = openssl_public_decrypt($chunk, $plain, $key, $padding->constant());
+            if (!$decrypted || !is_string($plain)) {
+                throw new RuntimeException('RSA 公钥解密失败');
+            }
+
+            if (RsaPadding::NoPadding === $padding) {
+                $plain = ltrim($plain, $pad);
+            }
+
+            $result .= $plain;
+        }
+
+        return $result;
+    }
+
+    /**
      * 签名。
      *
      * @param string $data 原始内容
@@ -190,6 +262,26 @@ final class Rsa
         }
 
         return 1 === openssl_verify($data, $raw, self::publicKey($publicKey), OPENSSL_ALGO_SHA256);
+    }
+
+    /**
+     * 返回单块可容纳的明文字节数。
+     *
+     * 无填充模式至少保留 1 字节用于左侧补齐：补齐后整块数值必然小于模数，
+     * 否则原始 RSA 会因 `m >= n` 失败。
+     *
+     * @param int $size 密钥字节数
+     * @param RsaPadding $padding 填充模式
+     * @return int<1, max> 单块明文字节数
+     */
+    private static function blockSize(int $size, RsaPadding $padding): int
+    {
+        $block = $size - max(1, $padding->overhead());
+        if ($block < 1) {
+            throw new RuntimeException('密钥长度不足以分块');
+        }
+
+        return $block;
     }
 
     /**

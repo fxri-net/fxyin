@@ -95,18 +95,29 @@ var_dump(Hash::equals('abc', 'abc'));   // bool(true)
 
 ### Rsa
 
-`MIN_BITS` 为 2048，`PADDING_BYTES` 为 11（PKCS#1 填充占用）。加密按「密钥字节数 - 11」分块，解密按密钥字节数切块，各块原始字节拼接后整体 base64。
+`MIN_BITS` 为 2048。`encrypt()` / `decrypt()` 走 PKCS#1 填充，加密按「密钥字节数 - 11」分块，解密按密钥字节数切块，各块原始字节拼接后整体 base64；`privateEncrypt()` / `publicDecrypt()` 支持 `RsaPadding` 指定的填充方式，返回原始字节而不做 base64。
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
 | `generate(int $bits = 2048): array` | 生成 PEM 密钥对，小于 2048 位抛 `InvalidArgumentException` | `array{private_key: string, public_key: string}` |
-| `encrypt(string $data, string $publicKey): string` | `OPENSSL_PKCS1_PADDING` 分块加密，空串原样返回空串 | `string` |
+| `encrypt(string $data, string $publicKey): string` | `OPENSSL_PKCS1_PADDING` 分块公钥加密，空串原样返回空串 | `string` |
 | `decrypt(string $payload, string $privateKey): string` | base64 非法抛 `InvalidArgumentException`，分块解密失败抛 `RuntimeException` | `string` |
+| `privateEncrypt(string $data, string $privateKey, RsaPadding $padding = RsaPadding::Pkcs1, string $pad = "\0"): string` | 私钥加密，用于「私钥加密、公钥解密」；`NoPadding` 时按 `$pad` 左补齐，空串返回空串 | `string` 原始字节 |
+| `publicDecrypt(string $payload, string $publicKey, RsaPadding $padding = RsaPadding::Pkcs1, string $pad = "\0"): string` | 公钥解密；`NoPadding` 时剥离左侧补齐字符 | `string` |
 | `sign(string $data, string $privateKey): string` | `OPENSSL_ALGO_SHA256` 签名，结果为 base64 | `string` |
 | `verify(string $data, string $signature, string $publicKey): bool` | SHA-256 验签，签名 base64 非法时直接返回 `false` | `bool` |
 | `normalizePem(string $pem): string` | 接受 PEM 文本或文件路径，去掉空白后按 64 字符折行并保留头尾标记；空内容抛 `InvalidArgumentException` | `string` |
 
 公钥、私钥不合法时抛 `InvalidArgumentException`（文案分别为「公钥不合法」「私钥不合法」）。
+
+### RsaPadding
+
+| 分支 | 含义 | 每块填充字节 |
+| --- | --- | --- |
+| `Pkcs1` | `OPENSSL_PKCS1_PADDING`，默认值 | 11 |
+| `NoPadding` | `OPENSSL_NO_PADDING`，由调用方补齐 | 至少 1（用于左侧补齐） |
+
+`constant()` 返回 openssl 填充常量，`overhead()` 返回填充字节数；分块大小统一为「密钥字节数 - 填充字节数」。
 
 ### Token
 
@@ -143,6 +154,10 @@ var_dump(Hash::equals('abc', 'abc'));   // bool(true)
 - `Rsa::generate()` 生成 2048 位密钥有明显耗时，不要放在请求链路里；密钥对生成一次后固化到配置或密钥库。
 - RSA 加解密使用 PKCS#1 v1.5 填充（`OPENSSL_PKCS1_PADDING`），与其他系统的 OAEP 密文不互通，对接前先确认填充方式。
 - RSA 是「分块拼接后整体 base64」：块长为「密钥字节数 - 11」，解密按「密钥字节数」切，自行实现对接时不要按行或按分隔符切分。
+- `privateEncrypt()` / `publicDecrypt()` 返回**原始字节**，不做 base64；跨系统传输前自行编码，长度按「密钥字节数」整块对齐。
+- 私钥加密只用于「证明来源」，不提供保密性：公钥可以解密，任何人都能伪造同样的密文；需要保密时用 `encrypt()` 公钥加密。
+- `NoPadding` 的分块至少保留 1 字节用于左侧补齐，补齐后整块数值小于模数；按密钥长度整块输入会因 `m >= n` 随机失败。
+- `NoPadding` 解密用 `ltrim($plain, $pad)` 剥离补齐字符，若明文本身以补齐字符开头会被一并剥掉；对接时约定不会出现在首部的补齐字符。
 - `Rsa::encrypt('')` 与 `Rsa::decrypt(base64_encode(''))` 都返回空串，这是正常返回而非错误，调用方别把它当成解密成功以外的信号。
 - `Rsa::verify()` 对 base64 非法的签名返回 `false`，但公钥不合法会抛 `InvalidArgumentException`，两种「验不过」的处理方式不同。
 - `Token::make()` 的 `$bytes` 是随机字节数，转成十六进制后 `id` 长度为两倍；小于 8 会抛异常，不要为了缩短令牌把它调到 8 以下。

@@ -269,11 +269,11 @@
                 "status": "equiv"
             },
             "rsapri": {
-                "target": "Security\\Rsa",
+                "target": "Security\\Rsa::privateEncrypt",
                 "status": "equiv"
             },
             "rsapub": {
-                "target": "Security\\Rsa",
+                "target": "Security\\Rsa::publicDecrypt",
                 "status": "equiv"
             },
             "rsapem": {
@@ -287,12 +287,12 @@
                 "status": "equiv"
             },
             "ip": {
-                "target": "Http\\ClientInfo::ip",
-                "status": "equiv"
+                "target": "Http\\HttpClient\\Curl + Param\\Json（组合）",
+                "status": "covered"
             },
             "system": {
-                "target": "Http\\ClientInfo::system",
-                "status": "equiv"
+                "target": "PHP_OS_FAMILY（原生）",
+                "status": "covered"
             },
             "format": {
                 "target": "Http\\Envelope::toArray / 项目序列化",
@@ -309,11 +309,11 @@
         },
         "Service": {
             "http": {
-                "target": "Http\\HttpClient\\Client",
+                "target": "Http\\HttpClient\\Curl",
                 "status": "equiv"
             },
             "httpDown": {
-                "target": "Http\\HttpClient\\Client::download",
+                "target": "Http\\HttpClient\\Curl::download",
                 "status": "equiv"
             }
         },

@@ -106,6 +106,8 @@ outline: [2, 3]
 以下不具备直接等价接口，但能力有替代：
 
 - `whereSafe`、`whereFilter`：由 `WhereBuilder` 绑定参数覆盖。
+- `Server::ip`：由 `HttpClient\Curl` + `Param\Json` 组合取公网地址。
+- `Server::system`：由 PHP 原生 `PHP_OS_FAMILY` 承接，不再做版本级名称映射。
 - 门面与全局函数：由 `Fxri\*`、`Application\Services` 覆盖。
 - 配置驱动的六元响应：由 `Envelope` 与项目响应工厂覆盖。
 

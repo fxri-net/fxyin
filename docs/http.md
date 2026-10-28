@@ -12,7 +12,7 @@ HTTP 层把一次请求的进出两端收敛成只读对象：入口是请求与
 | 出口 | `Envelope`、`Formatter`、`JsonFormatter`、`Responder` | 固定四字段信封，按格式化器落成响应体 |
 | 视图 | `View`、`Renderer` | 只做模板路径解析与安全校验，模板引擎由接入方实现 |
 | Cookie | `CookieJar`、`CookieOptions`、`SameSite` | 读写、删除与 HMAC 签名 |
-| 出站 | `HttpClient\Client`、`ClientFactory` | 包装 PSR-18 客户端，不绑定具体实现 |
+| 出站 | `HttpClient\Client`、`ClientFactory`、`HttpClient\Curl` | 包装 PSR-18 客户端，或直接以 URL 串发起请求，不绑定具体实现 |
 
 与相邻层的交界：`JsonFormatter` 的编码交给 `Fxri\Param\Json`（见[参数](./param)），`View` 用 `Fxri\File\Path::join()` 拼模板路径（见[文件](./file)）；内核只暴露 `httpClient()` 一个入口，装配方式见[内核与装配](./kernel)；异常到信封的映射在[接入](./integration)。
 
@@ -265,6 +265,40 @@ echo $jar->signed('uid');   // 7
 | `has(string $class): bool` | 类存在且实现 `ClientInterface` | `bool` |
 | `fromClass(string $class, array $arguments = []): Client` | 反射实例化后包装，类不存在抛 `InvalidArgumentException` | `Client` |
 
+### Curl
+
+以 URL 串为入口发起请求，承接 1.x 门面 `Service::http()`；不依赖 PSR-7/PSR-18，需要 `ext-curl`（列在 `suggest`，未安装时调用即抛 `RuntimeException`）。GET 与 HEAD 的数组数据拼进查询串，其余方法作为请求体并按 RFC 3986 编码；响应体去掉 UTF-8 BOM。
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `request(string $url, array\|string $data = '', array $headers = [], string $method = 'GET', array $options = [])` | 发起请求，返回状态码、响应头与正文 | `CurlResponse` |
+| `send(...)` | 同 `request()`，只返回正文 | `string` |
+| `download(string $url, string $file, array $headers = [], array $options = [])` | 下载到文件；非 2xx 抛 `RuntimeException`，父目录自动创建 | `string` 文件路径 |
+
+选项：
+
+| 键 | 默认 | 说明 |
+| --- | --- | --- |
+| `timeout` | 30 | 请求超时秒数 |
+| `connect_timeout` | 10 | 连接超时秒数 |
+| `follow` | `true` | 是否跟随重定向 |
+| `max_redirects` | 5 | 最大重定向次数 |
+| `verify` | `true` | 是否校验证书与主机名（1.x 默认关闭，v2 默认开启） |
+| `ipv4` | `true` | 是否优先 IPv4 |
+| `user_agent` | 未设置 | 自定义 UA |
+
+请求头接受 `['Name: value']` 列表与 `['Name' => 'value']` 映射两种写法。
+
+### CurlResponse
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `status(): int` | 状态码 | `int` |
+| `isSuccess(): bool` | 是否 2xx | `bool` |
+| `headers(): array` | 全部响应头，键为小写 | `array<string, string>` |
+| `header(string $name, string $default = ''): string` | 取单个响应头，头名大小写不敏感 | `string` |
+| `body(): string` | 响应正文 | `string` |
+
 ## 注意事项
 
 - `Envelope::make()` 的参数顺序是 `$ok, $code, $data, $message`，与 `success()`、`failure()` 都不同，按位置传参容易把提示语塞进 `data`。
@@ -288,3 +322,8 @@ echo $jar->signed('uid');   // 7
 - `SameSite::None` 必须配 `secure => true`，否则浏览器会丢弃 Cookie；`CookieOptions::toArray()` 不会替你补这个组合。
 - `Client::make()` 与 `ClientFactory::has()` 依赖 PSR 接口已安装：接口不存在时 `is_a()` 为假，`make()` 直接抛异常，`detect()` 找不到实现也不会静默降级。
 - `Client::send()` 会校验请求与响应类型，返回的是 PSR-7 响应对象；`ClientFactory::fromClass()` 的 `$arguments` 按位置传给构造函数。
+- `HttpClient\Curl` 需要 `ext-curl`，未安装时 `request()` / `send()` / `download()` 都抛 `RuntimeException`；PSR-18 路线不依赖该扩展。
+- `Curl` 默认校验证书与主机名（`verify` 为 `true`），与 1.x `ssl_peer` / `ssl_host` 默认关闭相反；对接自签证书时才显式传 `['verify' => false]`。
+- `Curl::download()` 只在 2xx 时写文件，非 2xx 直接抛异常且不改动目标路径；1.x 会把错误页写进去并用返回值区分。
+- `Curl` 的 GET 只拼接数组数据，字符串数据会被忽略；POST 等方法接受数组或原始字符串，数组按 RFC 3986 编码。
+- `CurlResponse::headers()` 的键为小写，重定向时只保留最后一跳的响应头；`header()` 查询不区分大小写。

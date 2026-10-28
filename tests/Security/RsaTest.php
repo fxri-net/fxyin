@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fxri\Tests\Security;
 
 use Fxri\Security\Rsa;
+use Fxri\Security\RsaPadding;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -57,6 +58,35 @@ final class RsaTest extends TestCase
         $data = str_repeat('风音', 300);
 
         self::assertSame($data, Rsa::decrypt(Rsa::encrypt($data, $pair['public_key']), $pair['private_key']));
+    }
+
+    /**
+     * 私钥加密的密文可由公钥解密，超长内容分块往返。
+     */
+    public function testPrivateEncrypt(): void
+    {
+        $pair = self::pair();
+        $data = str_repeat('风音', 300);
+
+        self::assertSame($data, Rsa::publicDecrypt(Rsa::privateEncrypt($data, $pair['private_key']), $pair['public_key']));
+        self::assertSame('', Rsa::privateEncrypt('', $pair['private_key']));
+        self::assertSame('', Rsa::publicDecrypt('', $pair['public_key']));
+    }
+
+    /**
+     * 无填充模式按密钥块补齐，解密端剥离补齐字符。
+     */
+    public function testPrivateEncryptNoPadding(): void
+    {
+        $pair = self::pair();
+        $data = str_repeat('风音', 300);
+
+        $cipher = Rsa::privateEncrypt($data, $pair['private_key'], RsaPadding::NoPadding);
+        self::assertSame(0, strlen($cipher) % 256);
+        self::assertSame($data, Rsa::publicDecrypt($cipher, $pair['public_key'], RsaPadding::NoPadding));
+
+        $custom = Rsa::privateEncrypt('raw', $pair['private_key'], RsaPadding::NoPadding, '*');
+        self::assertSame('raw', Rsa::publicDecrypt($custom, $pair['public_key'], RsaPadding::NoPadding, '*'));
     }
 
     /**
