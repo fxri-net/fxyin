@@ -136,6 +136,38 @@ final class RequestContextTest extends TestCase
     }
 
     /**
+     * 全局变量缺失时使用兜底值，已存在的变量优先。
+     */
+    public function testFromGlobalsDefaults(): void
+    {
+        $server = $_SERVER;
+
+        try {
+            unset($_SERVER['REQUEST_URI'], $_SERVER['SERVER_NAME'], $_SERVER['HTTP_HOST']);
+            $context = RequestContext::fromGlobals([
+                'SERVER_NAME' => 'cli.test',
+                'REQUEST_URI' => '/task/run',
+            ]);
+
+            self::assertSame('/task/run', $context->path());
+            self::assertSame('cli.test', $context->host());
+
+            $_SERVER['REQUEST_URI'] = '/real';
+            $_SERVER['SERVER_NAME'] = 'real.test';
+
+            $context = RequestContext::fromGlobals([
+                'SERVER_NAME' => 'cli.test',
+                'REQUEST_URI' => '/task/run',
+            ]);
+
+            self::assertSame('/real', $context->path());
+            self::assertSame('real.test', $context->host());
+        } finally {
+            $_SERVER = $server;
+        }
+    }
+
+    /**
      * 方法缺失的对象按缺省值处理。
      */
     public function testFromObjectWithoutMethods(): void

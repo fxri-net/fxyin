@@ -215,8 +215,8 @@
         },
         "Param": {
             "init": {
-                "target": "由调用方显式传入",
-                "status": "removed"
+                "target": "Application\\Cli::parse / Bootstrap::withCliArguments",
+                "status": "equiv"
             },
             "define": {
                 "target": "Param\\Shape / Pipeline",
@@ -299,7 +299,7 @@
                 "status": "equiv"
             },
             "env": {
-                "target": "Http\\ServerContext",
+                "target": "Application\\Cli::serverDefaults / RequestContext::fromGlobals",
                 "status": "equiv"
             },
             "branch": {
@@ -561,19 +561,19 @@
         },
         "Env": {
             "init": {
-                "target": "Application\\Bootstrap",
+                "target": "Config\\Store（env 命名空间）",
                 "status": "equiv"
             },
             "load": {
-                "target": "Config\\Environment::fromFile",
+                "target": "File\\Loader + Config\\Store::set",
                 "status": "equiv"
             },
             "has": {
-                "target": "Config\\Environment::has",
+                "target": "Config\\Store::has",
                 "status": "equiv"
             },
             "get": {
-                "target": "Config\\Environment::get",
+                "target": "Config\\Store::get",
                 "status": "equiv"
             },
             "set": {

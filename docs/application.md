@@ -10,6 +10,7 @@
 - `Fxri\Application\Services`：显式服务注册表，支持实例、工厂与按名称解析，替代 1.x 的 `facade_ext` 与 `oracle`。
 - `Fxri\Application\Module`：模块契约，获得启动器后自行追加配置、语言、函数、服务与钩子。
 - `Fxri\Application\Router`：可选路由，从请求路径解析控制器与方法，默认不装配。
+- `Fxri\Application\Cli`：命令行入参解析与运行环境兜底，默认不读取进程参数。
 
 `Bootstrap::boot()` 是唯一启动入口：构造启动器只做参数校验，不读目录、不执行脚本。项目目录结构沿用 1.x：
 
@@ -67,6 +68,7 @@ var_dump($bootstrap->services()->get('lazy'));     // 工厂首次解析
 | `withService(string $id, object $service): self` | 登记服务实例 | 启动器 |
 | `withFactory(string $id, callable(Services): object $factory): self` | 登记服务工厂 | 启动器 |
 | `withModule(Module $module): self` | 注册模块，返回模块处理后的启动器 | 启动器 |
+| `withCliArguments(array $arguments): self` | 开启命令行解析，启动时把 `@` 参数写入 `app.param.cli` 并兜底 `env.base.host` / `env.base.uri` | 启动器 |
 
 阶段常量：`PHASE_LOAD`（目录扫描与函数加载后、内核构建前）、`PHASE_START`（内核构建后）、`PHASE_READY`（启动脚本执行后）。钩子统一接收启动器，加载阶段 `kernel()` 为 `null`；启动或就绪阶段抛异常时内核被清空，修正后可重新 `boot()`。
 
@@ -112,9 +114,31 @@ $result = \Fxri\Application\Router::make('App', 'Controller')
     ->dispatch(\Fxri\Http\RequestContext::fromGlobals());
 ```
 
+### Cli
+
+命令行入参以 `@` 开头，按点号写成嵌套路径；`/_` 片段还原为键名中的点。解析结果写入 `app.param.cli`，已消费的参数从 `argv` 移除。承接 1.x 的 `Param::init()` 与 `Server::env()`，但只在显式调用 `withCliArguments()` 时生效。
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `parse(array $arguments)` | 返回 `['arguments' => 剩余参数, 'values' => 嵌套值]` | `array` |
+| `fromGlobals()` | 读取 `$_SERVER['argv']` 后交给 `parse()` | `array` |
+| `serverDefaults(Config\|Store $config)` | 取 `app.param.cli.svr_name` / `svr_uri` 生成 `SERVER_NAME` / `REQUEST_URI` 兜底值 | `array` |
+
+```php
+$bootstrap = \Fxri\Application\Bootstrap::make(__DIR__)
+    ->withCliArguments($_SERVER['argv'] ?? []);
+$kernel = $bootstrap->boot();
+
+// 命令行传入 @svr_name=Example.COM @svr_uri=/Api 后
+$request = \Fxri\Http\RequestContext::fromGlobals(
+    \Fxri\Application\Cli::serverDefaults($kernel->configStore()),
+);
+```
+
 ## 注意事项
 
 - `Bootstrap` 只在调用 `boot()` 时执行装配；构造启动器、注册模块与钩子都不会读盘或执行项目脚本。
+- `withCliArguments()` 不传就不读 `argv`；`@` 参数只写入 `app.param.cli` 作为命令行入参，不会覆盖普通配置项。
 - 项目目录扫描顺序固定：`config` → `language/*` → `function/*.php` → `store/*.php`，文件均按名称排序；显式追加的目录与文件排在扫描结果之后，后加载者覆盖先加载者。
 - `withHook()` 的钩子只接收启动器，需要内核时用 `$bootstrap->kernel()`；不要在加载阶段读取内核。
 - `store/*.php` 是普通 PHP 脚本，执行时已构建内核；返回可调用对象时只调用一次，不返回则按脚本副作用处理。
@@ -122,4 +146,5 @@ $result = \Fxri\Application\Router::make('App', 'Controller')
 - 启动失败时 `kernel()` 被清空，但已加载的函数文件不会回滚；函数文件应保持幂等，避免重复定义。
 - 应用层不接管路由与请求生命周期，HTTP 入口由接入方框架负责；`Application\Router` 只在显式调用 `dispatch()` 时生效。
 - `Router` 只按路径分段解析，不读取 HTTP 方法、不处理查询串；路径少于两段时抛 `RouteNotFoundException`。
+- `Cli::serverDefaults()` 读取的是命令行入参名 `svr_name` / `svr_uri`（即 `@svr_name=…`），不是配置路径 `app.param.cli.svr_name`；写成后者只会变成普通入参，不会兜底主机与路径。
 - 默认执行方式为无参实例化控制器并调用同名方法；需要依赖注入或容器解析时用 `withResolver()` 接管，解析器异常原样向上抛出。

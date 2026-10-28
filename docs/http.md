@@ -127,7 +127,7 @@ echo $jar->signed('uid');   // 7
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `fromGlobals(): self` | 读 `php://input` 后交给 `fromServer(ServerContext::fromGlobals(), $body)` | `self` |
+| `fromGlobals(array $defaults = [])` | 读 `php://input` 后交给 `fromServer(ServerContext::fromGlobals($defaults), $body)` | `self` |
 | `fromPsrRequest(object $request): self` | 依次探测 `getHeaders()`、`getUri()`、`getMethod()`、`getBody()`，缺方法按缺省值处理 | `self` |
 | `fromServer(ServerContext $server, string $body = ''): self` | 从服务端变量还原方法、路径、查询串、主机与安全标记 | `self` |
 | `make(string $method, string $path, array $headers = [], string $body = '', string $host = '', bool $secure = false, string $queryString = ''): self` | 手工构造 | `self` |
@@ -161,7 +161,7 @@ echo $jar->signed('uid');   // 7
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `fromGlobals(): self` | 快照 `$_SERVER` | `self` |
+| `fromGlobals(array $defaults = [])` | 快照 `$_SERVER`；`$defaults` 只在真实变量缺失时兜底，已存在变量优先 | `self` |
 | `fromPsrRequest(object $request): self` | 取 `getServerParams()`，方法不存在时为空数组 | `self` |
 | `make(array $server = []): self` | 手工构造，键统一转字符串 | `self` |
 | `all(): array` | 全部变量 | `array<string, mixed>` |

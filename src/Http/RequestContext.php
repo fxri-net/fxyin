@@ -69,13 +69,16 @@ final class RequestContext
     /**
      * 取当前请求的上下文。
      *
+     * `$defaults` 传给服务端上下文，只在真实变量缺失时兜底，供命令行等场景使用。
+     *
+     * @param array<array-key, mixed> $defaults 服务端变量兜底值
      * @return self 请求上下文
      */
-    public static function fromGlobals(): self
+    public static function fromGlobals(array $defaults = []): self
     {
         $body = file_get_contents('php://input');
 
-        return self::fromServer(ServerContext::fromGlobals(), is_string($body) ? $body : '');
+        return self::fromServer(ServerContext::fromGlobals($defaults), is_string($body) ? $body : '');
     }
 
     /**

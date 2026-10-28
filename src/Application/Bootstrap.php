@@ -41,6 +41,12 @@ final class Bootstrap
     /** @var list<string> 启动脚本 */
     private array $storeFiles = [];
 
+    /** @var array<array-key, mixed> 命令行参数 */
+    private array $cliArguments = [];
+
+    /** 是否解析命令行参数 */
+    private bool $cliEnabled = false;
+
     /** @var array<string, list<callable>> 阶段钩子 */
     private array $hooks = [];
 
@@ -91,6 +97,10 @@ final class Bootstrap
 
         $kernel = $builder->build();
         $this->kernel = $kernel;
+
+        if ($this->cliEnabled) {
+            $this->applyCli($kernel);
+        }
 
         try {
             $this->runHooks(self::PHASE_START);
@@ -151,6 +161,23 @@ final class Bootstrap
     public function services(): Services
     {
         return $this->services;
+    }
+
+    /**
+     * 开启命令行参数解析。
+     *
+     * 传入原始 `argv`，启动时把 `@` 参数写入配置并给出运行环境兜底值；
+     * 不调用时保持默认行为，不读取进程参数。
+     *
+     * @param array<array-key, mixed> $arguments 原始参数
+     * @return self 启动器
+     */
+    public function withCliArguments(array $arguments): self
+    {
+        $this->cliEnabled = true;
+        $this->cliArguments = array_values($arguments);
+
+        return $this;
     }
 
     /**
@@ -263,6 +290,32 @@ final class Bootstrap
         $this->services->set($id, $service);
 
         return $this;
+    }
+
+    /**
+     * 应用命令行参数。
+     *
+     * 解析结果写入配置 `app.param.cli`，并按其中的 `svr_name` / `svr_uri` 兜底
+     * `env.base.host` 与 `env.base.uri`；已被消费的参数从待解析列表中移除。
+     *
+     * @param Kernel $kernel 内核
+     * @return void
+     */
+    private function applyCli(Kernel $kernel): void
+    {
+        $parsed = Cli::parse($this->cliArguments);
+        $this->cliArguments = $parsed['arguments'];
+
+        $store = $kernel->configStore();
+        $store->set('app.param.cli', $parsed['values']);
+
+        $defaults = Cli::serverDefaults($store);
+        if (isset($defaults['SERVER_NAME'])) {
+            $store->set('env.base.host', $defaults['SERVER_NAME']);
+        }
+        if (isset($defaults['REQUEST_URI'])) {
+            $store->set('env.base.uri', $defaults['REQUEST_URI']);
+        }
     }
 
     /**

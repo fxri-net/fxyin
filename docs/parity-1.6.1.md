@@ -34,7 +34,7 @@ outline: [2, 3]
 | `base/frame/App` | 应用加载、启动、路由 | `Application\Bootstrap`；路由由可选 `Application\Router` 承接 |
 | `base/frame/Config` | 配置读取与运行期写入 | `Config`、`Config\Store` |
 | `base/frame/Lang` | 语言包、检测、Cookie、语言列表 | `Translation\Catalog`、`Translator`、`LocaleResolver`、`Language` |
-| `base/frame/Env` | 请求环境 | `Http\ServerContext`、`Config\Environment` |
+| `base/frame/Env` | 运行期环境叠加与请求环境 | 叠加层由 `Config\Store`（`env` 命名空间）与 `File\Loader` 承接；请求环境见 `Http\ServerContext` |
 | `base/frame/Cookie` | Cookie 读写 | `Http\Cookie\CookieJar` |
 | `base/frame/Dir` | 目录与路径 | `File\Filesystem`、`File\Path` |
 | `base/frame/Facade`、`Loader` | 门面与自动加载 | 移除；由 `Application\Services` 与 Composer 替代 |
@@ -91,8 +91,9 @@ outline: [2, 3]
 | `Lang::detect`、Cookie/列表配置 | `Translation\LocaleResolver` | 等价 |
 | `Cookie::get/set` | `CookieJar` | 等价 |
 | `Dir::create` | `Filesystem::createDirectory` | 等价 |
-| `Env::init/load/has/get` | `Application\Bootstrap`、`Environment` | 等价 |
-| `Env::set` | `Config\Store::set` | 等价 |
+| `Env::init/load/has/get/set` | `Config\Store`（`env` 命名空间）、`File\Loader` | 等价 |
+| `Param::init` | `Application\Cli`、`Bootstrap::withCliArguments()` | 等价 |
+| `Server::env` | `Application\Cli::serverDefaults()`、`RequestContext::fromGlobals()` | 等价 |
 | `Loader::*`、`Facade::__callStatic` | Composer、`Application\Services` | 设计移除 |
 
 ## 六、资源
@@ -104,7 +105,6 @@ outline: [2, 3]
 
 以下不具备直接等价接口，但能力有替代：
 
-- `Param::init`：由调用方显式传入输入。
 - `whereSafe`、`whereFilter`：由 `WhereBuilder` 绑定参数覆盖。
 - 门面与全局函数：由 `Fxri\*`、`Application\Services` 覆盖。
 - 配置驱动的六元响应：由 `Envelope` 与项目响应工厂覆盖。

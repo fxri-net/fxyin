@@ -45,11 +45,15 @@ final class ServerContext
     /**
      * 取当前请求的服务端变量。
      *
+     * `$defaults` 只在真实变量缺失时兜底，已存在的变量优先；命令行场景可传入
+     * `Cli::serverDefaults()` 的结果。
+     *
+     * @param array<array-key, mixed> $defaults 兜底值
      * @return self 服务端上下文
      */
-    public static function fromGlobals(): self
+    public static function fromGlobals(array $defaults = []): self
     {
-        return new self($_SERVER);
+        return new self(array_merge($defaults, $_SERVER));
     }
 
     /**

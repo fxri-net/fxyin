@@ -87,6 +87,8 @@ echo $translator->get('欢迎');                // 欢迎
 
 `Store` 的覆盖层与基底分离：`set()` 之后 `base()` 与 `$kernel->config()` 都保持原值，只有 `configStore()` 的读取结果变化。需要让覆盖值生效到全局，应在启动阶段写入同一份 `Store`，而不是另建一份。
 
+1.x `fxyin\Env` 的运行期叠加由 `Store` 的 `env` 命名空间承接：`Env::get('view.lang')` 对应 `$store->get('env.view.lang')`，`Env::load($file, 'view')` 对应 `$store->set('env.view', File\Loader::read($file))`。`Config\Environment` 只解析 `.env` 文本，不承担运行期叠加。
+
 ### ConfigLoader
 
 | 方法 | 说明 | 返回 |
@@ -164,4 +166,5 @@ echo $translator->get('欢迎');                // 欢迎
 - `KernelBuilder` 默认加载 `resources/config` 是 2.1.0 的行为变化；需要 2.0 的空配置环境时用 `withoutDefaultConfig()` 或 `bare()`。
 - `Store::get()` 的覆盖层优先：即使覆盖值是 `null`，也返回 `null` 而不是回落到基底；要恢复基底值需重新创建存储。
 - `Store::set()` 返回 `void`，与 1.6.1 `Config::set()` 一致；连续写入需要分行调用。
+- 1.x `Env` 的运行期叠加请用 `Config\Store` 的 `env` 命名空间，不要指向 `Config\Environment`——后者只解析 `.env` 文本，不读写配置。
 - `resources/config/app.php` 只迁入 v2 仍适用的键，1.x 的 `param`（请求全局变量快照）与 `facade.php`（门面响应/条件配置）不进入 v2 默认值。

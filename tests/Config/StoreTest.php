@@ -6,6 +6,7 @@ namespace Fxri\Tests\Config;
 
 use Fxri\Config\Config;
 use Fxri\Config\Store;
+use Fxri\File\Loader;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -55,6 +56,28 @@ final class StoreTest extends TestCase
         self::assertFalse($store->get('app.debug'));
         self::assertNull($store->get('app.name'));
         self::assertTrue($store->has('app.a/_b'));
+    }
+
+    /**
+     * 环境叠加层由 `env` 命名空间承接，文件数据经 `File\Loader` 读入。
+     */
+    public function testEnvironmentOverlay(): void
+    {
+        $file = tempnam(sys_get_temp_dir(), 'fxri-env-');
+        self::assertIsString($file);
+        file_put_contents($file, "<?php\nreturn ['lang' => 'en-us'];\n");
+
+        $store = Store::make(Config::make(['env' => ['base' => ['host' => null]]]));
+
+        try {
+            $store->set('env.view', Loader::read($file));
+
+            self::assertSame('en-us', $store->get('env.view.lang'));
+            self::assertTrue($store->has('env.base.host'));
+            self::assertSame('fallback', $store->get('env.missing', 'fallback'));
+        } finally {
+            @unlink($file);
+        }
     }
 
     /**

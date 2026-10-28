@@ -174,6 +174,38 @@ final class BootstrapTest extends TestCase
     }
 
     /**
+     * 不开命令行解析时不读取进程参数。
+     */
+    public function testCliDisabledByDefault(): void
+    {
+        $kernel = Bootstrap::make()->boot();
+
+        self::assertNull($kernel->configStore()->get('app.param.cli'));
+    }
+
+    /**
+     * 命令行参数写入配置，并给运行环境兜底主机与路径。
+     */
+    public function testCliArguments(): void
+    {
+        $bootstrap = Bootstrap::make()->withCliArguments([
+            'bin.php',
+            '@svr_name=Example.COM',
+            '@svr_uri=/Api',
+            '@app.debug.switch=1',
+            'run',
+        ]);
+
+        $store = $bootstrap->boot()->configStore();
+
+        self::assertSame('Example.COM', $store->get('app.param.cli.svr_name'));
+        self::assertSame('1', $store->get('app.param.cli.app.debug.switch'));
+        self::assertFalse($store->get('app.debug.switch'));
+        self::assertSame('example.com', $store->get('env.base.host'));
+        self::assertSame('/api', $store->get('env.base.uri'));
+    }
+
+    /**
      * 建立含配置、语言、函数与启动脚本的项目目录。
      *
      * @return string 项目目录
