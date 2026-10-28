@@ -6,6 +6,14 @@ outline: [2, 2]
 
 > 完整变更历史以随包发布的 CHANGELOG.md 为准，本页由 `pnpm sync:changelog-doc` 从根 CHANGELOG.md 自动同步，请勿手改。
 
+## 2.0.1
+
+> 2026-10-28 发布
+
+### 🐛 问题修复
+
+- 发布包不再包含 `.tasks`、`.trae`、`.agents` 与 1.x 的 `app/language`；`KernelBuilder::withConfigDir()` 对不存在的目录抛 `InvalidArgumentException`，避免静默得到空配置。
+
 ## 2.0.0
 
 > 2026-10-25 发布
@@ -65,6 +73,8 @@ outline: [2, 2]
 - README 改写为 Composer 安装与最小装配说明
 
 ## 1.6.1
+
+> 2026-10-28 发布
 
 > 2026-10-28 补打标签，未单独发版
 
