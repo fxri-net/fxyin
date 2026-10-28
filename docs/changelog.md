@@ -16,6 +16,12 @@ outline: [2, 2]
 - 默认配置随包提供，新增 `Config\Store` 运行期覆盖与 `Kernel::configStore()`，只读 `config()` 保持不变
 - 新增 `Translation\Catalog`、`Translator`、`LocaleResolver`、`Language`，项目语言目录可覆盖内置词条
 - 新增 `Application\Bootstrap`、`Services`、`Module` 与可选 `Router`，承接目录扫描、启动钩子、服务注册与控制器解析
+- 新增 `Application\Cli` 与 `Bootstrap::withCliArguments()`，解析 `@a.b=值` 命令行参数并兜底 `env.base.host` / `env.base.uri`
+- 新增 `Http\RequestInput` 聚合查询串、表单、JSON 请求体与命令行入参，`Picker::pick()` 按结构提取并补空
+- `File\Filesystem::findFiles()` 支持递归列文件、扩展名过滤与深度限制
+- 新增 `Security\Rsa::privateEncrypt()` / `publicDecrypt()` 与 `RsaPadding`，支持私钥加密、公钥解密与无填充
+- 新增 `HttpClient\Curl` / `CurlResponse`，以 URL 串发起请求、读取响应头与下载
+- 新增 `RandomCharset::Alpha`，`Random::string()` 可单独限定首字符集
 - 补齐 1.6.1 能力：`File\Loader`、`Data\Cast`/`Hierarchy`、字段距离/首字母/除法/别名/转义、`Rsa::normalizePem`、`Http\BranchContext`/`XmlFormatter`、`Client::download`、`Time::range`/`change`/`relative`、`Encode` 嵌套编码与首字母等
 
 ### 🔧 功能调整
@@ -23,11 +29,14 @@ outline: [2, 2]
 - `KernelBuilder` 默认装配内置语言与默认配置，可用 `bare()`、`withoutBuiltinLanguage()`、`withoutDefaultConfig()` 关闭；`withConfigDir()` 的项目配置覆盖内置配置
 - 内核构造首参接受 `Config|Store`，`config()` 始终返回只读基底
 - 应用启动与路由均需显式调用，不接管请求生命周期
+- `ServerContext::fromGlobals()` 与 `RequestContext::fromGlobals()` 支持缺失变量兜底，真实变量优先
+- 1.x `Env` 运行期叠加由 `Config\Store` 的 `env` 命名空间承接，`Config\Environment` 只解析 `.env` 文本
 
 ### ⚡ 优化改进
 
-- 对等矩阵、golden 测试与文档站对等说明补齐，1.6.1 能力项全部标记为等价
-- 内置资源随包分发，发布包卫生检查覆盖 `resources`
+- 逐方法复核 92 个门面、18 个全局函数与 27 个运行时方法，修正 `Text` 编解码/长度、`Math` 随机、`View` 序列化、`Env` 叠加与 `Data` 层级等矩阵目标
+- 对等矩阵、golden 测试与文档站对等说明补齐，1.6.1 能力项全部有可落地的 v2 目标（等价或覆盖）
+- 内置资源随包分发，发布包卫生检查覆盖 `resources`；`ext-curl` 列为建议依赖，未安装时 URL 级 HTTP 调用抛出明确异常
 
 ## 2.0.1
 
