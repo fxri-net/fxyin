@@ -12,6 +12,23 @@ namespace Fxri\Text;
 final class Uuid
 {
     /**
+     * 格式化现有标识串。
+     *
+     * 去掉横线、转大写后按 8-4-4-4-12 重新分段，对应 1.6.1 模式 1 对现有 UUID 的处理；
+     * `$style` 可再压缩或调整大小写。
+     *
+     * @param string $value 现有标识串
+     * @param UuidStyle|null $style 二次加工样式
+     * @return string 格式化结果
+     */
+    public static function format(string $value, ?UuidStyle $style = null): string
+    {
+        $uuid = self::dash(strtoupper(str_replace('-', '', trim($value))));
+
+        return $style instanceof UuidStyle ? $style->apply($uuid) : $uuid;
+    }
+
+    /**
      * 生成标识串。
      *
      * @param UuidMode $mode 形态

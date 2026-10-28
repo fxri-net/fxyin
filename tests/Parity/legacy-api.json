@@ -13,7 +13,7 @@
                 "status": "equiv"
             },
             "lang": {
-                "target": "Translation\\Language",
+                "target": "Translation\\Language::phrase（capitalize）",
                 "status": "equiv"
             },
             "langList": {
@@ -319,7 +319,7 @@
         },
         "Text": {
             "uuid": {
-                "target": "Text\\Uuid",
+                "target": "Text\\Uuid::make / format",
                 "status": "equiv"
             },
             "implode": {
@@ -355,11 +355,11 @@
                 "status": "equiv"
             },
             "timeMilli": {
-                "target": "Text\\Time::milli",
+                "target": "Text\\Time::milli / milliFormat / milliParse",
                 "status": "equiv"
             },
             "timeFormat": {
-                "target": "Text\\Time::relative",
+                "target": "Text\\Time::duration / decompose",
                 "status": "equiv"
             },
             "strEncode": {
@@ -444,7 +444,7 @@
             "status": "equiv"
         },
         "fxy_lang": {
-            "target": "Kernel::trans / Translation\\Language",
+            "target": "Translation\\Language::phrase（capitalize）",
             "status": "equiv"
         },
         "fxy_config": {

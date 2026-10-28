@@ -115,6 +115,10 @@ echo strlen(Uuid::make()) . ' / '
 | `format(int $timestamp, DateGranularity $granularity = DateGranularity::DateTime)` | 按粒度格式化为日期时间串，时区取 PHP 默认时区 | `string` |
 | `parse(int\|string $value)` | 整数原样返回，数字串转 `int`，其余交给 `strtotime`；失败抛 `InvalidArgumentException` | `int` |
 | `milli(?int $timestamp = null)` | 取毫秒时间戳；传参时按秒乘 1000，不传时取当前毫秒 | `int` |
+| `milliFormat(int $milliseconds)` | 毫秒时间戳转 `Y-m-d H:i:s.mmm` | `string` |
+| `milliParse(int\|string $value)` | 13 位毫秒串或 `Y-m-d H:i:s.mmm` 时间串转毫秒时间戳；其它形态抛 `InvalidArgumentException` | `int` |
+| `decompose(int $seconds)` | 把秒数按 30 天/月、12 月/年分解为年、月、天、时、分、秒 | `array` |
+| `duration(int $seconds, array $labels = [], bool $zero = false, ?string $max = null, bool $before = true)` | 拼接「1个月2小时」；标签留空关闭该单位，`$zero` 输出零值，`$max` 指定最高单位，`$before` 为 false 时只保留最高单位 | `string` |
 | `truncate(int $timestamp, DateGranularity $granularity = DateGranularity::DateTime)` | 截断到粒度起点：`Date` 归零时刻，`Time` 把日期重置为 1970-01-01，`DateTime` 原样返回 | `int` |
 | `change(int\|string $value, ?string $type = null, string $format = 'Y-m-d H:i:s')` | 字符串先解析为时间戳；类型 `1` 按格式截断后返回时间戳，`2` 返回格式化字符串；失败返回 `null` | `int\|string\|null` |
 | `range(string\|array $time, array $start = [], array $end = [])` | 解析逗号串或两项数组，缺项用起止配置补齐，按各自类型输出 | `array` |
@@ -135,6 +139,7 @@ echo strlen(Uuid::make()) . ' / '
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
 | `make(UuidMode $mode = UuidMode::Standard, ?string $seed = null, ?UuidStyle $style = null)` | 生成标识串；`$seed` 为 `null` 时取 `random_bytes(16)`，否则用 `md5($seed)`；`$style` 非空时在形态之后二次加工 | `string` |
+| `format(string $value, ?UuidStyle $style = null)` | 把现有标识串去横线、转大写并重新按 8-4-4-4-12 分段，对应 1.x 对现有 UUID 的格式化 | `string` |
 
 ### UuidMode
 
@@ -172,6 +177,9 @@ echo strlen(Uuid::make()) . ' / '
 - ⚠️ `Time::parse()` 见到纯数字串会直接转 `int`，不做位数与时区校验；`1700000000000` 这类毫秒值不会被自动降级为秒。
 - ⚠️ `Time::truncate()` 的 `Time` 粒度是把日期重置为 1970-01-01，得到的是「当天时刻对应的秒数」（示例中的 `80000`），不是当天零点。
 - ⚠️ `Uuid::make()` 传 `$seed` 后由 `md5($seed)` 派生，结果可预测且固定，只能用于需要复现的测试或幂等场景。
+- ⚠️ `Uuid::format()` 只做格式归一，不做合法性校验：非十六进制字符会原样保留，长度不足 32 位时会得到不完整的分段。
+- ⚠️ `Time::duration()` 的 `$max` 是「最高单位」而不是「最大数量」：`max: 'day'` 时 30 天会输出 `30天`，而不是 `1个月`。
+- ⚠️ `Time::milliParse()` 对 13 位纯数字按毫秒时间戳处理，10 位秒级时间戳请先用 `Time::parse()`。
 - ⚠️ `UuidMode::Md5Upper` 与 `UuidMode::Upper32` 的输出形式完全一致（32 位大写），区别只在语义；不传种子时 `Md5Upper` 同样取随机源。
 - ⚠️ `UuidStyle::Lower16` / `Upper16` 取的是去掉横线后的第 9~24 位，不是开头 16 位；需要首段标识时不要用它。
 - `UuidMode` 与 `UuidStyle` 没有 backed value，不能当字符串比较或直接输出，需要转换时用 `Uuid::make()` 的返回值。

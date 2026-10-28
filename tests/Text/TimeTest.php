@@ -38,6 +38,63 @@ final class TimeTest extends TestCase
     }
 
     /**
+     * 时长按 30 天/月、12 月/年分解。
+     */
+    public function testDecompose(): void
+    {
+        $seconds = (360 + 60 + 3) * 86400 + 4 * 3600 + 5 * 60 + 6;
+
+        self::assertSame(
+            ['year' => 1, 'month' => 2, 'day' => 3, 'hour' => 4, 'minute' => 5, 'second' => 6],
+            Time::decompose($seconds),
+        );
+        self::assertSame(
+            ['year' => 0, 'month' => 0, 'day' => 0, 'hour' => 0, 'minute' => 0, 'second' => 0],
+            Time::decompose(-10),
+        );
+    }
+
+    /**
+     * 时长文本按标签、零值与最高单位组合。
+     */
+    public function testDuration(): void
+    {
+        $seconds = 30 * 86400 + 2 * 3600 + 3 * 60 + 4;
+
+        self::assertSame('1个月2小时3分钟4秒', Time::duration($seconds));
+        self::assertSame('0年1个月0天2小时3分钟4秒', Time::duration($seconds, zero: true));
+        self::assertSame('30天2小时3分钟4秒', Time::duration($seconds, max: 'day'));
+        self::assertSame('1个月', Time::duration($seconds, max: 'month', before: false));
+        self::assertSame(
+            '1个月2小时',
+            Time::duration($seconds, ['year' => '', 'month' => '个月', 'day' => '', 'hour' => '小时', 'minute' => '', 'second' => '']),
+        );
+    }
+
+    /**
+     * 毫秒时间串与毫秒时间戳可双向转换。
+     */
+    public function testMilliConvert(): void
+    {
+        $milliseconds = 1700000000123;
+
+        self::assertSame(date('Y-m-d H:i:s', intdiv($milliseconds, 1000)) . '.123', Time::milliFormat($milliseconds));
+        self::assertSame($milliseconds, Time::milliParse('1700000000123'));
+        self::assertSame(strtotime('2026-10-28 12:00:00') * 1000 + 5, Time::milliParse('2026-10-28 12:00:00.005'));
+        self::assertSame($milliseconds, Time::milliParse($milliseconds));
+    }
+
+    /**
+     * 无法解析的毫秒串被拒绝。
+     */
+    public function testMilliParseInvalid(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Time::milliParse('not-a-time');
+    }
+
+    /**
      * 相对时间按差值选择单位，未来使用「后」。
      */
     public function testRelative(): void

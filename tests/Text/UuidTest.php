@@ -43,6 +43,18 @@ final class UuidTest extends TestCase
     }
 
     /**
+     * 现有标识串可去横线、转大写并重新分段。
+     */
+    public function testFormat(): void
+    {
+        $compact = '1234567890abcdef1234567890abcdef';
+
+        self::assertSame('12345678-90AB-CDEF-1234-567890ABCDEF', Uuid::format($compact));
+        self::assertSame('12345678-90AB-CDEF-1234-567890ABCDEF', Uuid::format('12345678-90ab-cdef-1234-567890abcdef'));
+        self::assertSame('1234567890ABCDEF1234567890ABCDEF', Uuid::format($compact, UuidStyle::Upper32));
+    }
+
+    /**
      * 各样式按约定产出 32 位或中间 16 位。
      *
      * @param UuidStyle $style 加工样式
