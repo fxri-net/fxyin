@@ -392,6 +392,23 @@ function scanProject(string $root): array
 
     arsort($methods);
     $extensionMethods = facadeExtensionMethods($root, $layout);
+    $declared = declaredFacadeMethods($root, $layout);
+    $localOnly = [];
+    foreach ($methods as $method => $count) {
+        $key = strtolower($method);
+        [$class] = explode('::', $key, 2);
+        if (!isset($declared[$key]) || isset($extensionMethods[$key])) {
+            continue;
+        }
+        if (!in_array($class, array_map(static fn (string $name): string => strtolower($name), $layout['facadeClasses']), true)) {
+            continue;
+        }
+        if (null !== matrixTarget($method)) {
+            continue;
+        }
+        $localOnly[$method] = $count;
+    }
+
     $topMethods = [];
     foreach (array_slice($methods, 0, 20, true) as $method => $count) {
         $topMethods[] = [
@@ -408,6 +425,7 @@ function scanProject(string $root): array
         'counts' => $counts,
         'byDirectory' => $byDirectory,
         'topMethods' => $topMethods,
+        'localOnlyMethods' => $localOnly,
     ];
 }
 
@@ -860,6 +878,7 @@ function projectLayout(string $root): array
         'namespace' => $namespace,
         'extensionNamespace' => $extensionNamespace,
         'extensionDirectory' => $extensionDirectory,
+        'facadeDirectory' => facadeDirectory($root, $loaderDirectories),
         'facadeClasses' => facadeClasses($root, $loaderDirectories),
         'globals' => globalFunctions($root),
         'excludedPaths' => $excludedPaths,
@@ -1006,6 +1025,30 @@ function loaderDirectories(array $tokens, string $root, string $configDir): arra
     }
 
     return $directories;
+}
+
+/**
+ * 取框架副本里的门面目录。
+ *
+ * @param string $root 项目根
+ * @param list<string> $loaderDirectories 加载目录
+ * @return string|null 相对项目根的门面目录
+ */
+function facadeDirectory(string $root, array $loaderDirectories): ?string
+{
+    $candidates = [];
+    foreach ($loaderDirectories as $directory) {
+        $candidates[] = $directory . '/facade';
+    }
+    $candidates[] = $root . '/' . FRAMEWORK_ROOT . '/base/app/controller/facade';
+
+    foreach ($candidates as $directory) {
+        if (is_dir($directory) && [] !== directPhpFiles($directory)) {
+            return relativeTo($root, $directory);
+        }
+    }
+
+    return null;
 }
 
 /**
@@ -1515,6 +1558,41 @@ function facadeExtensionMethods(string $root, array $layout): array
 }
 
 /**
+ * 收集本地框架副本声明的门面方法。
+ *
+ * 用于识别「项目副本里额外加过、正式标签没有」的方法：这类方法随副本一起消失，
+ * 2.0 没有等价 API，需要在报告里单独提示。
+ *
+ * @param string $root 项目根
+ * @param array<string, mixed> $layout 项目布局
+ * @return array<string, true> 形如 `base::config` 的小写集合
+ */
+function declaredFacadeMethods(string $root, array $layout): array
+{
+    $methods = [];
+    $directory = is_string($layout['facadeDirectory']) ? $layout['facadeDirectory'] : null;
+    if (null === $directory || !is_dir($root . '/' . $directory)) {
+        return $methods;
+    }
+
+    foreach (directPhpFiles($root . '/' . $directory) as $file) {
+        $class = basename($file, '.php');
+        $code = (string) file_get_contents($file);
+        if (!preg_match_all('/\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/', $code, $matches)) {
+            continue;
+        }
+        foreach ($matches[1] as $method) {
+            if (str_starts_with($method, '__')) {
+                continue;
+            }
+            $methods[strtolower($class . '::' . $method)] = true;
+        }
+    }
+
+    return $methods;
+}
+
+/**
  * 给出旧调用的迁移建议。
  *
  * 顺序：人工措辞表（更贴项目语境）→ 对等矩阵目标 → 项目扩展方法 → 按类名兜底。
@@ -1729,6 +1807,20 @@ function formatScanMarkdown(array $scan): string
         $lines[] = '| `' . $item['method'] . '` | ' . $item['count'] . ' | ' . $item['suggestion'] . ' |';
     }
     $lines[] = '';
+
+    $localOnly = is_array($scan['localOnlyMethods'] ?? null) ? $scan['localOnlyMethods'] : [];
+    if ([] !== $localOnly) {
+        $lines[] = '## 本地新增方法';
+        $lines[] = '';
+        $lines[] = '本地框架副本声明、但对等矩阵没有目标的方法；这些方法随副本删除而消失，需先定落点。';
+        $lines[] = '';
+        $lines[] = '| 方法 | 次数 |';
+        $lines[] = '| --- | --- |';
+        foreach ($localOnly as $method => $count) {
+            $lines[] = '| `' . $method . '` | ' . $count . ' |';
+        }
+        $lines[] = '';
+    }
 
     return implode(PHP_EOL, $lines);
 }

@@ -154,10 +154,10 @@ final class UpgradeInspectTest extends TestCase
                 ],
             ];
             PHP);
-        $this->write($root . '/extend/fxri/base/app/controller/facade/Base.php', '<?php class Base {}');
+        $this->write($root . '/extend/fxri/base/app/controller/facade/Base.php', '<?php class Base { public function extra() { return 1; } }');
         $this->write($root . '/extend/fxri/base/app/function/common.php', '<?php function is_custom($value) { return true; }');
         $this->write($root . '/extend/fxri/data/app/controller/facade_ext/Base.php', '<?php class Base {}');
-        $this->write($root . '/apps/controller/Index.php', '<?php \fxbase\Base::config("x"); \fxbase\facade_ext\Base::special(); is_custom($x);');
+        $this->write($root . '/apps/controller/Index.php', '<?php \fxbase\Base::config("x"); \fxbase\Base::extra(); \fxbase\facade_ext\Base::special(); is_custom($x);');
 
         [$profileCode, $profileOutput] = $this->runTool(['profile', '--root=' . $root, '--json']);
         self::assertSame(0, $profileCode, $profileOutput);
@@ -175,9 +175,10 @@ final class UpgradeInspectTest extends TestCase
         $scan = json_decode($scanOutput, true, 512, JSON_THROW_ON_ERROR);
         self::assertIsArray($scan);
         self::assertSame('fxbase', $scan['namespace']);
-        self::assertSame(1, $scan['counts']['fxapp']);
+        self::assertSame(2, $scan['counts']['fxapp']);
         self::assertSame(1, $scan['counts']['facade_ext_refs']);
         self::assertSame(1, $scan['counts']['is_functions']);
+        self::assertSame(['Base::extra' => 1], $scan['localOnlyMethods']);
         self::assertArrayHasKey('apps', $scan['byDirectory']);
     }
 
