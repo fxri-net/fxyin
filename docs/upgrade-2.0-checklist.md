@@ -12,6 +12,8 @@ outline: [2, 3]
 - [ ] 确认实际部署 PHP 版本达到 8.2，`composer.json` 的旧约束已同步
 - [ ] 确认项目有 `composer.json` 与 `vendor/autoload.php`；没有则先补接入
 - [ ] 为 1.x 目录、部署包与数据库打快照
+- [ ] 对比 `extend/fxri/base` 与 1.x 正式副本或备份，导出本地改动清单
+- [ ] 逐项确认本地改动的落点：v2 同类能力、项目服务或工具类
 - [ ] 记录当前入口文件、宿主版本与扩展模块清单
 - [ ] 明确 `extend/fxri/safe` 等独立模块不在本次范围
 
@@ -31,7 +33,7 @@ php tools/upgrade-inspect.php baseline --root=/path/to/project --write --baselin
 
 ## 三、阶段 1：环境与依赖
 
-- [ ] 删除 `extend/fxri/base`
+- [ ] 确认本地改动清单已全部有落点，再删除 `extend/fxri/base`
 - [ ] `composer require fxri/fxyin:^2.0`
 - [ ] 清理为旧目录保留的 PSR-0 / PSR-4 映射
 - [ ] 确认没有两套自动加载同时生效
