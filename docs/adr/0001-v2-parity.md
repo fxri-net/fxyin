@@ -20,7 +20,7 @@ v1.6.1 通过 `extend/fxri/base` 与 `extend/fxri/data` 提供框架运行时、
 1. **资源层**：`resources/config`、`resources/language` 随包分发，默认加载。
 2. **服务层**：
    - 语言拆为 `Catalog`（数据）、`Translator`（字符串翻译）、`LocaleResolver`（请求检测）、`Language`（组合入口）。
-   - 配置拆为只读 `Config`、可变 `Config\Store`、加载器 `Config\Loader`。
+   - 配置拆为只读 `Config`、可变 `Config\Store`、加载器 `Config\ConfigLoader`。
    - 缺失能力放到语义正确的 v2 类或新服务，不复制 1.x 类名。
 3. **应用层**：
    - `Application\Bootstrap` 替代 `App::init()` 的目录扫描与启动钩子。

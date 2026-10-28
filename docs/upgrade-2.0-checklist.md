@@ -69,14 +69,15 @@ php tools/upgrade-inspect.php baseline --root=/path/to/project --write --baselin
 ## 七、阶段 5：代码分域
 
 - [ ] 配置与翻译：`Base::config`、`Base::lang`、`Lang::get` 已替换
-- [ ] 参数：`Param::define`、`Param::merge`、`Param::array` 已替换
+- [ ] 参数：`Param::define`、`Param::merge`、`Param::array`、`Param::object`、`Param::append`、`Param::pick` 已替换
 - [ ] SQL：`Data::where*`、`whereMake` 已改为 `WhereBuilder`
-- [ ] 数据：`fieldJson`、`fieldText`、`fieldDate`、`paramEmpty` 已替换
-- [ ] 文本：`Text::*` 与 `Math::rand` 已替换
-- [ ] 文件：`File::getList`、`createDirectory` 已替换
-- [ ] 安全：`Safe::*` 已替换，旧密文用 `LegacyCipher`
-- [ ] HTTP：`Server::*`、`Client::*`、`View::*` 已替换
-- [ ] 客户端：`Service::http` 改为 PSR-18 客户端
+- [ ] 数据：`fieldJson`、`fieldText`、`fieldDate`、`fieldDistance`、`fieldInitial`、`fieldDivision`、`fieldAlias`、`fieldEscape`、`paramEmpty` 已替换
+- [ ] 文本：`Text::*`、`Math::rand`、`Time::duration` / `milliFormat` / `milliParse`、`Uuid::format` 已替换
+- [ ] 文件：`File::getList` → `findFiles`，`getMediaInfo` → `VideoInfo`，`moveDirectory`、`deleteDirectory` 已替换
+- [ ] 安全：`Safe::*` 已替换，旧密文用 `LegacyCipher`、旧令牌用 `LegacyToken`
+- [ ] HTTP：`Server::*`、`Client::*`（含 `RequestInput`）、`View::*` 已替换
+- [ ] 客户端：`Service::http` / `httpDown` 用 `HttpClient\Curl`
+- [ ] 命令行：`Param::init` 用 `Application\Cli` + `Bootstrap::withCliArguments()`
 
 ## 八、阶段 6：响应与异常
 

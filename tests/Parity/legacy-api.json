@@ -485,7 +485,7 @@
         },
         "Config": {
             "load": {
-                "target": "Config\\Loader",
+                "target": "Config\\ConfigLoader",
                 "status": "equiv"
             },
             "has": {

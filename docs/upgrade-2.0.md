@@ -20,6 +20,27 @@ outline: [2, 3]
 - 1.x 的兼容层不会出现在 2.x 中；需要过渡时由接入方项目自行保留一层薄适配，见[扩展目录迁移](./upgrade-2.0-extend)。
 - 2.0 的响应信封固定为 `ok`、`code`、`message`、`data` 四个字段；旧协议的 `extend`、`time` 由接入方自行保留。
 
+### 2.1.0 能力补齐
+
+2.1.0 在不恢复门面的前提下补齐了 1.6.1 的对外能力，升级时优先使用下列 v2 入口：
+
+| 1.x 能力 | v2 入口 |
+| --- | --- |
+| `Client::param` | `Http\RequestInput` |
+| `Param::init` | `Application\Cli` + `Bootstrap::withCliArguments()` |
+| `File::getList` | `File\Filesystem::findFiles()` |
+| `File::getMediaInfo` | `File\VideoInfo::inspect()` |
+| `Service::http` / `httpDown` | `Http\HttpClient\Curl` / `Curl::download()` |
+| `Safe::token` | `Token`（新）/ `LegacyToken`（旧） |
+| `Safe::rsapri` / `rsapub` | `Rsa::privateEncrypt()` / `publicDecrypt()` |
+| `Text::timeFormat` / `timeMilli` | `Time::duration()` / `milliFormat()` / `milliParse()` |
+| `Text::uuid` 格式化现有串 | `Uuid::format()` |
+| `Base::lang` 标记与首字母 | `Language::phrase(..., true)` |
+| `Param::object` / `append` | `Cast::emptyToObject()` / `Merger::append()` |
+| `Env::*` / `fxy_env` | `Config\Store`（`env` 命名空间） |
+
+完整映射见[对等矩阵](./parity-1.6.1)与[API 对照](./migration-2.0)。
+
 ## 二、升级前必须确认的三件事
 
 1. **PHP 版本**：实际部署版本必须达到 8.2。`composer.json` 里的 `php` 约束可能已经过时，以线上运行版本为准。

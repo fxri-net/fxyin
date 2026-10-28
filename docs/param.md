@@ -124,6 +124,8 @@ echo Url::withQuery('/user/list?page=2&kw=old#top', ['kw' => 'new', 'page' => nu
 
 `$depth` 是剩余递归层数：`0` 表示不递归、同名数组整体覆盖；正数表示最多下钻的层数，每下钻一层减一，减到 `0` 后整体覆盖；负数表示不限制深度。两个方法都不修改入参。
 
+`append()` 是 1.x `Param::append()` 的兼容入口，语义等价于 `array_merge()`；新代码也可直接使用原生函数。
+
 ### Picker
 
 | 方法 | 说明 | 返回 |

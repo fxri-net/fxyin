@@ -149,6 +149,8 @@ var_export($diff->keys());      // array ( 0 => 'name', 1 => 'remark' )
 | `emptyToObject(mixed $value, int $limit = -1)` | 只把空数组转为 `stdClass`，非空数组与列表保持数组，对应 1.x `Param::object()` | `mixed` |
 | `toObject(mixed $value, int $limit = -1)` | 数组递归转为对象，空数组转为空对象以保证 JSON 输出 `{}` | `mixed` |
 
+`emptyToObject()` 是 1.x `Param::object()` 的兼容语义：只把空数组转对象、非空数组与列表保持数组；v2 新代码统一用 `toObject()`。
+
 ### Param
 
 | 方法 | 说明 | 返回 |

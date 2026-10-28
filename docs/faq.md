@@ -70,7 +70,7 @@
 
 ### `Fxri\Param` 和 `Fxri\Data\Param` 有什么区别
 
-`Fxri\Param` 是入参定义与整形：`Definition`、`Shape`、`Pipeline`、`Merger`、`Picker`，管「补默认值、定形状、按需挑选」。`Fxri\Data\Param` 只有两个数据整理方法：`filter()` 去掉空值，`missing()` 找出空值键。前者面向入口，后者面向整理，见[参数](./param)与[数据](./data)。
+`Fxri\Param` 是入参定义与整形：`Definition`、`Shape`、`Pipeline`、`Merger`、`Picker`，管「补默认值、定形状、按需挑选」。`Fxri\Data\Param` 是数据整理工具：`exist()` 判断是否有非空值、`filter()` 去掉空值、`missing()` 找出空值键、`repair()` 补全多行结构的键。前者面向入口，后者面向整理，见[参数](./param)与[数据](./data)。
 
 ### SQL 构造器会连接数据库执行吗
 

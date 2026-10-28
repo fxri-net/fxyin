@@ -305,15 +305,15 @@ return Envelope::success($data, '请求成功');
 
 | 旧方法 | 新写法 |
 | --- | --- |
-| `load($file, $type)` | 无等价实现，项目侧 `require` / `require_once` |
-| `lang($name, $vars, $lang)` | `$kernel->trans($name, $vars)` |
-| `langList($name, $vars, $lang)` | 无等价实现，`ArrayTranslator::trans()` 不做语言相关拼接 |
-| `langParse($name)` | 无等价实现，同上 |
-| `config(...$vars)` | `$kernel->config()->get()` |
+| `load($file, $type)` | `File\Loader::load()`（副作用脚本）、`File\Loader::read()`（数据文件） |
+| `lang($name, $vars, $lang)` | `Language::phrase($name, $locale, true)`（含首字母大写） |
+| `langList($name, $vars, $lang)` | `Language::phrase($name, $locale)` |
+| `langParse($name)` | `Language::phrase($name, $locale)` |
+| `config(...$vars)` | `$kernel->config()->get()`、`Config\Store::set()` |
 | `cookie(...$vars)` | `CookieJar::get()`、`CookieJar::set()` |
-| `env(...$vars)` | `ServerContext::get()`、`Environment::get()` |
+| `env(...$vars)` | `Config\Store`（`env` 命名空间） |
 | `dump(...$vars)` | `Dump::write(...)` |
-| `json($data, $type, $param)` | `Json::encode()`、`Json::decode()` |
+| `json($data, $type, $param)` | `Json::encode()`、`Json::decode()`；非 JSON 串按查询串解码用 `Encode::decodeAll()` |
 | `ipv4($data, $type)` | `Ip::toLong()`、`Ip::fromLong()` |
 | `crypt($data, $type, $param)` | `Cipher::encrypt()`、`Cipher::decrypt()`；旧数据用 `LegacyCipher::decrypt()` |
 | `throwable($message)` | 抛异常，由接入层处理 |
@@ -326,35 +326,35 @@ return Envelope::success($data, '请求成功');
 | `ip($type = 0)` | `ClientInfo::ip()`；需要整型时用 `Ip::toLong()` |
 | `browser($type = -1)` | `ClientInfo::browser(CaseFormat::Original)` |
 | `system($type = -1)` | `ClientInfo::system(CaseFormat::Original)` |
-| `param($param, $method)` | 无等价实现，直接读 `RequestContext` 与 `ServerContext` |
+| `param($param, $method)` | `Http\RequestInput::all()` / `query()` / `post()` / `body()` / `cli()`；按结构提取用 `only()` |
 
 ### 7.3 `\fxapp\Data`
 
 | 旧方法 | 新写法 |
 | --- | --- |
 | `where($data, $param)` | `WhereBuilder`，见 4.4 |
-| `whereSafe($value, &$method, $case)` | 无等价实现，绑定参数后不再需要白名单 |
-| `whereFilter($value, $method, $case)` | 无等价实现，同上 |
+| `whereSafe($value, &$method, $case)` | 由 `WhereBuilder` 绑定参数覆盖，不再需要字符串白名单 |
+| `whereFilter($value, $method, $case)` | 由 `WhereBuilder` 绑定参数覆盖，同上 |
 | `whereBuild($key, $value, $method)` | `WhereBuilder::eq()`、`in()`、`like()` 等 |
 | `whereAssemble($data)` | `WhereBuilder::build()` |
 | `whereMake($data, $type)` | `WhereBuilder::build()`；需要前缀时用 `Expression` 拼接 |
 | `insert($table, $data)` | `StatementBuilder::insert()` |
 | `update($table, $data, $param)` | `StatementBuilder::update()` |
 | `updateContrast($data_new, $data_old)` | `Diff::make()`，未变化时抛 `SameDataException` |
-| `storeUpperLevel(...)` | 无等价实现，项目侧递归查询 |
-| `storeLowerLevel(...)` | 无等价实现，同上 |
-| `fieldDistance(...)` | 无等价实现，用 `Sql\Expression` 书写 |
-| `fieldInitial($field)` | 无等价实现，用 `Sql\Expression` 书写 |
-| `fieldDivision(...)` | 无等价实现，用 `Sql\Expression` 书写 |
+| `storeUpperLevel(...)` | `Data\Hierarchy::ancestors($list, $id, $idKey, $parentKey)` |
+| `storeLowerLevel(...)` | `Data\Hierarchy::descendants($list, $id, $idKey, $parentKey)` |
+| `fieldDistance(...)` | `Field::distance()` / `Sql\Expression::distance()` |
+| `fieldInitial($field)` | `Field::initial()` / `Sql\Expression::initial()` |
+| `fieldDivision(...)` | `Field::division()` / `Sql\Expression::division()` |
 | `fieldJson($field, $replace, $param)` | `Field::json($column, $path, FieldJsonMode::Quoted)` |
 | `fieldText($field, $replace, $param)` | `Field::text($column, $replace, FieldTextMode::Keep)` |
 | `fieldDate($field, $replace, $param)` | `Field::date($column, DateGranularity::DateTime, $replace)` |
-| `fieldAlias($data, $alias, $delimiter)` | 无等价实现，项目侧拼接 |
-| `fieldEscape($data, $delimiter)` | 无等价实现，`Expression` 内自行反引号 |
+| `fieldAlias($data, $alias, $delimiter)` | `Field::alias($data, $alias, $delimiter)` |
+| `fieldEscape($data, $delimiter)` | `Field::escape($data, $delimiter)` |
 | `htmlFilter($data, $flags)` | `Html::escape($data)` |
 | `htmlRemove($data, $flags)` | `Html::strip($data, $allowed)` |
 | `listToTree($list, ...)` | `Tree::fromList($list, $rootId, $idKey, $parentKey, $childKey)` |
-| `paramRepair($param)` | 无等价实现，项目侧按需补键 |
+| `paramRepair($param)` | `Data\Param::repair($rows)` |
 | `paramFilter($param)` | `Data\Param::filter($param)` |
 | `paramEmpty($param, $type)` | `Data\Param::missing($param, NullPolicy::Blank)` |
 | `paramExist($param)` | `[] === Data\Param::missing($param, NullPolicy::StrictNull)` |
@@ -406,24 +406,24 @@ return Envelope::success($data, '请求成功');
 | 旧方法 | 新写法 |
 | --- | --- |
 | `echo()` | `Envelope::success()` 的模板等价物 |
-| `ip()` | `ClientInfo::ip()` |
-| `system($type)` | `ClientInfo::system(CaseFormat::Original)` |
+| `ip()` | `HttpClient\Curl` + `Json` 组合获取公网地址 |
+| `system($type)` | PHP 原生 `PHP_OS_FAMILY` |
 | `format($data, $type)` | `Envelope::toArray()`、`JsonFormatter::format()` |
-| `env()` | `ServerContext::fromGlobals()`、`Environment::fromFile()` |
-| `branch()` | 无等价实现，项目侧读取自身配置 |
+| `env()` | `Application\Cli::serverDefaults()`、`RequestContext::fromGlobals()` |
+| `branch()` | `Http\BranchContext::resolve()`，分支配置由调用方写入 `Config\Store` |
 
 ### 7.9 `\fxapp\Service`
 
 | 旧方法 | 新写法 |
 | --- | --- |
-| `http($url, $data, $header, $method, $option)` | `HttpClient\Client::send()` |
-| `httpDown($url, $file)` | 无等价实现，项目侧用 `HttpClient\Client` 自行落盘 |
+| `http($url, $data, $header, $method, $option)` | `HttpClient\Curl::request()`（URL 级）；需要 PSR-18 时用 `HttpClient\Client::send()` |
+| `httpDown($url, $file)` | `HttpClient\Curl::download()` |
 
 ### 7.10 `\fxapp\Text`
 
 | 旧方法 | 新写法 |
 | --- | --- |
-| `uuid($mode, $param)` | `Uuid::make(UuidMode, $seed, UuidStyle)` |
+| `uuid($mode, $param)` | `Uuid::make(UuidMode, $seed, UuidStyle)`；格式化现有串用 `Uuid::format()` |
 | `implode($delimiter, $data, $explode, $unique)` | `Str::implode($glue, $values, $unique)` |
 | `explode($delimiter, $data, $unique, $limit)` | `Str::explode($separator, $value, $unique)` |
 | `splice($string, $value, $delimiter)` | `Str::splice($value, $append, $glue)` |
@@ -432,21 +432,21 @@ return Envelope::success($data, '请求成功');
 | `letter($var, $in_charset, $out_charset)` | `Encode::letter($value, $inCharset, $outCharset)` |
 | `timeRange($time, $start, $end)` | `Time::range($time, $start, $end)` |
 | `timeChange($time, $type, $format)` | `Time::parse()`、`Time::format()` |
-| `timeMilli($mtime)` | `Time::milli()` |
-| `timeFormat($time, $param)` | `Time::relative($time, $param)` |
+| `timeMilli($mtime)` | `Time::milli()`、`Time::milliFormat()`、`Time::milliParse()` |
+| `timeFormat($time, $param)` | `Time::duration($seconds, $labels, $zero, TimeUnit, $before)`、`Time::decompose()` |
 | `strEncode($data)` | `Encode::encodeAll($data)` |
 | `strEncodeMerge($data)` | `Encode::encodeAll($data)`（递归辅助已合并） |
 | `strDecode($data)` | `Encode::decodeAll($data)` |
 | `strDecodeMerge($data)` | `Encode::decodeAll($data)`（递归辅助已合并） |
 | `ipv4($data, $type)` | `Ip::toLong()`、`Ip::fromLong()` |
 | `convert($data, $type)` | `Encode::convert($value, $type)` |
-| `throwable($th, $type, $param)` | 无等价实现，接入层自行渲染 |
+| `throwable($th, $type, $param)` | 改为抛异常，由接入层映射为信封 |
 
 ### 7.11 `\fxapp\View`
 
 | 旧方法 | 新写法 |
 | --- | --- |
-| `echo($data, $type)` | `View::render()`、`Renderer::render()` |
+| `echo($data, $type)` | `JsonFormatter::format()`、`XmlFormatter::format()`（按类型序列化） |
 
 ## 八、接入方 `extend/fxri/data` 处置
 
