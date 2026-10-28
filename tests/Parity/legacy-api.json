@@ -75,7 +75,7 @@
                 "status": "equiv"
             },
             "param": {
-                "target": "Http\\RequestContext",
+                "target": "Http\\RequestInput",
                 "status": "equiv"
             }
         },
@@ -191,7 +191,7 @@
                 "status": "equiv"
             },
             "getList": {
-                "target": "File\\Filesystem::listFiles",
+                "target": "File\\Filesystem::findFiles",
                 "status": "equiv"
             },
             "moveDirectory": {
@@ -231,7 +231,7 @@
                 "status": "equiv"
             },
             "pick": {
-                "target": "Param\\Picker::only",
+                "target": "Param\\Picker::pick",
                 "status": "equiv"
             },
             "append": {

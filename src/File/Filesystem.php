@@ -75,6 +75,32 @@ final class Filesystem
     }
 
     /**
+     * 递归列出目录下的文件。
+     *
+     * 只返回文件，不返回目录；`$maxDepth` 为 null 时不限深度，0 只取当前层，
+     * 正数表示向下递归的层数。扩展名留空表示不过滤，匹配不区分大小写。
+     *
+     * 符号链接目录不跟随，避免环形目录导致无限递归；结果按路径排序，保证输出稳定。
+     *
+     * @param string $directory 目录路径
+     * @param list<string> $extensions 扩展名列表，不含点号
+     * @param int|null $maxDepth 递归深度
+     * @return list<string> 文件路径
+     */
+    public static function findFiles(string $directory, array $extensions = [], ?int $maxDepth = null): array
+    {
+        $path = realpath($directory);
+        if (false === $path || !is_dir($path)) {
+            return [];
+        }
+
+        $files = self::collect($path, self::normalizeExtensions($extensions), $maxDepth, 0);
+        sort($files);
+
+        return $files;
+    }
+
+    /**
      * 列出目录下的文件与子目录，只取当前层。
      *
      * @param string $directory 目录路径
@@ -167,5 +193,82 @@ final class Filesystem
 
             throw new RuntimeException('无法替换文件：' . $path);
         }
+    }
+
+    /**
+     * 递归收集文件。
+     *
+     * @param string $directory 当前目录
+     * @param list<string> $extensions 扩展名列表
+     * @param int|null $maxDepth 递归深度
+     * @param int $level 当前层级
+     * @return list<string> 文件路径
+     */
+    private static function collect(string $directory, array $extensions, ?int $maxDepth, int $level): array
+    {
+        $names = scandir($directory);
+        if (false === $names) {
+            throw new RuntimeException('无法读取目录：' . $directory);
+        }
+
+        $files = [];
+
+        foreach ($names as $name) {
+            if ('.' === $name || '..' === $name) {
+                continue;
+            }
+
+            $path = $directory . DIRECTORY_SEPARATOR . $name;
+            if (is_file($path)) {
+                if (self::matches($path, $extensions)) {
+                    $files[] = $path;
+                }
+
+                continue;
+            }
+
+            // 符号链接目录不跟随，避免环形目录导致无限递归
+            if (is_dir($path) && !is_link($path) && (null === $maxDepth || $level < $maxDepth)) {
+                $files = array_merge($files, self::collect($path, $extensions, $maxDepth, $level + 1));
+            }
+        }
+
+        return $files;
+    }
+
+    /**
+     * 判断文件扩展名是否命中。
+     *
+     * @param string $path 文件路径
+     * @param list<string> $extensions 扩展名列表
+     * @return bool 是否命中
+     */
+    private static function matches(string $path, array $extensions): bool
+    {
+        if ([] === $extensions) {
+            return true;
+        }
+
+        return in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), $extensions, true);
+    }
+
+    /**
+     * 归一扩展名。
+     *
+     * @param list<string> $extensions 扩展名列表
+     * @return list<string> 去点号、小写、去重后的列表
+     */
+    private static function normalizeExtensions(array $extensions): array
+    {
+        $normalized = [];
+
+        foreach ($extensions as $extension) {
+            $value = strtolower(ltrim(trim($extension), '.'));
+            if ('' !== $value) {
+                $normalized[] = $value;
+            }
+        }
+
+        return array_values(array_unique($normalized));
     }
 }

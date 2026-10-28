@@ -70,6 +70,7 @@ echo PHP_EOL;
 | `read(string $path)` | 读取整个文件内容，读不到抛 `RuntimeException` | `string` |
 | `write(string $path, string $contents)` | 写入内容；自动递归创建父目录，先写同目录临时文件再 `rename` 覆盖，任一步失败抛 `RuntimeException` | `void` |
 | `exists(string $path)` | 路径是否存在，等价于 `file_exists`，目录同样算存在 | `bool` |
+| `findFiles(string $directory, array $extensions = [], ?int $maxDepth = null)` | 递归列出**文件**（不含目录）；`$extensions` 为空不过滤，匹配不区分大小写、可带点号；`$maxDepth` 为 `null` 不限深度、`0` 只取当前层、正数表示下探层数；符号链接目录不跟随，结果按路径排序 | `array` |
 | `listFiles(string $directory)` | 列出目录**当前层**的文件与子目录，返回 `glob` 给出的完整路径；目录不可读或无匹配时返回空数组 | `array` |
 | `makeDirectory(string $directory, int $permissions = 0o777)` | 递归创建目录；已存在时直接返回，创建失败且目录仍不存在时抛 `RuntimeException` | `void` |
 | `createDirectory(string $directory, int $permissions = 0o777)` | `makeDirectory` 的兼容命名，语义完全一致 | `void` |
@@ -137,6 +138,9 @@ echo PHP_EOL;
 - ⚠️ `Path::filename()` 只去掉最后一段扩展名：`/a/b.tar.gz` 得到 `b.tar`；`extension()` 同理得到 `gz`。
 - ⚠️ `Path::extension('.env')` 返回空串而不是 `env`，以点开头的隐藏文件名会被 `pathinfo` 视作无扩展名。
 - ⚠️ `Filesystem::listFiles()` 不递归，只列一层；`glob('*')` 不匹配以 `.` 开头的隐藏文件，目录也会被一并列出，需要过滤时由调用方处理。
+- ⚠️ `Filesystem::findFiles()` 只返回文件，目录本身不会出现；扩展名列表是数组而不是 1.x 的 `|` 分隔字符串，大小写不敏感，`['.PHP']` 与 `['php']` 等价。
+- ⚠️ `Filesystem::findFiles()` 的 `$maxDepth` 语义与 1.x `getList()` 的 `$limit` 对齐：`0` 只取当前层、`1` 下探一层、`null` 不限；但 `$limit` 的负数不限深度写法在 v2 用 `null` 表达。
+- ⚠️ `Filesystem::findFiles()` 不跟随符号链接目录，避免环形目录；需要跟随时要自行基于 `Filesystem::listFiles()` 实现。
 - ⚠️ `Filesystem::read()` 一次性把整个文件读进内存，大文件不要用它；它也不做编码转换，二进制内容原样返回。
 - ⚠️ `Filesystem::write()` 依赖目标目录可写，失败时先 `unlink` 临时文件再抛 `RuntimeException`；文件名本身会被临时文件名替换，因此原文件的权限位不会保留。
 - ⚠️ `Filesystem::makeDirectory()` 的 `$permissions` 受进程 `umask` 影响，`0o777` 不等于最终权限；并发下目录被其他进程抢先建好时不算失败。

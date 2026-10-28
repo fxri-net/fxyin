@@ -8,7 +8,7 @@ HTTP 层把一次请求的进出两端收敛成只读对象：入口是请求与
 
 | 环节 | 类 | 职责 |
 | --- | --- | --- |
-| 入口 | `ServerContext`、`RequestContext`、`ClientInfo` | 把 `$_SERVER` 与 PSR-7 请求收敛成只读快照 |
+| 入口 | `ServerContext`、`RequestContext`、`RequestInput`、`ClientInfo` | 把 `$_SERVER`、PSR-7 请求与各类入参收敛成只读快照 |
 | 出口 | `Envelope`、`Formatter`、`JsonFormatter`、`Responder` | 固定四字段信封，按格式化器落成响应体 |
 | 视图 | `View`、`Renderer` | 只做模板路径解析与安全校验，模板引擎由接入方实现 |
 | Cookie | `CookieJar`、`CookieOptions`、`SameSite` | 读写、删除与 HMAC 签名 |
@@ -140,6 +140,22 @@ echo $jar->signed('uid');   // 7
 | `host(): string` | 取主机名 | `string` |
 | `isSecure(): bool` | 是否 HTTPS | `bool` |
 | `body(): string` | 取请求体 | `string` |
+
+### RequestInput
+
+把查询串、表单、JSON 请求体与命令行参数收敛成一个只读取值入口，承接 1.x 门面 `Client::param()` 的能力。`all()` 按查询串、表单、JSON 请求体、命令行参数依次合并，同名键后出现的来源覆盖；请求体不是 JSON 对象时整段忽略。
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `fromGlobals(array $cli = [])` | 读 `$_GET`、`$_POST` 与 `php://input` | `self` |
+| `fromRequest(RequestContext $request, array $post = [], array $cli = [])` | 查询串按嵌套结构解码，表单需显式传入 | `self` |
+| `make(array $query = [], array $post = [], string $body = '', array $cli = [])` | 手工构造 | `self` |
+| `query()` / `post()` / `cli()` | 取对应来源的原始数组 | `array` |
+| `body()` | 原始请求体 | `string` |
+| `json()` | 请求体按 JSON 解析，非 JSON 对象时为 `null` | `?array` |
+| `all()` | 合并全部来源 | `array` |
+| `get(string $key, mixed $default = null)` | 从合并结果取单值 | `mixed` |
+| `only(array $keys)` | 按结构提取，缺失键补 `null`，数组值递归下钻 | `array` |
 
 ### ServerContext
 
