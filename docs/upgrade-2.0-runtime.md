@@ -34,7 +34,7 @@ $kernel = KernelBuilder::make()
     ->build();
 ```
 
-装配项全部可选；`withConfigDir()` 可多次追加，后追加的目录覆盖同名配置。日志、翻译器、HTTP 客户端与适配器按需注入。
+装配项全部可选；`withConfigDir()` 可多次追加，后追加的目录覆盖同名配置；目录不存在时会抛 `InvalidArgumentException`。日志、翻译器、HTTP 客户端与适配器按需注入。
 
 为了让异常处理、旧代码适配层都能拿到同一个内核，建议在项目里放一个极薄的持有者：
 

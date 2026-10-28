@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fxri;
 
 use Fxri\Config\ConfigLoader;
+use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -84,6 +85,11 @@ final class KernelBuilder
      */
     public function withConfigDir(string $directory): self
     {
+        // 路径拼写或部署遗漏在装配阶段暴露，避免运行期读到空配置
+        if (!is_dir($directory)) {
+            throw new InvalidArgumentException('配置目录不存在：' . $directory);
+        }
+
         return new self(
             [...$this->configDirectories, $directory],
             $this->logger,

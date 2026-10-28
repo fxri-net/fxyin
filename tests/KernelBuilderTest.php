@@ -7,6 +7,7 @@ namespace Fxri\Tests;
 use Fxri\File\Filesystem;
 use Fxri\KernelBuilder;
 use Fxri\Translation\ArrayTranslator;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Psr\Log\NullLogger;
@@ -52,6 +53,17 @@ final class KernelBuilderTest extends TestCase
 
         self::assertSame('override', $config->get('app.name'));
         self::assertTrue($config->get('app.debug'));
+    }
+
+    /**
+     * 配置目录不存在时立即失败，避免静默得到空配置。
+     */
+    public function testWithConfigDirRejectsMissingDirectory(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('配置目录不存在');
+
+        KernelBuilder::make()->withConfigDir(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'fxri-missing-' . bin2hex(random_bytes(6)));
     }
 
     /**

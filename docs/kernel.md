@@ -56,7 +56,7 @@ echo Package::describe();                            // fxri/fxyin 2.0.0-dev
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
 | `make(): self` | 创建构建器，构造方法私有，只能由此进入 | 构建器 |
-| `withConfigDir(string $directory): self` | 追加配置目录，后追加者覆盖先前的同名配置 | 新实例 |
+| `withConfigDir(string $directory): self` | 追加配置目录，后追加者覆盖先前的同名配置；目录不存在时抛 `InvalidArgumentException` | 新实例 |
 | `withLogger(LoggerInterface $logger): self` | 指定 PSR-3 日志 | 新实例 |
 | `withTranslator(TranslatorInterface $translator): self` | 指定 Symfony 翻译器 | 新实例 |
 | `withHttpClient(object $client): self` | 指定 HTTP 客户端 | 新实例 |

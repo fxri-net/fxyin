@@ -36,7 +36,7 @@ $kernel = KernelBuilder::make()
 
 | 方法 | 作用 |
 | --- | --- |
-| `withConfigDir(string $directory)` | 追加配置目录，后追加者覆盖同名文件 |
+| `withConfigDir(string $directory)` | 追加配置目录，后追加者覆盖同名文件；目录不存在时抛 `InvalidArgumentException` |
 | `withLogger(LoggerInterface $logger)` | 注入 PSR-3 日志，缺省为无操作日志 |
 | `withTranslator(TranslatorInterface $translator)` | 注入翻译器，缺省为内置数组翻译 |
 | `withHttpClient(object $client)` | 注入 PSR-18 客户端 |
