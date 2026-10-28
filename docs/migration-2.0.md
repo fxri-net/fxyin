@@ -382,9 +382,9 @@ return Envelope::success($data, '请求成功');
 | `init()` | `Application\Cli::parse()` + `Bootstrap::withCliArguments()` |
 | `define($param, $mode)` | `Shape` 链式组合，见 4.2 |
 | `array($param, $limit, $filter)` | `Data\Cast::toArray($param, $limit)` |
-| `object($param, $limit, $filter)` | `Data\Cast::toObject($param, $limit)` |
+| `object($param, $limit, $filter)` | `Data\Cast::emptyToObject($param, $limit)` |
 | `pick($base, $data)` | `Picker::pick()` |
-| `append(...$args)` | `Pipeline` |
+| `append(...$args)` | `Merger::append()` |
 | `merge($limit, $cover, $type, ...$args)` | `Merger::merge()`、`Merger::mergeKeepBlank()` |
 | `cover($args, $limit, $cover, $type)` | `Merger::merge()` |
 | `url($data)` | `Url::build()`、`Url::query()`、`Url::withQuery()` |

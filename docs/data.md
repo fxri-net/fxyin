@@ -146,6 +146,7 @@ var_export($diff->keys());      // array ( 0 => 'name', 1 => 'remark' )
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
 | `toArray(mixed $value, int $limit = -1)` | 对象按属性展开为数组，递归处理；`$limit` 为 0 时不处理，负数不限制 | `mixed` |
+| `emptyToObject(mixed $value, int $limit = -1)` | 只把空数组转为 `stdClass`，非空数组与列表保持数组，对应 1.x `Param::object()` | `mixed` |
 | `toObject(mixed $value, int $limit = -1)` | 数组递归转为对象，空数组转为空对象以保证 JSON 输出 `{}` | `mixed` |
 
 ### Param

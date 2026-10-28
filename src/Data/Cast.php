@@ -14,6 +14,34 @@ use stdClass;
 final class Cast
 {
     /**
+     * 只把空数组转为对象。
+     *
+     * 与 1.x `Param::object()` 一致：空数组转 `stdClass`，非空数组保持数组并递归处理，
+     * 非数组值原样返回。
+     *
+     * @param mixed $value 待转换值
+     * @param int $limit 递归深度，0 表示不处理，负数表示不限制
+     * @return mixed 转换结果
+     */
+    public static function emptyToObject(mixed $value, int $limit = -1): mixed
+    {
+        if (0 === $limit || !is_array($value)) {
+            return $value;
+        }
+        if ([] === $value) {
+            return new stdClass();
+        }
+
+        $next = $limit > 0 ? $limit - 1 : -1;
+        $result = [];
+        foreach ($value as $key => $item) {
+            $result[$key] = self::emptyToObject($item, $next);
+        }
+
+        return $result;
+    }
+
+    /**
      * 转为数组。
      *
      * 对象按属性展开，数组逐项递归；标量原样返回。

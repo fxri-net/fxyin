@@ -14,6 +14,33 @@ use Fxri\Support\Type;
 final class Merger
 {
     /**
+     * 追加数组。
+     *
+     * 字符串键覆盖，数字键追加到末尾；与 1.x `Param::append()` 一致。
+     *
+     * @param array<array-key, mixed> ...$arrays 待追加数组
+     * @return array<array-key, mixed> 追加结果
+     */
+    public static function append(array ...$arrays): array
+    {
+        $result = [];
+
+        foreach ($arrays as $array) {
+            foreach ($array as $key => $value) {
+                if (is_string($key)) {
+                    $result[$key] = $value;
+
+                    continue;
+                }
+
+                $result[] = $value;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * 递归合并，覆盖层的同名值优先。
      *
      * @param array<array-key, mixed> $base 基底

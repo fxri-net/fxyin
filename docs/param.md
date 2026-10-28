@@ -118,6 +118,7 @@ echo Url::withQuery('/user/list?page=2&kw=old#top', ['kw' => 'new', 'page' => nu
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
+| `append(array ...$arrays)` | 字符串键覆盖，数字键追加到末尾，对应 1.x `Param::append()` | `array<array-key, mixed>` |
 | `merge(array $base, array $overlay, int $depth = -1)` | 递归合并，覆盖层同名值优先 | `array<array-key, mixed>` |
 | `mergeKeepBlank(array $base, array $overlay, int $depth = -1)` | 同上，但覆盖层的空值（`null` 与 `''`）不覆盖基底已有的键 | `array<array-key, mixed>` |
 

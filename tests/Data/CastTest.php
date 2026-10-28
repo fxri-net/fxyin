@@ -41,6 +41,21 @@ final class CastTest extends TestCase
     }
 
     /**
+     * 只把空数组转为对象，非空数组与列表保持数组。
+     */
+    public function testEmptyToObject(): void
+    {
+        $converted = Cast::emptyToObject(['empty' => [], 'list' => [1, 2], 'nested' => ['deep' => []]]);
+
+        self::assertIsArray($converted);
+        self::assertInstanceOf(stdClass::class, $converted['empty']);
+        self::assertSame([1, 2], $converted['list']);
+        self::assertIsArray($converted['nested']);
+        self::assertInstanceOf(stdClass::class, $converted['nested']['deep']);
+        self::assertSame(['empty' => []], Cast::emptyToObject(['empty' => []], 0));
+    }
+
+    /**
      * 深度为 0 时不处理，深度为 1 时只处理一层。
      */
     public function testLimit(): void

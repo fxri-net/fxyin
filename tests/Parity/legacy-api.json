@@ -227,7 +227,7 @@
                 "status": "equiv"
             },
             "object": {
-                "target": "Data\\Cast::toObject",
+                "target": "Data\\Cast::emptyToObject",
                 "status": "equiv"
             },
             "pick": {
@@ -235,7 +235,7 @@
                 "status": "equiv"
             },
             "append": {
-                "target": "Param\\Pipeline",
+                "target": "Param\\Merger::append",
                 "status": "equiv"
             },
             "merge": {
