@@ -32,6 +32,7 @@
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.64",
         "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpunit/phpunit": "^11.5.50 || ^12.5.8"
     },
     "suggest": {
@@ -66,6 +67,7 @@
             "@composer validate --strict",
             "@cs",
             "@stan",
+            "@stan:deprecation",
             "@test",
             "@scan",
             "@package",
@@ -73,6 +75,7 @@
         ],
         "cs": "php-cs-fixer fix --dry-run --diff",
         "stan": "phpstan analyse --no-progress",
+        "stan:deprecation": "phpstan analyse --no-progress -c phpstan-deprecation.neon",
         "test": "phpunit",
         "scan": "@php tools/no-numeric-code.php",
         "package": "@php tools/check-package.php",

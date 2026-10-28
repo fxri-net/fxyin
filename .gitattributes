@@ -10,6 +10,7 @@
 /.gitignore export-ignore
 /.php-cs-fixer.dist.php export-ignore
 /phpstan.neon export-ignore
+/phpstan-deprecation.neon export-ignore
 /phpunit.xml.dist export-ignore
 
 # 发版与文档站工具链不随包分发

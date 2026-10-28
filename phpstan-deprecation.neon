@@ -1,0 +1,10 @@
+# 废弃函数门禁：按 CI 矩阵的最高 PHP 版本解析，提前发现本地较旧 PHP 运行时看不见的废弃调用。
+# 版本上限以 .github/workflows/ci.yml 的 matrix 为准，CI 增加新版本时同步本文件与 composer.json 的 php 约束。
+includes:
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+
+parameters:
+    level: max
+    phpVersion: 80500
+    paths:
+        - src

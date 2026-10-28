@@ -161,7 +161,7 @@ final class Curl
         $content = curl_exec($handle);
         $status = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
         $error = curl_error($handle);
-        curl_close($handle);
+        // 句柄自 PHP 8.0 起是对象，离开作用域即释放；curl_close() 已无作用并在 8.5 废弃
 
         if (!is_string($content)) {
             throw new RuntimeException('HTTP 请求失败：' . ('' === $error ? '未知错误' : $error));
