@@ -77,7 +77,7 @@ echo strlen(Uuid::make()) . ' / '
 | `implode(string $glue, array $values, bool $unique = true)` | 递归拉平嵌套数组，跳过无法表达为字符串的项与空串，可按 `$unique` 去重 | `string` |
 | `isLength(string $value, ?int $start = null, ?int $end = null)` | 字符数是否落在闭区间内；`null` 表示该侧不限制 | `bool` |
 | `length(string $value)` | 按 UTF-8 计算字符数 | `int` |
-| `splice(string $value, string $append, string $glue = '')` | 把 `$append` 追加到 `$value`，已存在时不重复追加；`$append` 为空串或整串已相等时原样返回 | `string` |
+| `splice(string $value, string $append, string $glue = '', bool $unique = true)` | 把 `$append` 追加到 `$value`，默认已存在时不重复追加；`$unique` 为 false 时无条件追加，对应 1.x `Text::splice()` | `string` |
 
 ### Encode
 
@@ -205,7 +205,7 @@ echo strlen(Uuid::make()) . ' / '
 - ⚠️ `Str::explode()` 的 `$unique` 默认是 `true`，需要保留重复项必须显式传 `false`；去重按字符串比较，`'1'` 与 `'01'` 视为不同项。
 - ⚠️ `Str::isLength()` 的上下界都是闭区间，`null` 表示该侧不限制；`$start > $end` 时不会抛异常，而是恒为 `false`。
 - ⚠️ `Str::implode()` 会递归展开嵌套数组，`null`、数组与不具备 `Stringable` 的对象被跳过；`false` 会被转成 `'0'` 而不是空串，布尔值混入时要留意。
-- ⚠️ `Str::splice()` 的存在性判断依赖 `$glue` 拆分：`$glue` 为空串时只有整串等于 `$append` 才算已存在，`splice('ab', 'b')` 会得到 `'abb'`。
+- ⚠️ `Str::splice()` 的存在性判断依赖 `$glue` 拆分：`$glue` 为空串时只有整串等于 `$append` 才算已存在，`splice('ab', 'b')` 会得到 `'abb'`；需要 1.x 的无条件追加时传 `$unique = false`。
 - ⚠️ `Encode::base64Decode()` 解码失败抛异常而不返回 `false`；默认 `$strict = false` 会跳过非法字符，可能解出空串或残缺内容，校验场景应传 `true`。
 - ⚠️ `Encode::htmlEncode()` 的 `$doubleEncode` 默认为 `true`，对已含实体的文本会二次编码；保存富文本或重复处理时必须显式传 `false`。
 - ⚠️ `Encode::queryEncode()` 固定 RFC 3986，空格是 `%20` 而不是 `+`；`queryDecode()` 基于 `parse_str`，键名中的 `.` 与空格会变成下划线，同名键后值覆盖前值。

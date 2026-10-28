@@ -87,20 +87,26 @@ final class Str
     }
 
     /**
-     * 追加片段，已存在时不重复追加。
+     * 追加片段。
+     *
+     * 默认已存在时不重复追加；`$unique` 为 false 时按 1.x `Text::splice()` 语义无条件追加。
      *
      * @param string $value 原始字符串
      * @param string $append 待追加片段
      * @param string $glue 连接符
+     * @param bool $unique 是否去重
      * @return string 追加结果
      */
-    public static function splice(string $value, string $append, string $glue = ''): string
+    public static function splice(string $value, string $append, string $glue = '', bool $unique = true): string
     {
         if ('' === $append) {
             return $value;
         }
         if ('' === $value) {
             return $append;
+        }
+        if (!$unique) {
+            return $value . $glue . $append;
         }
 
         $items = '' === $glue ? [$value] : explode($glue, $value);

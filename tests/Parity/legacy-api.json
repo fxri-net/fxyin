@@ -25,7 +25,7 @@
                 "status": "equiv"
             },
             "config": {
-                "target": "Kernel::config / Config\\Store",
+                "target": "Config::get/has / Config\\Store::set",
                 "status": "equiv"
             },
             "cookie": {
@@ -448,7 +448,7 @@
             "status": "equiv"
         },
         "fxy_config": {
-            "target": "Kernel::config / Config\\Store",
+            "target": "Config::get/has / Config\\Store::set",
             "status": "equiv"
         },
         "fxy_cookie": {

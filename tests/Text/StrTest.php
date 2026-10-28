@@ -21,5 +21,6 @@ final class StrTest extends TestCase
         self::assertSame('a,b,c', Str::splice('a,b', 'c', ','));
         self::assertSame('a,b', Str::splice('a,b', 'b', ','));
         self::assertSame('a,b', Str::splice('a,b', ''));
+        self::assertSame('a,b,b', Str::splice('a,b', 'b', ',', false));
     }
 }

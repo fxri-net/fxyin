@@ -100,6 +100,7 @@ outline: [2, 3]
 
 - 语言包 6 份：`zh-cn`/`en-us` × `base`/`env`/`phrase`，全部随包提供。
 - 默认配置 4 份：`app`、`branch`、`env`、`facade`；v2 迁入 `app`、`branch`、`env` 三份，`facade` 的 1.x 响应/条件配置不进入 v2 默认值。
+- `env` 只保留纯数据 `view.lang`；v1 `env.app` / `env.base` / `env.facade` 的运行期快照分别由 `Application\Bootstrap` 目录装配、`Http\RequestContext` 与 `Application\Services` 承接，不再写入默认配置。
 
 ## 七、设计上不支持
 
@@ -148,6 +149,10 @@ outline: [2, 3]
 | `File::formatSize` | 形如 `1.5MB`（无空格） | `Formatter::size()` 形如 `1.50 MB`，带千分位；单位增加 PB |
 | `Text::strlen` | 返回响应数组，含错误码 | `Str::isLength()` 返回布尔值 |
 | `Text::implode` / `explode` | 带 `$explode` 标志与 `$limit` 参数 | `Str::implode()` / `Str::explode()`；返回数组用 `Str::explode()`，限长用 `array_slice()` |
+| `Text::splice` | 无条件追加 | `Str::splice()` 默认去重；无条件追加传 `$unique = false` |
+| 查询串编码 | `urlencode`，空格为 `+` | `Encode::encodeAll()` 按 RFC 3986，空格为 `%20` |
+| `Service::httpDown` 失败 | 返回 `false` | `Curl::download()` 非 2xx 抛异常 |
+| `Data::updateContrast` 数据相同 | 返回「数据相同」响应数组 | `Diff` 抛 `SameDataException` |
 | `Data::whereBuild` | 内置 `find_in_set`、`json array/object`、`field`、`like fuzzy` | v2 只内置通用比较；MySQL 专有条件用 `Expression` 或项目数据库层 |
 | `Base::ipv4` / `Safe::rsapem` / `Text::letters` 等 | 非法输入返回 `false` | 改为抛异常或类型化参数 |
 

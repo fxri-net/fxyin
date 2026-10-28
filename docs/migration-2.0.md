@@ -426,7 +426,7 @@ return Envelope::success($data, '请求成功');
 | `uuid($mode, $param)` | `Uuid::make(UuidMode, $seed, UuidStyle)`；格式化现有串用 `Uuid::format()` |
 | `implode($delimiter, $data, $explode, $unique)` | `Str::implode($glue, $values, $unique)` |
 | `explode($delimiter, $data, $unique, $limit)` | `Str::explode($separator, $value, $unique)` |
-| `splice($string, $value, $delimiter)` | `Str::splice($value, $append, $glue)` |
+| `splice($string, $value, $delimiter)` | `Str::splice($value, $append, $glue)`；需要无条件追加时传 `$unique = false` |
 | `strlen($string, $start, $end)` | `Str::isLength($value, $start, $end)` |
 | `letters($var, $in_charset, $out_charset)` | `Encode::letters($value, $inCharset, $outCharset)` |
 | `letter($var, $in_charset, $out_charset)` | `Encode::letter($value, $inCharset, $outCharset)` |
