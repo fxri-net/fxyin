@@ -28,6 +28,32 @@ const PARITY_MATRIX = 'tests/Parity/legacy-api.json';
 /** 扩展门面目录：项目在 1.x 里追加门面方法的位置 */
 const FACADE_EXTENSION_DIRECTORY = 'extend/fxri/data/app/controller/facade_ext';
 
+/** 人工措辞表：比矩阵目标更贴项目语境的表述，键与 PHP 一致按不区分大小写匹配 */
+const SUGGESTION_MAP = [
+    'Base::config' => 'Kernel::config()->get()',
+    'Base::env' => 'ServerContext / Environment',
+    'Base::json' => 'Param\\Json::encode() / decode()',
+    'Base::lang' => 'Kernel::trans()',
+    'Base::oracle' => '项目工厂或容器',
+    'Client::ip' => 'ClientInfo::ip()',
+    'Data::fieldJson' => 'Data\\Field::json()',
+    'Data::paramEmpty' => 'Data\\Param::missing()',
+    'Data::whereMake' => 'Sql\\WhereBuilder',
+    'File::getList' => 'Filesystem::listFiles()',
+    'Math::rand' => 'Random::string()',
+    'Param::define' => 'Shape / Pipeline',
+    'Param::json' => 'Param\\Json',
+    'Param::merge' => 'Merger::merge()',
+    'Server::branch' => '项目中间件 + RequestContext',
+    'Server::echo' => 'Envelope',
+    'Server::format' => 'Envelope::toArray() 或项目序列化',
+    'Service::http' => 'HttpClient\\Client',
+    'Text::throwable' => '抛异常 + 统一映射',
+    'Text::timeMilli' => 'Time::milli()',
+    'View::echo' => 'Responder / Renderer',
+    'View::log' => 'PSR-3 LoggerInterface',
+];
+
 /** 目录名排除：第三方依赖与运行产物 */
 const EXCLUDED_DIRECTORIES = ['vendor', 'runtime', 'node_modules', '.git'];
 
@@ -1020,7 +1046,7 @@ function tierFor(int $count): string
  * 与框架 API 区分开，避免给出「见 2.0 API 对照」的误导建议。
  *
  * @param string $root 项目根
- * @return array<string, true> 形如 `Safe::rsapriExt` 的集合
+ * @return array<string, true> 形如 `safe::rsapriext` 的小写集合
  */
 function facadeExtensionMethods(string $root): array
 {
@@ -1041,7 +1067,7 @@ function facadeExtensionMethods(string $root): array
             }
             $next = $tokens[$i + 1] ?? null;
             if (is_array($next) && T_STRING === $next[0]) {
-                $methods[$class . '::' . $next[1]] = true;
+                $methods[strtolower($class . '::' . $next[1])] = true;
             }
         }
     }
@@ -1060,82 +1086,78 @@ function facadeExtensionMethods(string $root): array
  */
 function suggestFor(string $method, array $extensionMethods = []): string
 {
-    $map = [
-        'Base::config' => 'Kernel::config()->get()',
-        'Base::env' => 'ServerContext / Environment',
-        'Base::json' => 'Param\\Json::encode() / decode()',
-        'Base::lang' => 'Kernel::trans()',
-        'Base::oracle' => '项目工厂或容器',
-        'Client::ip' => 'ClientInfo::ip()',
-        'Data::fieldJson' => 'Data\\Field::json()',
-        'Data::paramEmpty' => 'Data\\Param::missing()',
-        'Data::whereMake' => 'Sql\\WhereBuilder',
-        'File::getList' => 'Filesystem::listFiles()',
-        'Math::rand' => 'Random::string()',
-        'Param::define' => 'Shape / Pipeline',
-        'Param::json' => 'Param\\Json',
-        'Param::merge' => 'Merger::merge()',
-        'Server::branch' => '项目中间件 + RequestContext',
-        'Server::echo' => 'Envelope',
-        'Server::format' => 'Envelope::toArray() 或项目序列化',
-        'Service::http' => 'HttpClient\\Client',
-        'Text::throwable' => '抛异常 + 统一映射',
-        'Text::timeMilli' => 'Time::milli()',
-        'View::echo' => 'Responder / Renderer',
-        'View::log' => 'PSR-3 LoggerInterface',
-    ];
-    if (isset($map[$method])) {
-        return $map[$method];
+    static $map = null;
+    if (null === $map) {
+        $map = array_change_key_case(SUGGESTION_MAP, CASE_LOWER);
+    }
+
+    $normalized = strtolower($method);
+    if (isset($map[$normalized])) {
+        return $map[$normalized];
     }
     $target = matrixTarget($method);
     if (null !== $target) {
         return $target;
     }
-    if (isset($extensionMethods[$method])) {
+    if (isset($extensionMethods[$normalized])) {
         return '项目扩展方法，随 facade_ext 迁移';
     }
     $class = explode('::', $method, 2)[0];
 
-    return in_array($class, FRAMEWORK_CLASSES, true) ? '见 2.0 API 对照' : '项目自有方法，保留实现';
+    return in_array($class, FRAMEWORK_CLASSES, true) ? '项目扩展或服务方法，随扩展目录迁移' : '项目自有方法，保留实现';
 }
 
 /**
  * 从对等矩阵取 v2 目标。
  *
- * 只在首次调用时读取矩阵并缓存；文件缺失或结构不符时返回 null，工具仍可运行。
+ * 只在首次调用时把矩阵摊成小写索引并缓存；PHP 方法名不区分大小写，`Base::Config`
+ * 与 `Base::config` 必须命中同一目标。文件缺失或结构不符时返回 null，工具仍可运行。
  *
  * @param string $method 形如 Text::explode
  * @return string|null 目标描述
  */
 function matrixTarget(string $method): ?string
 {
-    static $matrix = null;
-    if (null === $matrix) {
-        $file = dirname(__DIR__) . '/' . PARITY_MATRIX;
-        $raw = is_file($file) ? file_get_contents($file) : false;
-        $decoded = false === $raw ? null : json_decode($raw, true);
-        $matrix = is_array($decoded) ? $decoded : [];
+    static $index = null;
+    if (null === $index) {
+        $index = matrixTargetIndex();
     }
 
-    $parts = explode('::', $method, 2);
-    if (2 !== count($parts)) {
-        return null;
+    return $index[strtolower($method)] ?? null;
+}
+
+/**
+ * 构建矩阵目标索引。
+ *
+ * @return array<string, string> 形如 text::explode => Text\Str::explode
+ */
+function matrixTargetIndex(): array
+{
+    $file = dirname(__DIR__) . '/' . PARITY_MATRIX;
+    $raw = is_file($file) ? file_get_contents($file) : false;
+    $matrix = false === $raw ? null : json_decode($raw, true);
+    if (!is_array($matrix)) {
+        return [];
     }
     $facades = $matrix['facades'] ?? null;
     if (!is_array($facades)) {
-        return null;
+        return [];
     }
-    $facade = $facades[$parts[0]] ?? null;
-    if (!is_array($facade)) {
-        return null;
-    }
-    $entry = $facade[$parts[1]] ?? null;
-    if (!is_array($entry)) {
-        return null;
-    }
-    $target = $entry['target'] ?? null;
 
-    return is_string($target) && '' !== $target ? $target : null;
+    $index = [];
+    foreach ($facades as $facade => $methods) {
+        if (!is_array($methods)) {
+            continue;
+        }
+        foreach ($methods as $name => $entry) {
+            $target = is_array($entry) ? ($entry['target'] ?? null) : null;
+            if (is_string($target) && '' !== $target) {
+                $index[strtolower($facade . '::' . $name)] = $target;
+            }
+        }
+    }
+
+    return $index;
 }
 
 /**
