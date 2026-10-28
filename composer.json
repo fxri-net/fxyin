@@ -66,12 +66,14 @@
             "@cs",
             "@stan",
             "@test",
-            "@scan"
+            "@scan",
+            "@package"
         ],
         "cs": "php-cs-fixer fix --dry-run --diff",
         "stan": "phpstan analyse --no-progress",
         "test": "phpunit",
         "scan": "@php tools/no-numeric-code.php",
+        "package": "@php tools/check-package.php",
         "upgrade:inspect": "@php tools/upgrade-inspect.php"
     }
 }

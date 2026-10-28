@@ -16,3 +16,8 @@
 /.changeset export-ignore
 /.gitlab-ci.yml export-ignore
 /.node-version export-ignore
+
+# 协作与任务元数据不随包分发
+/.tasks export-ignore
+/.trae export-ignore
+/.agents export-ignore
