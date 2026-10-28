@@ -22,6 +22,9 @@ const APP_DIRECTORY_CONFIG = 'extend/fxri/data/config.php';
 /** 应用目录配置缺失或无法解析时的兜底候选 */
 const FALLBACK_APP_DIRECTORIES = ['app', 'application'];
 
+/** 对等矩阵：升级建议的第二来源，避免人工表与矩阵漂移 */
+const PARITY_MATRIX = 'tests/Parity/legacy-api.json';
+
 /** 目录名排除：第三方依赖与运行产物 */
 const EXCLUDED_DIRECTORIES = ['vendor', 'runtime', 'node_modules', '.git'];
 
@@ -1009,10 +1012,13 @@ function tierFor(int $count): string
 /**
  * 给出旧调用的迁移建议。
  *
+ * 顺序：人工措辞表（更贴项目语境）→ 对等矩阵目标 → 按类名兜底。
+ *
  * @param string $method 形如 Base::config
+ * @param array<string, true> $extensionMethods 项目扩展方法集合
  * @return string 建议
  */
-function suggestFor(string $method): string
+function suggestFor(string $method, array $extensionMethods = []): string
 {
     $map = [
         'Base::config' => 'Kernel::config()->get()',
@@ -1041,9 +1047,55 @@ function suggestFor(string $method): string
     if (isset($map[$method])) {
         return $map[$method];
     }
+    $target = matrixTarget($method);
+    if (null !== $target) {
+        return $target;
+    }
+    if (isset($extensionMethods[$method])) {
+        return '项目扩展方法，随 facade_ext 迁移';
+    }
     $class = explode('::', $method, 2)[0];
 
     return in_array($class, FRAMEWORK_CLASSES, true) ? '见 2.0 API 对照' : '项目自有方法，保留实现';
+}
+
+/**
+ * 从对等矩阵取 v2 目标。
+ *
+ * 只在首次调用时读取矩阵并缓存；文件缺失或结构不符时返回 null，工具仍可运行。
+ *
+ * @param string $method 形如 Text::explode
+ * @return string|null 目标描述
+ */
+function matrixTarget(string $method): ?string
+{
+    static $matrix = null;
+    if (null === $matrix) {
+        $file = dirname(__DIR__) . '/' . PARITY_MATRIX;
+        $raw = is_file($file) ? file_get_contents($file) : false;
+        $decoded = false === $raw ? null : json_decode($raw, true);
+        $matrix = is_array($decoded) ? $decoded : [];
+    }
+
+    $parts = explode('::', $method, 2);
+    if (2 !== count($parts)) {
+        return null;
+    }
+    $facades = $matrix['facades'] ?? null;
+    if (!is_array($facades)) {
+        return null;
+    }
+    $facade = $facades[$parts[0]] ?? null;
+    if (!is_array($facade)) {
+        return null;
+    }
+    $entry = $facade[$parts[1]] ?? null;
+    if (!is_array($entry)) {
+        return null;
+    }
+    $target = $entry['target'] ?? null;
+
+    return is_string($target) && '' !== $target ? $target : null;
 }
 
 /**
