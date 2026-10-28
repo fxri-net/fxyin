@@ -203,7 +203,7 @@
                 "status": "equiv"
             },
             "getMediaInfo": {
-                "target": "File\\MediaInfo",
+                "target": "File\\VideoInfo::inspect",
                 "status": "equiv"
             }
         },

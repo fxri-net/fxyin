@@ -6,7 +6,7 @@
 
 `Fxri\File` 是纯静态工具层，直接作用于本地文件系统，不依赖内核、配置或 PSR-7 上传对象。它承接的是「业务代码里散落的 `mkdir` / `file_put_contents` / `pathinfo`」这类重复片段，范围刻意收窄：只做目录与文件的增删读写、路径字符串处理、MIME 与扩展名互查。
 
-三个类职责不重叠：`Filesystem` 负责实际 I/O，读写与目录操作失败统一抛 `RuntimeException`；`Path` 只做字符串层面的拼接与规范化，不碰磁盘；`MediaInfo` 查内置映射表，不读取文件内容，也不依赖 `fileinfo` 扩展。
+四个类职责不重叠：`Filesystem` 负责实际 I/O，读写与目录操作失败统一抛 `RuntimeException`；`Path` 只做字符串层面的拼接与规范化，不碰磁盘；`MediaInfo` 查内置映射表，不读取文件内容，也不依赖 `fileinfo` 扩展。`VideoInfo` 执行外部探测命令解析视频元信息，命令与二进制由调用方传入。
 
 与相邻层的关系：文件大小格式化在 `Fxri\Support\Formatter`（`size()`），不在这一层；这一层不解析 HTTP 请求，也不判断上传文件是否合法，只负责把给定路径写入或读出，来源判定与权限约束留给调用方。
 
@@ -130,6 +130,16 @@ echo PHP_EOL;
 
 映射表是唯一的查询源：`mime()` 由 `array_search()` 反查，因此两个方向的结果天然一致。
 
+### VideoInfo
+
+执行外部探测命令并解析输出，承接 1.x `File::getMediaInfo()` 的视频分支。命令支持两种形态：`[二进制, ...参数]` 数组不经 shell；含 `%s` 的字符串模板会先用 `escapeshellarg()` 替换文件路径，模板由调用方保证可信。
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `inspect(string $file, array\|string $command)` | 解析 `Duration/start/bitrate`、`Video`、`Audio` 三段输出，补充 `seconds`、`play_time` 与 `size`；文件不存在抛 `InvalidArgumentException`，命令失败且无输出抛 `RuntimeException` | `array<string, mixed>` |
+
+返回字段：`duration`、`seconds`、`start`、`bitrate`、`vcodec`、`vformat`、`resolution`、`width`、`height`、`acodec`、`asamplerate`、`play_time`、`size`；未匹配到的段落不会出现对应键。
+
 ## 注意事项
 
 - ⚠️ `Path::join()` 只保留**首段**的前导 `/` 与盘符、协议头：`Path::join('/tmp', 'a')` 得 `/tmp/a`，而 `Path::join('', '/tmp')` 仍是 `tmp`（相对路径）。后续段的斜杠一律当作分隔符，要绝对路径就把绝对前缀放在首段。
@@ -150,3 +160,6 @@ echo PHP_EOL;
 - ⚠️ `Filesystem::exists()` 不区分文件与目录，判断「是文件」需要另加 `is_file()`。
 - ⚠️ `MediaInfo` 查的是内置表而不是文件内容，`mime('jpeg')` 返回 `null`（表里只有 `jpg`），`extension('image/jpg')` 同样返回 `null`（表里只有 `image/jpeg`）。
 - ⚠️ `MediaInfo::extension()` 只取 `;` 之前的主类型，参数（如 `charset=utf-8`）被丢弃；未收录的类型返回 `null`，与「扩展名为空串」是两种不同结果。
+- ⚠️ `VideoInfo::inspect()` 会执行外部命令：数组形式不经 shell 更安全；字符串模板若来自不可信输入，文件路径虽被转义，模板本身仍可能注入命令。
+- ⚠️ `VideoInfo::inspect()` 依赖命令把探测信息输出到标准输出且返回码为 0；命令失败但有部分输出时仍会按已解析字段返回，不视为错误。
+- ⚠️ `VideoInfo` 只解析 v1 使用的 `Duration/Video/Audio` 文本格式，ffprobe 的 JSON 输出不在解析范围内。
