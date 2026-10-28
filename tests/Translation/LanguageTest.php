@@ -53,6 +53,26 @@ final class LanguageTest extends TestCase
     }
 
     /**
+     * 直通与忽略标记按 1.x 语义生效，可选首字母大写。
+     */
+    public function testPhraseMarkersAndCapitalize(): void
+    {
+        $language = $this->makeLanguage();
+
+        self::assertSame('Hello', $language->phrase('!@Hello'));
+        self::assertSame('', $language->phrase('!#ignored'));
+        self::assertSame('Hello风音', $language->phrase(['!@Hello', 'fxyin']));
+        self::assertSame('风音删除', $language->phrase(['fxyin', '!#ignored', 'delete']));
+        self::assertSame('Hello', $language->phrase('hello', null, true));
+        self::assertSame('Hello world', $language->phrase(['hello', 'world'], 'en-us', true));
+
+        $custom = $language->withPrefix('~')->withIgnore('#');
+        self::assertSame('raw', $custom->phrase('~raw'));
+        self::assertSame('', $custom->phrase('#ignored'));
+        self::assertSame('!@Hello', $custom->phrase('!@Hello'));
+    }
+
+    /**
      * 检测后返回新实例，原实例语言不变。
      */
     public function testDetectIsImmutable(): void

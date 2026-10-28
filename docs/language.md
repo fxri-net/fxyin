@@ -105,10 +105,11 @@ var_dump($bare->language()); // NULL
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `make(Catalog $catalog, ?LocaleResolver $resolver = null, string $locale = 'zh-cn'): self` | 创建语言服务，检测器缺省按目录语言生成允许列表 | 语言服务 |
+| `make(Catalog $catalog, ?LocaleResolver $resolver = null, string $locale = 'zh-cn', string $prefix = '!@', string $ignore = '!#'): self` | 创建语言服务，检测器缺省按目录语言生成允许列表 | 语言服务 |
 | `get(?string $name = null, array $vars = [], ?string $locale = null): mixed` | 取词条；`$name` 为 `null` 时返回全部词条；字符串替换占位符，数组原样返回 | 词条内容 |
 | `has(string $name, ?string $locale = null): bool` | 判断词条是否存在 | 是否存在 |
-| `phrase(string\|array\|null $name, ?string $locale = null): mixed` | 对应 1.6.1 的 `langList` + `langParse`：列表逐项取词后拼接 | 拼接结果 |
+| `phrase(string\|array\|null $name, ?string $locale = null, bool $capitalize = false): mixed` | 对应 1.6.1 的 `langList` + `langParse`：列表逐项取词后拼接；`!@` 前缀去标记直通、`!#` 前缀返回空串，`$capitalize` 对应 `lang()` 的首字母大写 | 拼接结果 |
+| `withPrefix(string $prefix): self` / `withIgnore(string $ignore): self` | 替换直通与忽略标记，空串表示关闭 | 新实例 |
 | `detect(?array $query = null, ?CookieJar $cookies = null, ?ServerContext $server = null): self` | 检测并切换语言，返回新实例 | 新语言服务 |
 | `withLocale(string $locale): self` | 切换语言，返回新实例 | 新语言服务 |
 | `withResolver(LocaleResolver $resolver): self` | 替换检测器 | 新实例 |
@@ -129,6 +130,7 @@ var_dump($bare->language()); // NULL
 - `Language` 的 `detect()`、`withLocale()`、`set()`、`load()` 都返回新实例，原实例不变；内核持有的语言服务也不会被就地修改。
 - `Language::get()` 未命中时原样返回名称；要区分「已翻译」与「未翻译」用 `has()`。
 - `phrase()` 的中文拼接不带分隔符，其它语言带空格；空值词条会被跳过。
+- `phrase()` 的直通/忽略标记取自 `app.lang.prefix`（默认 `!@`）与 `app.lang.ignore`（默认 `!#`）：`!@` 开头的词条去掉标记原样返回，`!#` 开头的词条返回空串。`get()` 不处理标记，需要模板场景的标记语义时用 `phrase()`。
 - 自动检测只在显式调用 `detect()` 时发生，内核装配阶段不读取请求变量，命令行与常驻进程不会因全局状态改变默认语言。
 - `Translator` 只返回字符串；`lang_list` 这类嵌套词条请走 `Language::get()`。
 - `ArrayTranslator` 在 2.x 继续可用，未装配语言服务时作为内核的兜底翻译器。

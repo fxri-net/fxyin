@@ -21,11 +21,15 @@ final class Language
      * @param Catalog $catalog 语言目录
      * @param LocaleResolver $resolver 语言检测器
      * @param string $locale 当前语言
+     * @param string $prefix 直通标记，命中时去掉标记原样返回
+     * @param string $ignore 忽略标记，命中时返回空串
      */
     private function __construct(
         private readonly Catalog $catalog,
         private readonly LocaleResolver $resolver,
         private readonly string $locale = Catalog::LOCALE,
+        private readonly string $prefix = '!@',
+        private readonly string $ignore = '!#',
     ) {
     }
 
@@ -108,7 +112,7 @@ final class Language
      */
     public function load(string|array $file, ?string $locale = null, string $domain = Catalog::DOMAIN): self
     {
-        return new self($this->catalog->load($file, $locale ?? $this->locale, $domain), $this->resolver, $this->locale);
+        return new self($this->catalog->load($file, $locale ?? $this->locale, $domain), $this->resolver, $this->locale, $this->prefix, $this->ignore);
     }
 
     /**
@@ -129,23 +133,27 @@ final class Language
      * @param Catalog $catalog 语言目录
      * @param LocaleResolver|null $resolver 语言检测器
      * @param string $locale 当前语言
+     * @param string $prefix 直通标记
+     * @param string $ignore 忽略标记
      * @return self 语言服务
      */
-    public static function make(Catalog $catalog, ?LocaleResolver $resolver = null, string $locale = Catalog::LOCALE): self
+    public static function make(Catalog $catalog, ?LocaleResolver $resolver = null, string $locale = Catalog::LOCALE, string $prefix = '!@', string $ignore = '!#'): self
     {
-        return new self($catalog, $resolver ?? LocaleResolver::make()->withAllowList($catalog->locales()), $locale);
+        return new self($catalog, $resolver ?? LocaleResolver::make()->withAllowList($catalog->locales()), $locale, $prefix, $ignore);
     }
 
     /**
      * 拼接词条列表。
      *
      * 对应 1.6.1 的 `langList` 与 `langParse`：数组逐项取词后，中文直接相连，其它语言以空格分隔。
+     * 命中直通标记时去掉标记原样返回，命中忽略标记时返回空串；`$capitalize` 对应 `lang()` 的首字母大写。
      *
      * @param string|array<array-key, mixed>|null $name 词条或词条列表
      * @param string|null $locale 语言，缺省为当前语言
+     * @param bool $capitalize 是否把结果首字母大写
      * @return mixed 拼接结果或原始词条
      */
-    public function phrase(string|array|null $name, ?string $locale = null): mixed
+    public function phrase(string|array|null $name, ?string $locale = null, bool $capitalize = false): mixed
     {
         $locale ??= $this->locale;
 
@@ -154,12 +162,14 @@ final class Language
         }
 
         if (!is_array($name)) {
-            return $this->get($name, [], $locale);
+            $value = $this->phraseItem(Type::toString($name), $locale);
+
+            return $capitalize && is_string($value) ? ucfirst($value) : $value;
         }
 
         $parts = [];
         foreach ($name as $item) {
-            $value = is_array($item) ? $this->phrase($item, $locale) : $this->get(Type::toString($item), [], $locale);
+            $value = is_array($item) ? $this->phrase($item, $locale) : $this->phraseItem(Type::toString($item), $locale);
             if (is_array($value)) {
                 $value = $this->phrase($value, $locale);
             }
@@ -170,7 +180,9 @@ final class Language
             $parts[] = $text;
         }
 
-        return implode('zh-cn' === $locale ? '' : ' ', $parts);
+        $result = implode('zh-cn' === $locale ? '' : ' ', $parts);
+
+        return $capitalize ? ucfirst($result) : $result;
     }
 
     /**
@@ -198,6 +210,8 @@ final class Language
             $this->catalog->set($name, $value, $locale ?? $this->locale, $domain),
             $this->resolver,
             $this->locale,
+            $this->prefix,
+            $this->ignore,
         );
     }
 
@@ -235,7 +249,29 @@ final class Language
      */
     public function withLocale(string $locale): self
     {
-        return new self($this->catalog, $this->resolver, $locale);
+        return new self($this->catalog, $this->resolver, $locale, $this->prefix, $this->ignore);
+    }
+
+    /**
+     * 指定忽略标记。
+     *
+     * @param string $ignore 忽略标记，空串表示关闭
+     * @return self 新实例
+     */
+    public function withIgnore(string $ignore): self
+    {
+        return new self($this->catalog, $this->resolver, $this->locale, $this->prefix, $ignore);
+    }
+
+    /**
+     * 指定直通标记。
+     *
+     * @param string $prefix 直通标记，空串表示关闭
+     * @return self 新实例
+     */
+    public function withPrefix(string $prefix): self
+    {
+        return new self($this->catalog, $this->resolver, $this->locale, $prefix, $this->ignore);
     }
 
     /**
@@ -246,6 +282,25 @@ final class Language
      */
     public function withResolver(LocaleResolver $resolver): self
     {
-        return new self($this->catalog, $resolver, $this->locale);
+        return new self($this->catalog, $resolver, $this->locale, $this->prefix, $this->ignore);
+    }
+
+    /**
+     * 处理单个词条标记。
+     *
+     * @param string $name 词条
+     * @param string $locale 语言
+     * @return mixed 词条内容
+     */
+    private function phraseItem(string $name, string $locale): mixed
+    {
+        if ('' !== $this->prefix && str_starts_with($name, $this->prefix)) {
+            return substr($name, strlen($this->prefix));
+        }
+        if ('' !== $this->ignore && str_starts_with($name, $this->ignore)) {
+            return '';
+        }
+
+        return $this->get($name, [], $locale);
     }
 }

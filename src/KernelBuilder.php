@@ -145,7 +145,13 @@ final class KernelBuilder
             locale: $locale,
         );
 
-        return Language::make($catalog, $resolver, $locale);
+        return Language::make(
+            $catalog,
+            $resolver,
+            $locale,
+            self::configText($config, 'app.lang.prefix', '!@'),
+            self::configText($config, 'app.lang.ignore', '!#'),
+        );
     }
 
     /**
@@ -353,5 +359,20 @@ final class KernelBuilder
         $value = $config->get($name);
 
         return is_string($value) && '' !== $value ? $value : $default;
+    }
+
+    /**
+     * 读取文本配置，允许空串表示关闭。
+     *
+     * @param Store $config 配置存储
+     * @param string $name 点号路径
+     * @param string $default 缺失或非字符串时的默认值
+     * @return string 配置值
+     */
+    private static function configText(Store $config, string $name, string $default): string
+    {
+        $value = $config->get($name);
+
+        return is_string($value) ? $value : $default;
     }
 }
