@@ -25,6 +25,9 @@ const FALLBACK_APP_DIRECTORIES = ['app', 'application'];
 /** 对等矩阵：升级建议的第二来源，避免人工表与矩阵漂移 */
 const PARITY_MATRIX = 'tests/Parity/legacy-api.json';
 
+/** 扩展门面目录：项目在 1.x 里追加门面方法的位置 */
+const FACADE_EXTENSION_DIRECTORY = 'extend/fxri/data/app/controller/facade_ext';
+
 /** 目录名排除：第三方依赖与运行产物 */
 const EXCLUDED_DIRECTORIES = ['vendor', 'runtime', 'node_modules', '.git'];
 
@@ -330,12 +333,13 @@ function scanProject(string $root): array
     }
 
     arsort($methods);
+    $extensionMethods = facadeExtensionMethods($root);
     $topMethods = [];
     foreach (array_slice($methods, 0, 20, true) as $method => $count) {
         $topMethods[] = [
             'method' => $method,
             'count' => $count,
-            'suggestion' => suggestFor($method),
+            'suggestion' => suggestFor($method, $extensionMethods),
         ];
     }
 
@@ -1010,9 +1014,45 @@ function tierFor(int $count): string
 }
 
 /**
+ * 收集项目扩展方法。
+ *
+ * 扩展门面以文件名为门面类，方法在文件内以 `function` 声明；用于把项目自有方法
+ * 与框架 API 区分开，避免给出「见 2.0 API 对照」的误导建议。
+ *
+ * @param string $root 项目根
+ * @return array<string, true> 形如 `Safe::rsapriExt` 的集合
+ */
+function facadeExtensionMethods(string $root): array
+{
+    $methods = [];
+    foreach (directPhpFiles($root . '/' . FACADE_EXTENSION_DIRECTORY) as $file) {
+        $class = basename($file, '.php');
+        $code = file_get_contents($file);
+        if (false === $code) {
+            continue;
+        }
+
+        $tokens = significantTokens(token_get_all($code));
+        $count = count($tokens);
+        for ($i = 0; $i < $count; ++$i) {
+            $token = $tokens[$i];
+            if (!is_array($token) || T_FUNCTION !== $token[0]) {
+                continue;
+            }
+            $next = $tokens[$i + 1] ?? null;
+            if (is_array($next) && T_STRING === $next[0]) {
+                $methods[$class . '::' . $next[1]] = true;
+            }
+        }
+    }
+
+    return $methods;
+}
+
+/**
  * 给出旧调用的迁移建议。
  *
- * 顺序：人工措辞表（更贴项目语境）→ 对等矩阵目标 → 按类名兜底。
+ * 顺序：人工措辞表（更贴项目语境）→ 对等矩阵目标 → 项目扩展方法 → 按类名兜底。
  *
  * @param string $method 形如 Base::config
  * @param array<string, true> $extensionMethods 项目扩展方法集合
