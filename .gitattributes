@@ -1,3 +1,7 @@
+# 全库固定 LF：Windows 的 core.autocrlf 会把文本检出成 CRLF，
+# 导致按字节比对或按内容校验的实现本地通过、CI 失败
+* text=auto eol=lf
+
 # 发布归档时排除开发期文件，接入方 composer 下载的包只保留运行所需内容
 /.github export-ignore
 /tests export-ignore
@@ -21,3 +25,7 @@
 /.tasks export-ignore
 /.trae export-ignore
 /.agents export-ignore
+
+# 内置资源按 1.6.1 原始字节分发，固定 LF，避免平台自动转换造成哈希不一致
+/resources/language/** text eol=lf
+/resources/config/** text eol=lf
