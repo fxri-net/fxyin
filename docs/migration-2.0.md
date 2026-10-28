@@ -313,7 +313,7 @@ return Envelope::success($data, '请求成功');
 | `cookie(...$vars)` | `CookieJar::get()`、`CookieJar::set()` |
 | `env(...$vars)` | `Config\Store`（`env` 命名空间） |
 | `dump(...$vars)` | `Dump::write(...)` |
-| `json($data, $type, $param)` | `Json::encode()`、`Json::decode()`；非 JSON 串按查询串解码用 `Encode::decodeAll()` |
+| `json($data, $type, $param)` | `Json::encode()`、`Json::decode()`；非 JSON 串按查询串解码用 `Encode::decodeAll()`；v1 对已编码串不再编码，v2 需先 `Type::isJson()` 判断 |
 | `ipv4($data, $type)` | `Ip::toLong()`、`Ip::fromLong()` |
 | `crypt($data, $type, $param)` | `Cipher::encrypt()`、`Cipher::decrypt()`；旧数据用 `LegacyCipher::decrypt()` |
 | `throwable($message)` | 抛异常，由接入层处理 |

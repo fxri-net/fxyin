@@ -485,7 +485,7 @@
         },
         "Config": {
             "load": {
-                "target": "Config\\ConfigLoader",
+                "target": "Config\\ConfigLoader（目录）/ File\\Loader + Config\\Store::set（单文件）",
                 "status": "equiv"
             },
             "has": {

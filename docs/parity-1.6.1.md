@@ -83,9 +83,9 @@ outline: [2, 3]
 
 | 1.x | v2 目标 | 状态 |
 | --- | --- | --- |
-| `App::init` | `Application\Bootstrap` | 等价 |
+| `App::init` | `Application\Bootstrap`（按路径装配；`env.app` 名称映射不迁移） | 等价 |
 | `App::run` | `Application\Router`（可选） | 等价 |
-| `Config::load/has/get` | `ConfigLoader`、`Config` | 等价 |
+| `Config::load/has/get` | `Config\ConfigLoader`（目录）、`Config`；单文件用 `File\Loader + Config\Store::set` | 等价 |
 | `Config::set` | `Config\Store::set` | 等价 |
 | `Lang::range/set/load/has/get` | `Translation\Catalog`、`Language` | 等价 |
 | `Lang::detect`、Cookie/列表配置 | `Translation\LocaleResolver` | 等价 |
@@ -113,6 +113,38 @@ outline: [2, 3]
 - `Server::system`：由 PHP 原生 `PHP_OS_FAMILY` 承接，不再做版本级名称映射。
 - 门面与全局函数：由 `Fxri\*`、`Application\Services` 覆盖。
 - 配置驱动的六元响应：由 `Envelope` 与项目响应工厂覆盖。
+
+### 7.1 行为差异清单
+
+以下差异是 2.0 的既定设计或已确认的取舍，能力均有替代：
+
+| 项 | 1.6.1 | v2 |
+| --- | --- | --- |
+| 响应结构 | 配置驱动 6 元数组 | `Envelope` 固定四字段 |
+| 错误模型 | `throwable()` 直接终止进程 | 抛异常，由接入层映射 |
+| 对称加密 | 任意 openssl 算法/口令/IV | `Cipher` 固定 AES-256-GCM；旧数据 `LegacyCipher` |
+| `Client::ip` | 无条件信任转发头 | 默认只信直连，转发需可信代理 |
+| 浏览器/系统名称 | IE8、Firefox3 等旧标签 | 现代标签集合（Edge 等） |
+| `File::formatSize` | 最大 TB | 增加 PB |
+| `Uuid` 默认 | 大写；种子直接 MD5 | 小写；种子一律 MD5；现有串用 `Uuid::format()` |
+| `File::moveDirectory` | 内容扁平合并 | `rename` 整目录 |
+| `Server::branch` | 命中后自动写回配置 | 只解析分支，配置由调用方写入 `Config\Store` |
+| `Base::json` / `fxy_json` | 已编码串不重复编码；非 JSON 串按查询串解码 | `Json` 只处理 JSON；先 `Type::isJson()`，查询串用 `Encode::decodeAll()` |
+| `Language::phrase(null)` | 返回字符串 `null` | 返回全部词条 |
+| `Param::array` / `merge` | 保留 `''` 标记；`$type` 强转 | 纯转换/合并；类型由调用方显式转换 |
+| `Param::url` | 类型 `1.1/1.2/2.1` | `Url::build/query/withQuery` 组合 |
+| `Data::htmlFilter` | 可传 `$flags` | 固定 `ENT_NOQUOTES` 语义 |
+| `Text::implode/explode` | 接受数字、对象等混合值 | 只接受字符串/数组 |
+| `is_function` / `is_email` | 仅对象 callable；正则邮箱 | 任意 callable；`filter_var` |
+| `Math::rand` | 数字类型排除 `0` | 包含 `0` |
+| `App::init($name)` | 按 `env.app` 名称选目录 | 按应用路径显式 `Bootstrap::make($path)` |
+| `Config::load($file,$name)` | 单文件按名称挂载 | `File\Loader::read` + `Config\Store::set` |
+| `File::getMediaInfo` | 自动读取配置命令 | 显式传命令；`inspectTemplate()` 承接旧模板 |
+| `Service::http` GET 字符串数据 | 拼进查询串 | 只拼数组数据 |
+| `Param::init` | 从 `$_SERVER['argv']` 移除已消费参数 | `Cli::parse()` 返回剩余参数，不改写全局；由调用方继续传递 |
+| `Server::env` | 改写 `$_SERVER` 的 `SERVER_NAME` / `REQUEST_URI` | 只写 `env.base.host/uri`，请求上下文通过 `RequestContext::fromGlobals($defaults)` 注入 |
+| `Client::param` 方法筛选 | `$method` 字符串按 `get/post/input/cli` 组合 | `RequestInput` 分源方法 + `all()` / `only()` 组合 |
+| `Text::timeFormat` 单位标签 | 语言包键 `millisecond/sec/...` | `Time::duration()` 默认中文标签，可用 `$labels` 覆盖 |
 
 ## 八、相关文档
 
