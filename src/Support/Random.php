@@ -43,23 +43,38 @@ final class Random
     /**
      * 生成随机字符串。
      *
+     * `$firstCharset` 单独限定首字符，用于需要以字母开头的标识；缺省与其余字符同一字符集。
+     *
      * @param int $length 字符个数
      * @param RandomCharset $charset 字符集
+     * @param RandomCharset|null $firstCharset 首字符集，null 表示与 `$charset` 相同
      * @return string 随机串
      */
-    public static function string(int $length, RandomCharset $charset = RandomCharset::Alnum): string
+    public static function string(int $length, RandomCharset $charset = RandomCharset::Alnum, ?RandomCharset $firstCharset = null): string
     {
         if ($length < 1) {
             throw new InvalidArgumentException('随机字符串长度必须大于 0');
         }
 
-        $characters = $charset->characters();
-        $size = $charset->length();
-        $result = '';
-        for ($index = 0; $index < $length; ++$index) {
-            $result .= $characters[random_int(0, $size - 1)];
+        $first = $firstCharset ?? $charset;
+        $result = self::pick($first);
+        for ($index = 1; $index < $length; ++$index) {
+            $result .= self::pick($charset);
         }
 
         return $result;
+    }
+
+    /**
+     * 从字符集取一个随机字符。
+     *
+     * @param RandomCharset $charset 字符集
+     * @return string 单个字符
+     */
+    private static function pick(RandomCharset $charset): string
+    {
+        $characters = $charset->characters();
+
+        return $characters[random_int(0, $charset->length() - 1)];
     }
 }

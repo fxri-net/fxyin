@@ -56,19 +56,19 @@ outline: [2, 3]
 
 | 门面 | 方法数 | 等价 | 需新增 | 覆盖 / 移除 |
 | --- | --- | --- | --- | --- |
-| Base | 13 | 9 | 4 | 0 |
+| Base | 13 | 13 | 0 | 0 |
 | Client | 4 | 4 | 0 | 0 |
-| Data | 26 | 15 | 9 | 覆盖 2 |
+| Data | 26 | 22 | 0 | 覆盖 4 |
 | File | 5 | 5 | 0 | 0 |
 | Math | 1 | 1 | 0 | 0 |
-| Param | 10 | 7 | 2 | 移除 1 |
-| Safe | 6 | 5 | 1 | 0 |
-| Server | 6 | 5 | 1 | 0 |
-| Service | 2 | 1 | 1 | 0 |
-| Text | 18 | 9 | 9 | 0 |
-| View | 1 | 0 | 1 | 0 |
+| Param | 10 | 10 | 0 | 0 |
+| Safe | 6 | 6 | 0 | 0 |
+| Server | 6 | 4 | 0 | 覆盖 2 |
+| Service | 2 | 2 | 0 | 0 |
+| Text | 18 | 18 | 0 | 0 |
+| View | 1 | 1 | 0 | 0 |
 
-需新增项为零：`App::run` 已由可选 `Application\Router` 承接，其余能力均已落到 v2 入口——语言、文件加载、数据层级/字段/参数、参数转换、PEM 规范化、分支上下文、HTTP 下载、文本时间/编码、XML 响应与目录创建。
+需新增项为零：全部门面能力已落到 v2 入口。`App::run` 由可选 `Application\Router` 承接；`Client::param` 由 `Http\RequestInput` 承接；`File::getList` 由 `Filesystem::findFiles` 承接；`Param::init` 由 `Application\Cli` 承接；`Safe::rsapri/rsapub` 由 `Rsa::privateEncrypt/publicDecrypt` 承接；`Service::http/httpDown` 由 `HttpClient\Curl` 承接；`Text` 的嵌套编解码与长度校验分别落到 `Encode::encodeAll/decodeAll` 与 `Str::isLength`；其余能力均可按 v1.6.1 语义对齐。
 
 完整映射见 `tests/Parity/legacy-api.json`。
 
@@ -106,6 +106,7 @@ outline: [2, 3]
 以下不具备直接等价接口，但能力有替代：
 
 - `whereSafe`、`whereFilter`：由 `WhereBuilder` 绑定参数覆盖。
+- `storeUpperLevel`、`storeLowerLevel`：由 `Data\Hierarchy::ancestors()` / `descendants()` 在应用层递归，替代 MySQL 专有递归 SQL。
 - `Server::ip`：由 `HttpClient\Curl` + `Param\Json` 组合取公网地址。
 - `Server::system`：由 PHP 原生 `PHP_OS_FAMILY` 承接，不再做版本级名称映射。
 - 门面与全局函数：由 `Fxri\*`、`Application\Services` 覆盖。

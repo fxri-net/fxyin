@@ -33,7 +33,7 @@
                 "status": "equiv"
             },
             "env": {
-                "target": "Http\\ServerContext / Config\\Environment",
+                "target": "Config\\Store（env 命名空间）",
                 "status": "equiv"
             },
             "dump": {
@@ -117,12 +117,12 @@
                 "status": "equiv"
             },
             "storeUpperLevel": {
-                "target": "Data\\Hierarchy",
-                "status": "equiv"
+                "target": "Data\\Hierarchy::ancestors（应用层递归）",
+                "status": "covered"
             },
             "storeLowerLevel": {
-                "target": "Data\\Hierarchy",
-                "status": "equiv"
+                "target": "Data\\Hierarchy::descendants（应用层递归）",
+                "status": "covered"
             },
             "fieldDistance": {
                 "target": "Data\\Field::distance / Sql\\Expression::distance",
@@ -209,7 +209,7 @@
         },
         "Math": {
             "rand": {
-                "target": "Support\\Random::string",
+                "target": "Support\\Random::string（首字符集 Alpha）",
                 "status": "equiv"
             }
         },
@@ -335,7 +335,7 @@
                 "status": "equiv"
             },
             "strlen": {
-                "target": "Text\\Str::length",
+                "target": "Text\\Str::isLength",
                 "status": "equiv"
             },
             "letters": {
@@ -363,7 +363,7 @@
                 "status": "equiv"
             },
             "strEncode": {
-                "target": "Text\\Encode::base64Encode",
+                "target": "Text\\Encode::encodeAll",
                 "status": "equiv"
             },
             "strEncodeMerge": {
@@ -371,7 +371,7 @@
                 "status": "equiv"
             },
             "strDecode": {
-                "target": "Text\\Encode::base64Decode",
+                "target": "Text\\Encode::decodeAll",
                 "status": "equiv"
             },
             "strDecodeMerge": {
@@ -393,7 +393,7 @@
         },
         "View": {
             "echo": {
-                "target": "Http\\XmlFormatter",
+                "target": "Http\\JsonFormatter / XmlFormatter / Renderer（按类型序列化）",
                 "status": "equiv"
             }
         }

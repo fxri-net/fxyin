@@ -82,7 +82,7 @@ Dump::write(['ok' => true]);
 | --- | --- | --- |
 | `bytes(int $length): string` | 生成长度为 `$length` 字节的随机二进制串，`$length < 1` 抛 `InvalidArgumentException` | 二进制串 |
 | `integer(int $minimum, int $maximum): int` | 生成闭区间内的随机整数，委托 `random_int()` | 随机整数 |
-| `string(int $length, RandomCharset $charset = RandomCharset::Alnum): string` | 逐位从字符集取字符，`$length < 1` 抛 `InvalidArgumentException` | 随机串 |
+| `string(int $length, RandomCharset $charset = RandomCharset::Alnum, ?RandomCharset $firstCharset = null): string` | 逐位从字符集取字符；`$firstCharset` 单独限定首字符，缺省与其余字符同一字符集；`$length < 1` 抛 `InvalidArgumentException` | 随机串 |
 
 ### RandomCharset
 
@@ -91,9 +91,10 @@ Dump::write(['ok' => true]);
 | `Numeric` | 纯数字，值为 `0123456789` |
 | `Lower` | 小写字母，值为 `abcdefghijklmnopqrstuvwxyz` |
 | `Upper` | 大写字母，值为 `ABCDEFGHIJKLMNOPQRSTUVWXYZ` |
-| `Alnum` | 数字与大小写字母，值为前三者按数字、小写、大写顺序拼接 |
+| `Alpha` | 大小写字母，值为小写与大写拼接 |
+| `Alnum` | 数字与大小写字母，值为前四者按数字、小写、大写顺序拼接 |
 
-`characters(): string` 返回字符集本身（可直接按位取字符），`length(): int` 返回字符个数，即 `Numeric` 为 10、`Lower` 与 `Upper` 为 26、`Alnum` 为 62。
+`characters(): string` 返回字符集本身（可直接按位取字符），`length(): int` 返回字符个数，即 `Numeric` 为 10、`Lower`、`Upper` 与 `Alpha` 为 26/26/52、`Alnum` 为 62。
 
 ### Formatter
 
@@ -120,7 +121,8 @@ Dump::write(['ok' => true]);
 - `toInt('12abc')` 是 `0` 而非 `12`，`is_numeric()` 不通过就不转换；`toInt(12.9)` 为 `12`，小数被截断而不是四舍五入。
 - `toString()` 对数组、非 `Stringable` 对象返回空串，因此它不会触发「数组转字符串」告警，但也会把这类值悄悄吞成空串；调试结构请用 `Dump`。
 - `Random::bytes()` 产出的是二进制串，直接入库或放进 URL 前需自行 `bin2hex()` 或 base64 编码；仓储层若按 UTF-8 校验，二进制会直接失败。
-- `Random::string()` 的长度是「字符个数」，因四个字符集都是 ASCII，才与字节数一致；扩展字符集时两者会分叉。
+- `Random::string()` 的长度是「字符个数」，因五个字符集都是 ASCII，才与字节数一致；扩展字符集时两者会分叉。
+- 需要「首字符必须是字母」的标识（如变量名、短链），用 `Random::string($length, RandomCharset::Alnum, RandomCharset::Alpha)`；只传字符集不保证首字符类型。
 - `Random::integer()` 的两端都包含，且未做参数校验，`$minimum > $maximum` 时由 `random_int()` 自行报错。
 - `Formatter::number()` 与 `size()` 的整数部分都带千分位，`1023` 字节会输出 `1,023.00 B`；不要把结果直接用于数值比较或再解析。
 - `Formatter::size()` 把负数当 0，上传大小、剩余容量这类可能为负的输入不会被报错，需要拦截时在调用前判断。

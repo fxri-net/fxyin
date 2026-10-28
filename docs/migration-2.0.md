@@ -106,11 +106,11 @@ echo $kernel->trans('欢迎');
 | `Client::ip()` | `0`、`1` | `ClientInfo::ip()`、`Text\Ip::toLong()` |
 | `Client::browser()`、`Client::system()` | `-1`、`1`、`2` | `CaseFormat::Original`、`Lower`、`Upper` |
 | `Base::ipv4()`、`Text::ipv4()` | `encode`、`decode` | `Text\Ip::toLong()`、`Text\Ip::fromLong()` |
-| `Math::rand()` | `0`、`1` | `RandomCharset::Alnum`、`RandomCharset::Numeric` |
+| `Math::rand()` | `0`、`1` | `RandomCharset::Alnum`、`RandomCharset::Numeric`；类型 0 的首字符用 `RandomCharset::Alpha` |
 | `Text::uuid()` | mode `1`/`2`/`3`；style `1`~`4` | `UuidMode` + `UuidStyle` |
 | `Safe::md5()` | `1`、`2` | `HashLength::Full32`、`HashLength::Short16` |
-| `Base::load()` | `null`、`'data'` | 无等价实现，项目侧直接 `require` |
-| `Server::format()` | `1`、`2` | 无等价实现，见 4.5 |
+| `Base::load()` | `null`、`'data'` | `File\Loader::load()`、`File\Loader::read()` |
+| `Server::format()` | `1`、`2` | `Envelope::toArray()` 或项目侧序列化，见 4.5 |
 
 ### 4.2 `Param::define()` 模式号 → `Shape`
 
@@ -364,7 +364,7 @@ return Envelope::success($data, '请求成功');
 | 旧方法 | 新写法 |
 | --- | --- |
 | `formatSize($size)` | `Formatter::size($bytes)` |
-| `getList($path, $ext, $limit)` | `Filesystem::listFiles($directory)`，扩展名过滤由调用方处理 |
+| `getList($path, $ext, $limit)` | `Filesystem::findFiles($directory, $extensions, $maxDepth)` |
 | `moveDirectory($oldpath, $newpath)` | `Filesystem::moveDirectory()` |
 | `deleteDirectory($path)` | `Filesystem::deleteDirectory()` |
 | `getMediaInfo($var, $type)` | `MediaInfo::mime()`、`MediaInfo::extension()` |
@@ -373,17 +373,17 @@ return Envelope::success($data, '请求成功');
 
 | 旧方法 | 新写法 |
 | --- | --- |
-| `rand($length, $type)` | `Random::string($length, RandomCharset::Alnum)` |
+| `rand($length, $type)` | 类型 0：`Random::string($length, RandomCharset::Alnum, RandomCharset::Alpha)`；类型 1：`Random::string($length, RandomCharset::Numeric)` |
 
 ### 7.6 `\fxapp\Param`
 
 | 旧方法 | 新写法 |
 | --- | --- |
-| `init()` | 移除，参数由调用方直接传入 |
+| `init()` | `Application\Cli::parse()` + `Bootstrap::withCliArguments()` |
 | `define($param, $mode)` | `Shape` 链式组合，见 4.2 |
-| `array($param, $limit, $filter)` | 无等价实现，直接数组操作 |
-| `object($param, $limit, $filter)` | 无等价实现，`(object)` 强转或自建 |
-| `pick($base, $data)` | `Picker::only()` |
+| `array($param, $limit, $filter)` | `Data\Cast::toArray($param, $limit)` |
+| `object($param, $limit, $filter)` | `Data\Cast::toObject($param, $limit)` |
+| `pick($base, $data)` | `Picker::pick()` |
 | `append(...$args)` | `Pipeline` |
 | `merge($limit, $cover, $type, ...$args)` | `Merger::merge()`、`Merger::mergeKeepBlank()` |
 | `cover($args, $limit, $cover, $type)` | `Merger::merge()` |
@@ -427,19 +427,19 @@ return Envelope::success($data, '请求成功');
 | `implode($delimiter, $data, $explode, $unique)` | `Str::implode($glue, $values, $unique)` |
 | `explode($delimiter, $data, $unique, $limit)` | `Str::explode($separator, $value, $unique)` |
 | `splice($string, $value, $delimiter)` | `Str::splice($value, $append, $glue)` |
-| `strlen($string, $start, $end)` | `Str::length()`、`Str::isLength()` |
-| `letters($var, $in_charset, $out_charset)` | 无等价实现，`mb_convert_encoding()` |
-| `letter($var, $in_charset, $out_charset)` | 无等价实现，同上 |
-| `timeRange($time, $start, $end)` | 无等价实现，项目侧比较 |
+| `strlen($string, $start, $end)` | `Str::isLength($value, $start, $end)` |
+| `letters($var, $in_charset, $out_charset)` | `Encode::letters($value, $inCharset, $outCharset)` |
+| `letter($var, $in_charset, $out_charset)` | `Encode::letter($value, $inCharset, $outCharset)` |
+| `timeRange($time, $start, $end)` | `Time::range($time, $start, $end)` |
 | `timeChange($time, $type, $format)` | `Time::parse()`、`Time::format()` |
 | `timeMilli($mtime)` | `Time::milli()` |
-| `timeFormat($time, $param)` | 无等价实现，按 `DateGranularity` 组合 |
-| `strEncode($data)` | `Encode::base64Encode()` |
-| `strEncodeMerge($data)` | 无等价实现，项目侧循环 |
-| `strDecode($data)` | `Encode::base64Decode()` |
-| `strDecodeMerge($data)` | 无等价实现，项目侧循环 |
+| `timeFormat($time, $param)` | `Time::relative($time, $param)` |
+| `strEncode($data)` | `Encode::encodeAll($data)` |
+| `strEncodeMerge($data)` | `Encode::encodeAll($data)`（递归辅助已合并） |
+| `strDecode($data)` | `Encode::decodeAll($data)` |
+| `strDecodeMerge($data)` | `Encode::decodeAll($data)`（递归辅助已合并） |
 | `ipv4($data, $type)` | `Ip::toLong()`、`Ip::fromLong()` |
-| `convert($data, $type)` | 无等价实现，按需用 `mb_convert_encoding()` |
+| `convert($data, $type)` | `Encode::convert($value, $type)` |
 | `throwable($th, $type, $param)` | 无等价实现，接入层自行渲染 |
 
 ### 7.11 `\fxapp\View`
@@ -473,19 +473,15 @@ return Envelope::success($data, '请求成功');
 
 ## 十、不再提供的能力
 
-以下能力在 2.0 中没有等价实现，需要接入方按业务自行实现，避免误以为只是改了名字：
+以下 1.x 入口不再存在；能力大多有替代，但调用方式必须改写：
 
-- 门面静态转发（`Facade::__callStatic`）与 `\fxapp\*` 全部类名。
-- 全局函数与函数文件自动加载（`app/function/` 目录约定）。
-- 配置驱动的响应结构（`server.echo.template` / `server.echo.format`）与 `extend`、`time` 两个响应位。
-- 条件拼接的字符串白名单过滤（`whereSafe` / `whereFilter`）。
-- 递归上级 / 下级存储查询（`storeUpperLevel` / `storeLowerLevel`）。
-- 字段级别的距离、首字母、除法表达式（`fieldDistance` / `fieldInitial` / `fieldDivision`）。
-- 字段别名与字段转义（`fieldAlias` / `fieldEscape`）。
-- 语言列表拼接与按语言切换连接符（`langList` / `langParse`）。
-- 编码转换助手（`letters` / `letter` / `convert` / `strEncodeMerge` / `strDecodeMerge`）。
-- 应用目录约定式启动（`\fxyin\App::init()` 扫描 `function/`、`config/`、`language/`、`store/`）。
-- 内置路由分发（`\fxyin\App::run()`）。
+- 门面静态转发（`Facade::__callStatic`）与 `\fxapp\*` 类名：改由 `Fxri\*` 与 `Application\Services`。
+- 全局函数与 `app/function/` 目录约定：`Support\Type`、各服务，或 `Bootstrap::withFunctions()`。
+- 配置驱动的六元响应结构（`server.echo.template` / `server.echo.format`）：改为 `Envelope` 固定四字段，`extend`、`time` 两个响应位移除。
+- 点分模式号与整型 `type`：改为具名枚举与链式 `Shape`。
+- `throwable()` 直接终止进程：改为抛异常，由接入层映射。
+- 数据库连接与事务：fxyin 不接管，仍由项目数据库层负责。
+- 递归上下级 SQL 与字段表达式：改为应用层 `Data\Hierarchy` 与 `Sql\Expression`，不再生成 MySQL 专有 SQL。
 
 ## 十一、高频调用与行为差异
 
@@ -508,12 +504,12 @@ return Envelope::success($data, '请求成功');
 | `Data::paramEmpty($data, $type)` | `Data\Param::missing($data, NullPolicy::Blank)` | 空值策略改为枚举 |
 | `Data::fieldJson(...)` | `Field::json(...)` | 见 7.3 |
 | `View::log($data, $type)` | PSR-3 `LoggerInterface` | 通过 `KernelBuilder::withLogger()` 注入 |
-| `Service::http(...)` | `Http\HttpClient\Client::send()` | 需要 PSR-18 客户端实现 |
-| `File::getList($path, $ext)` | `Filesystem::listFiles($directory)` | 扩展名过滤由调用方处理 |
+| `Service::http(...)` | `HttpClient\Curl::request()` / `send()` | 需要 PSR-7 与 PSR-18 实现时改用 `HttpClient\Client::send()` |
+| `File::getList($path, $ext)` | `Filesystem::findFiles($directory, $extensions)` | 扩展名过滤与深度由参数表达 |
 | `Data::whereMake($data, $type)` | `WhereBuilder::build()`、`Expression` | 条件与绑定值对象化 |
-| `Data::fieldEscape(...)` | 无等价实现 | 项目侧用 `Expression` 书写 |
-| `Service::httpDown(...)` | 无等价实现 | 项目侧用 `HttpClient\Client` 落盘 |
-| `Math::rand($length, $type)` | `Random::string($length, RandomCharset::Alnum)` | 字符集改为枚举 |
+| `Data::fieldEscape(...)` | `Field::escape()` | 见 7.3 |
+| `Service::httpDown(...)` | `HttpClient\Curl::download()` | 非 2xx 不写文件 |
+| `Math::rand($length, $type)` | `Random::string($length, RandomCharset::Alnum, RandomCharset::Alpha)` | 字符集改为枚举，首字符集单独指定 |
 | `Text::timeMilli($mtime)` | `Time::milli()` | 见 7.10 |
 | `Text::explode()`、`Text::implode()` | `Text\Str::explode()`、`Str::implode()` | 去重与限长参数调整 |
 | `Client::ip($type)` | `ClientInfo::ip()`、`Text\Ip::toLong()` | 整型地址由 `Ip` 转换 |

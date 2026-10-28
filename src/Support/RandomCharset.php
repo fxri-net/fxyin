@@ -20,6 +20,9 @@ enum RandomCharset: string
     /** 大写字母 */
     case Upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
+    /** 大小写字母 */
+    case Alpha = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
     /** 数字与大小写字母 */
     case Alnum = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
