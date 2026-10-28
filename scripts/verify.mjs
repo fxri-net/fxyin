@@ -20,6 +20,24 @@ const steps = [
 const failures = []
 let executed = 0
 
+// 前置探测：Windows 的 PHP 默认找不到 openssl.cnf，RSA 用例会以「密钥生成失败」收场；
+// 这里先探一次并给出可执行指引，避免把环境问题误判成代码缺陷
+if (!skipCode) {
+  const probe = spawnSync("php", ["-r", "exit(@openssl_pkey_new(['private_key_bits' => 512]) === false ? 1 : 0);"], { cwd: root })
+  if (probe.status !== 0) {
+    console.error("\n✖ 前置检查未通过：当前 php 无法生成 OpenSSL 密钥")
+    if (probe.error) {
+      console.error("  未找到 php 命令，请先安装 PHP 并加入 PATH")
+    } else if (isWindows) {
+      console.error("  Windows 下通常是缺少 openssl.cnf，设置后重跑：")
+      console.error('  $env:OPENSSL_CONF = "<PHP 目录>\\extras\\ssl\\openssl.cnf"')
+    } else {
+      console.error("  请检查 php 的 openssl 扩展与 openssl.cnf 配置")
+    }
+    process.exit(1)
+  }
+}
+
 for (const step of steps) {
   if (step.skip) continue
   console.log(`\n▶ ${step.label}`)
