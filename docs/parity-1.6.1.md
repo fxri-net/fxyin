@@ -68,11 +68,7 @@ outline: [2, 3]
 | Text | 18 | 9 | 9 | 0 |
 | View | 1 | 0 | 1 | 0 |
 
-需新增项只剩：
-
-- 路由：`App::run` → 可选 `Application\Router`。
-
-其余能力均已落到 v2 入口：语言、文件加载、数据层级/字段/参数、参数转换、PEM 规范化、分支上下文、HTTP 下载、文本时间/编码、XML 响应与目录创建。
+需新增项为零：`App::run` 已由可选 `Application\Router` 承接，其余能力均已落到 v2 入口——语言、文件加载、数据层级/字段/参数、参数转换、PEM 规范化、分支上下文、HTTP 下载、文本时间/编码、XML 响应与目录创建。
 
 完整映射见 `tests/Parity/legacy-api.json`。
 
@@ -88,7 +84,7 @@ outline: [2, 3]
 | 1.x | v2 目标 | 状态 |
 | --- | --- | --- |
 | `App::init` | `Application\Bootstrap` | 等价 |
-| `App::run` | `Application\Router`（可选） | 需新增 |
+| `App::run` | `Application\Router`（可选） | 等价 |
 | `Config::load/has/get` | `ConfigLoader`、`Config` | 等价 |
 | `Config::set` | `Config\Store::set` | 等价 |
 | `Lang::range/set/load/has/get` | `Translation\Catalog`、`Language` | 等价 |

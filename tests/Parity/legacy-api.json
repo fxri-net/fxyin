@@ -480,7 +480,7 @@
             },
             "run": {
                 "target": "Application\\Router（可选）",
-                "status": "add"
+                "status": "equiv"
             }
         },
         "Config": {
