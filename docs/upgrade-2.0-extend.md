@@ -325,7 +325,29 @@ final class LegacyResponse
 
 内部新代码用 `Envelope`，旧代码继续取六元数组；协议变更单独排期。
 
-## 九、删除顺序
+## 九、框架副本的本地新增方法
+
+`extend/fxri/base` 里的类常被就地加过方法。这类方法不在任何正式标签里，2.0 也没有等价 API，升级前必须逐项定落点，不能跟着目录一起删。
+
+判定方式：
+
+1. 用升级总览里「框架副本可复原」的比对结果，筛出「1.x 正式副本没有、项目副本有」的方法。
+2. 在 2.0 里按语义找同类能力；找不到就落成项目服务或工具类。
+3. 把落点写进改动清单，与 `facade_ext` 的迁移项分开跟踪。
+
+常见落点：
+
+| 本地新增方法 | 建议落点 |
+| --- | --- |
+| `File::createDirectory` | `File\Filesystem`（写入前自动建目录），或项目工具类 |
+| `Base::langRange` / `langSet` / `langDetect` / `langCookieExpire` | `Translation\Language` / `LocaleResolver`；Cookie 名与有效期由项目配置承接 |
+
+两条注意：
+
+- 这类方法不属于「项目扩展方法」：后者定义在 `facade_ext` 里，随扩展目录迁移；前者寄生在框架副本内，只在副本存在时可用。
+- 删除副本前先跑一次基线，确认引用点全部有替代，再执行删除。
+
+## 十、删除顺序
 
 1. 备份 `extend/fxri` 与部署包，记录当前 PHP 与宿主版本。
 2. 补 `composer.json` 与自动加载，装入 `fxri/fxyin:^2.0`。
@@ -337,7 +359,7 @@ final class LegacyResponse
 8. 清理 Composer 里为旧目录保留的映射。
 9. 运行基线，确认 `\fxapp\` 与点分模式号归零。
 
-## 十、验收
+## 十一、验收
 
 1. 全仓检索 `extend/fxri/base`、`\fxapp\`、`\fxyin\`、`fxy_`、点分模式号，除过渡层外归零。
 2. `config/` 下每个文件只返回数组，不调用函数、不读超全局变量。
@@ -345,7 +367,7 @@ final class LegacyResponse
 4. `upgrade-inspect.php baseline --check` 零新增。
 5. 过渡层调用量持续下降；归零后删除 `\fxapp\` 命名空间与映射。
 
-## 十一、红线
+## 十二、红线
 
 1. 不把 `safe` / `safe_local` 混进 fxyin 的删除与迁移。
 2. 不在同一提交里既删旧目录又改对外响应协议。
