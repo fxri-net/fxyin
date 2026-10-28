@@ -107,6 +107,8 @@ php tools/upgrade-inspect.php baseline --root=/path/to/project --write --baselin
 
 ## 十一、基线文件
 
+目录键取自项目 `extend/fxri/data/config.php` 的 `env.base.app`，实际可能是 `application`、`app` 或其它名称，不固定为 `app`；配置缺失时才按存在性兜底探测常见命名。
+
 ```json
 {
   "version": 1,

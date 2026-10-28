@@ -16,8 +16,11 @@ declare(strict_types=1);
  *      php tools/upgrade-inspect.php baseline --root=<项目> --check --baseline=<文件>
  */
 
-/** 扫描目录：与文档约定的范围一致，只覆盖业务层、扩展数据与入口 */
-const SCAN_DIRECTORIES = ['app', 'extend/fxri/data', 'public'];
+/** 1.x 扩展配置：应用目录写在 env.base.app */
+const APP_DIRECTORY_CONFIG = 'extend/fxri/data/config.php';
+
+/** 应用目录配置缺失或无法解析时的兜底候选 */
+const FALLBACK_APP_DIRECTORIES = ['app', 'application'];
 
 /** 目录名排除：第三方依赖与运行产物 */
 const EXCLUDED_DIRECTORIES = ['vendor', 'runtime', 'node_modules', '.git'];
@@ -273,7 +276,8 @@ function buildProfile(string $root): array
  */
 function scanProject(string $root): array
 {
-    $files = collectPhpFiles($root, SCAN_DIRECTORIES);
+    $directories = scanDirectories($root);
+    $files = collectPhpFiles($root, $directories);
     $counts = [
         'fxapp' => 0,
         'echo_indexes' => 0,
@@ -285,7 +289,7 @@ function scanProject(string $root): array
         'facade_ext_refs' => 0,
         'oracle_refs' => 0,
     ];
-    $byDirectory = array_fill_keys(SCAN_DIRECTORIES, 0);
+    $byDirectory = array_fill_keys($directories, 0);
     $methods = [];
 
     foreach ($files as $file) {
@@ -707,6 +711,252 @@ function listSubdirectories(string $path): array
     sort($names);
 
     return $names;
+}
+
+/**
+ * 解析项目声明的应用目录。
+ *
+ * 1.x 在 `extend/fxri/data/config.php` 的 `env.base.app` 里声明应用目录，
+ * 取值可能是 `application`、`app` 或其它名称，因此不按目录名硬编码。
+ * 只做静态解析，不 include 项目文件。
+ *
+ * @param string $root 项目根
+ * @return string|null 相对项目根的应用目录
+ */
+function resolveAppDirectory(string $root): ?string
+{
+    $file = $root . '/' . APP_DIRECTORY_CONFIG;
+    if (!is_file($file)) {
+        return null;
+    }
+    $code = file_get_contents($file);
+    if (false === $code) {
+        return null;
+    }
+
+    $tokens = significantTokens(token_get_all($code));
+    $base = valueTokens($tokens, 'base');
+    if (null === $base) {
+        return null;
+    }
+    $app = valueTokens($base, 'app');
+    if (null === $app) {
+        return null;
+    }
+
+    $path = evaluatePathTokens($app, $root, dirname($file));
+
+    return null === $path ? null : relativeTo($root, $path);
+}
+
+/**
+ * 确定扫描目录。
+ *
+ * 应用目录取自项目配置；配置缺失或无法静态解析时才按存在性兜底探测常见命名。
+ *
+ * @param string $root 项目根
+ * @return list<string> 相对项目根的目录列表
+ */
+function scanDirectories(string $root): array
+{
+    $directories = [];
+    $app = resolveAppDirectory($root);
+    if (null !== $app && is_dir($root . '/' . $app)) {
+        $directories[] = $app;
+    } else {
+        foreach (FALLBACK_APP_DIRECTORIES as $candidate) {
+            if (is_dir($root . '/' . $candidate)) {
+                $directories[] = $candidate;
+            }
+        }
+    }
+    $directories[] = 'extend/fxri/data';
+    $directories[] = 'public';
+
+    return $directories;
+}
+
+/**
+ * 去掉空白与注释，保留有意义的标记。
+ *
+ * @param array<int, array{0: int, 1: string, 2: int}|string> $tokens 原始标记
+ * @return array<int, array{0: int, 1: string, 2: int}|string> 精简标记
+ */
+function significantTokens(array $tokens): array
+{
+    $significant = [];
+    foreach ($tokens as $token) {
+        if (is_array($token) && in_array($token[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+            continue;
+        }
+        $significant[] = $token;
+    }
+
+    return $significant;
+}
+
+/**
+ * 按数组键取出值标记。
+ *
+ * 值可能是数组字面量或标量表达式；数组字面量会去掉最外层方括号。
+ *
+ * @param array<int, array{0: int, 1: string, 2: int}|string> $tokens 精简标记
+ * @param string $key 数组键名
+ * @return array<int, array{0: int, 1: string, 2: int}|string>|null 值标记
+ */
+function valueTokens(array $tokens, string $key): ?array
+{
+    $count = count($tokens);
+    for ($i = 0; $i < $count; ++$i) {
+        $token = $tokens[$i];
+        if (!is_array($token) || T_CONSTANT_ENCAPSED_STRING !== $token[0] || literalValue($token[1]) !== $key) {
+            continue;
+        }
+        $arrow = $tokens[$i + 1] ?? null;
+        if (!is_array($arrow) || T_DOUBLE_ARROW !== $arrow[0]) {
+            continue;
+        }
+
+        $value = [];
+        $depth = 0;
+        for ($j = $i + 2; $j < $count; ++$j) {
+            $current = $tokens[$j];
+            $text = is_array($current) ? $current[1] : $current;
+            if (',' === $text && 0 === $depth) {
+                break;
+            }
+            if (']' === $text || ')' === $text) {
+                if (0 === $depth) {
+                    break;
+                }
+                --$depth;
+                $value[] = $current;
+
+                continue;
+            }
+            if ('[' === $text || '(' === $text) {
+                ++$depth;
+            }
+            $value[] = $current;
+        }
+
+        return stripOuterBrackets($value);
+    }
+
+    return null;
+}
+
+/**
+ * 去掉数组字面量最外层的一对方括号。
+ *
+ * @param array<int, array{0: int, 1: string, 2: int}|string> $tokens 值标记
+ * @return array<int, array{0: int, 1: string, 2: int}|string> 内层标记
+ */
+function stripOuterBrackets(array $tokens): array
+{
+    $count = count($tokens);
+    if ($count >= 2 && '[' === $tokens[0] && ']' === $tokens[$count - 1]) {
+        return array_slice($tokens, 1, -1);
+    }
+
+    return $tokens;
+}
+
+/**
+ * 静态求值路径表达式。
+ *
+ * 只支持 1.x 扩展配置里的常见写法：字符串字面量、`.` 拼接、`$root`、`__DIR__` 与
+ * `DIRECTORY_SEPARATOR`；遇到其它写法返回 null，交由调用方兜底。
+ *
+ * @param array<int, array{0: int, 1: string, 2: int}|string> $tokens 表达式标记
+ * @param string $root 项目根
+ * @param string $configDir 配置文件所在目录
+ * @return string|null 绝对路径
+ */
+function evaluatePathTokens(array $tokens, string $root, string $configDir): ?string
+{
+    $value = '';
+    foreach ($tokens as $token) {
+        if (is_string($token)) {
+            if ('.' !== $token) {
+                return null;
+            }
+
+            continue;
+        }
+        switch ($token[0]) {
+            case T_CONSTANT_ENCAPSED_STRING:
+                $value .= literalValue($token[1]);
+
+                break;
+            case T_DIR:
+                $value .= $configDir;
+
+                break;
+            case T_VARIABLE:
+                if ('$root' !== $token[1]) {
+                    return null;
+                }
+                // 约定：配置里的 $root 即项目根，且已带尾部分隔符
+                $value .= rtrim($root, '/') . '/';
+
+                break;
+            case T_STRING:
+                if ('DIRECTORY_SEPARATOR' !== $token[1]) {
+                    return null;
+                }
+                $value .= '/';
+
+                break;
+            default:
+                return null;
+        }
+    }
+
+    return '' === $value ? null : $value;
+}
+
+/**
+ * 还原字符串字面量的值。
+ *
+ * @param string $raw 带引号的字面量
+ * @return string 字面量内容
+ */
+function literalValue(string $raw): string
+{
+    $body = substr($raw, 1, -1);
+
+    return "'" === ($raw[0] ?? '') ? str_replace(['\\\\', "\\'"], ['\\', "'"], $body) : stripcslashes($body);
+}
+
+/**
+ * 取相对项目根的路径。
+ *
+ * @param string $root 项目根
+ * @param string $path 绝对路径
+ * @return string|null 相对路径
+ */
+function relativeTo(string $root, string $path): ?string
+{
+    $base = rtrim(collapseSlashes(str_replace('\\', '/', (string) realpath($root))), '/');
+    $normalized = rtrim(collapseSlashes(str_replace('\\', '/', $path)), '/');
+    if ('' === $base || !str_starts_with($normalized, $base . '/')) {
+        return null;
+    }
+    $relative = substr($normalized, strlen($base) + 1);
+
+    return '' === $relative ? null : $relative;
+}
+
+/**
+ * 合并重复的斜杠。
+ *
+ * @param string $path 路径
+ * @return string 规范化路径
+ */
+function collapseSlashes(string $path): string
+{
+    return (string) preg_replace('#/+#', '/', $path);
 }
 
 /**
