@@ -12,7 +12,7 @@
 
 `Environment` 与 `Config` 没有耦合：它不读配置文件，也不把结果写进 `$_ENV`、`$_SERVER` 或 `putenv()`。需要把 `.env` 的值并入配置时，由调用方自行取值再拼装数组。
 
-翻译词条按「语言 / 域 / 词条」三级组织，`ArrayTranslator` 的缺省域是 `messages`；`PhpFileLoader` 只负责把一个目录下的 PHP 文件读成「词条 => 译文」的平铺数组。
+翻译词条按「语言 / 域 / 词条」三级组织，`ArrayTranslator` 的缺省域是 `messages`；`PhpFileLoader` 只负责把一个目录下的 PHP 文件读成「词条 => 译文」的平铺数组。2.1.0 起内置语言包、嵌套词条与请求检测统一由[语言](./language)层的 `Language` 承担，`ArrayTranslator` 保留为轻量翻译器与内核兜底实现。
 
 ## 最小示例
 

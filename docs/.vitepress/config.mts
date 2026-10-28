@@ -65,6 +65,7 @@ export default defineConfig({
           { text: '安全', link: '/security' },
           { text: 'HTTP', link: '/http' },
           { text: '配置', link: '/config' },
+          { text: '语言', link: '/language' },
           { text: '支撑', link: '/support' },
           { text: '接入', link: '/integration' },
         ],
@@ -102,6 +103,7 @@ export default defineConfig({
         items: [
           { text: '内核与装配', link: '/kernel' },
           { text: '配置', link: '/config' },
+          { text: '语言', link: '/language' },
           { text: '接入', link: '/integration' },
         ],
       },

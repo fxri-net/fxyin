@@ -6,6 +6,7 @@ namespace Fxri;
 
 use Fxri\Config\Config;
 use Fxri\Translation\ArrayTranslator;
+use Fxri\Translation\Language;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -24,7 +25,7 @@ final class Kernel
     private readonly LoggerInterface $logger;
 
     /** 翻译器 */
-    private readonly TranslatorInterface $translator;
+    private readonly ?TranslatorInterface $translator;
 
     /** HTTP 客户端 */
     private readonly ?object $httpClient;
@@ -32,16 +33,20 @@ final class Kernel
     /** 接入方适配器 */
     private readonly ?object $adapter;
 
+    /** 语言服务 */
+    private readonly ?Language $language;
+
     /**
      * 初始化。
      *
-     * 日志与翻译器缺省时落为无操作实现，保证内核持有的服务永不为空。
+     * 日志缺省时落为无操作实现；翻译器缺省时取语言服务，二者都缺省时落为数组翻译器。
      *
      * @param Config $config 配置
      * @param LoggerInterface|null $logger 日志
      * @param TranslatorInterface|null $translator 翻译器
      * @param object|null $httpClient HTTP 客户端
      * @param object|null $adapter 接入方适配器
+     * @param Language|null $language 语言服务
      */
     public function __construct(
         Config $config,
@@ -49,12 +54,14 @@ final class Kernel
         ?TranslatorInterface $translator = null,
         ?object $httpClient = null,
         ?object $adapter = null,
+        ?Language $language = null,
     ) {
         $this->config = $config;
         $this->logger = $logger ?? new NullLogger();
-        $this->translator = $translator ?? ArrayTranslator::make();
+        $this->translator = $translator;
         $this->httpClient = $httpClient;
         $this->adapter = $adapter;
+        $this->language = $language;
     }
 
     /**
@@ -88,6 +95,16 @@ final class Kernel
     }
 
     /**
+     * 取语言服务。
+     *
+     * @return Language|null 语言服务，未装配内置语言且未显式指定时为 null
+     */
+    public function language(): ?Language
+    {
+        return $this->language;
+    }
+
+    /**
      * 取日志。
      *
      * @return LoggerInterface 日志实例
@@ -106,16 +123,18 @@ final class Kernel
      */
     public function trans(string $id, array $parameters = []): string
     {
-        return $this->translator->trans($id, $parameters);
+        return $this->translator()->trans($id, $parameters);
     }
 
     /**
      * 取翻译器。
      *
+     * 优先返回显式注入的翻译器，其次取语言服务的翻译器，都没有时落为数组翻译器。
+     *
      * @return TranslatorInterface 翻译器
      */
     public function translator(): TranslatorInterface
     {
-        return $this->translator;
+        return $this->translator ?? $this->language?->translator() ?? ArrayTranslator::make();
     }
 }

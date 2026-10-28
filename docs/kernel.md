@@ -12,6 +12,8 @@
 
 配置文件由 `ConfigLoader` 在 `build()` 时读入（细节见[配置](./config)），翻译器只要求实现 Symfony 的 `TranslatorInterface`，日志只要求 PSR-3 的 `LoggerInterface`，HTTP 客户端只要求任意对象（约定为 PSR-18 客户端）。接入方适配器同样是任意对象，ThinkPHP 场景下的用法见[接入](./integration)。
 
+默认装配还会加载内置中英文语言包，生成 `Fxri\Translation\Language`（细节见[语言](./language)）；`withoutBuiltinLanguage()` 或 `bare()` 可关闭，`withLanguageDir()` 可追加项目语言目录并覆盖内置词条。
+
 内核装配完成后不可变：没有任何 `set*` 方法，`config()` 返回的 `Config` 也是只读容器。需要在运行期改变装配，只能重新 `build()` 一份新的内核。
 
 ## 最小示例
@@ -39,6 +41,10 @@ echo $kernel->config()->get('app.name', '未命名');   // 未命名
 // 翻译走内核的 trans()，占位符参数键可省略百分号
 echo $kernel->trans('欢迎', ['name' => '风音框架']);  // 欢迎使用 风音框架
 
+// 默认已装配内置语言包，关闭时用 withoutBuiltinLanguage() 或 bare()
+// 注入了自定义翻译器时，$kernel->trans() 走自定义翻译器，内置词条仍可从语言服务读取
+echo $kernel->language()->get('delete');              // 删除
+
 // 未注入日志时落为无操作实现
 echo get_class($kernel->logger());                   // Psr\Log\NullLogger
 
@@ -56,27 +62,34 @@ echo Package::describe();                            // fxri/fxyin 2.0.0-dev
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
 | `make(): self` | 创建构建器，构造方法私有，只能由此进入 | 构建器 |
+| `bare(): self` | 关闭内置语言等默认资源，只保留显式装配部分 | 新实例 |
+| `withoutBuiltinLanguage(): self` | 关闭内置语言包 | 新实例 |
 | `withConfigDir(string $directory): self` | 追加配置目录，后追加者覆盖先前的同名配置；目录不存在时抛 `InvalidArgumentException` | 新实例 |
+| `withLanguageDir(string $directory, string $locale = 'zh-cn'): self` | 追加项目语言目录，覆盖内置同名词条；目录不存在时抛 `InvalidArgumentException` | 新实例 |
+| `withLanguage(Language $language): self` | 显式指定语言服务，接管内置与项目语言装配 | 新实例 |
+| `withLocale(string $locale): self` | 指定默认语言，缺省为 `zh-cn` | 新实例 |
+| `withLocaleResolver(LocaleResolver $resolver): self` | 指定语言检测器，缺省按已加载语言生成允许列表 | 新实例 |
 | `withLogger(LoggerInterface $logger): self` | 指定 PSR-3 日志 | 新实例 |
-| `withTranslator(TranslatorInterface $translator): self` | 指定 Symfony 翻译器 | 新实例 |
+| `withTranslator(TranslatorInterface $translator): self` | 指定 Symfony 翻译器；指定后 `trans()` 走该实例 | 新实例 |
 | `withHttpClient(object $client): self` | 指定 HTTP 客户端 | 新实例 |
 | `withAdapter(object $adapter): self` | 指定接入方适配器 | 新实例 |
-| `build(): Kernel` | 按当前装配加载配置并生成内核 | 内核实例 |
+| `build(): Kernel` | 按当前装配加载配置与语言并生成内核 | 内核实例 |
 
-`build()` 每次都重新走一遍 `ConfigLoader::make(...$this->configDirectories)->load()`，改了磁盘上的配置文件后重新 `build()` 即可生效。
+`build()` 每次都重新走一遍 `ConfigLoader::make(...$this->configDirectories)->load()` 与语言组装，改了磁盘上的配置或语言包后重新 `build()` 即可生效。
 
 ### Kernel
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
 | `config(): Config` | 取配置，构造内核时必须传入 | `Fxri\Config\Config` |
+| `language(): ?Language` | 取语言服务，关闭内置语言且未显式指定时为 `null` | `Fxri\Translation\Language` 或 `null` |
 | `logger(): LoggerInterface` | 取日志，未注入时为 `NullLogger` | PSR-3 日志 |
-| `translator(): TranslatorInterface` | 取翻译器，未注入时为 `ArrayTranslator::make()` | Symfony 翻译器 |
+| `translator(): TranslatorInterface` | 优先返回注入的翻译器，其次取语言服务的翻译器，都没有时为 `ArrayTranslator::make()` | Symfony 翻译器 |
 | `httpClient(): ?object` | 取 HTTP 客户端，未注入时为 `null` | 对象或 `null` |
 | `adapter(): ?object` | 取接入方适配器，未注入时为 `null` | 对象或 `null` |
 | `trans(string $id, array $parameters = []): string` | 等价于 `translator()->trans($id, $parameters)` | 译文 |
 
-构造函数签名是 `__construct(Config $config, ?LoggerInterface $logger = null, ?TranslatorInterface $translator = null, ?object $httpClient = null, ?object $adapter = null)`，虽是公开方法，常规路径仍建议走构建器。
+构造函数签名是 `__construct(Config $config, ?LoggerInterface $logger = null, ?TranslatorInterface $translator = null, ?object $httpClient = null, ?object $adapter = null, ?Language $language = null)`，虽是公开方法，常规路径仍建议走构建器。
 
 ### Package
 
@@ -91,10 +104,10 @@ echo Package::describe();                            // fxri/fxyin 2.0.0-dev
 - `withConfigDir()` 是追加语义，不是替换。想「覆盖某组配置」应把覆盖目录放在后面，而不是先清空已有目录。
 - `with*` 返回新实例，旧变量仍指向旧装配。写成 `$builder->withLogger($logger);` 而不接返回值，等于什么都没做。
 - `withHttpClient()` 与 `withAdapter()` 接受任意 `object`，类型不做校验；传错实现只会在使用处才暴露，注入前自行确认接口。
-- 日志与翻译器有缺省实现，因此完全不传装配项也能 `build()`；但 HTTP 客户端与适配器没有缺省对象，取到的是 `null`，调用方需自行判空。
+- 日志与翻译器有缺省实现，因此完全不传装配项也能 `build()`；默认装配还会加载内置语言包，关闭后用 `ArrayTranslator` 兜底。HTTP 客户端与适配器没有缺省对象，取到的是 `null`，调用方需自行判空。
 - 内核不缓存 `build()` 结果，也不提供单例。同一进程内多次 `build()` 会多次读盘，且得到互不相同的实例。
 - 内核不承载参数、数据、SQL、文本、文件、安全等能力，这些是不经过内核的纯静态类（见[快速开始](./getting-started)）。
 - 适配器与 HTTP 客户端在内核里只是被承载，内核不会主动调用它们；取到之后由业务代码或集成层自行使用，ThinkPHP 的绑定方式见[接入](./integration)。
 - `Package::VERSION` 当前为 `2.0.0-dev`，随发版变化；用它做版本校验时按语义化版本比较，不要硬编码整个字符串。
 - `build()` 期间读取配置若抛出异常会直接向上冒泡，装配阶段不做兜底；启动失败策略由接入方自行决定。
-- 配置与翻译的加载细节、目录叠加顺序在[配置](./config)中说明。
+- 配置与翻译的加载细节、目录叠加顺序在[配置](./config)与[语言](./language)中说明。
