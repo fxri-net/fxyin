@@ -306,8 +306,8 @@ return Envelope::success($data, '请求成功');
 | 旧方法 | 新写法 |
 | --- | --- |
 | `load($file, $type)` | `File\Loader::load()`（副作用脚本）、`File\Loader::read()`（数据文件） |
-| `lang($name, $vars, $lang)` | `Language::phrase($name, $locale, true)`（含首字母大写） |
-| `langList($name, $vars, $lang)` | `Language::phrase($name, $locale)` |
+| `lang($name, $vars, $lang)` | `Language::phrase($name, $locale, $vars, true)`（含首字母大写） |
+| `langList($name, $vars, $lang)` | `Language::phrase($name, $locale, $vars)` |
 | `langParse($name)` | `Language::phrase($name, $locale)` |
 | `config(...$vars)` | `$kernel->config()->get()`、`Config\Store::set()` |
 | `cookie(...$vars)` | `CookieJar::get()`、`CookieJar::set()` |
@@ -430,8 +430,8 @@ return Envelope::success($data, '请求成功');
 | `strlen($string, $start, $end)` | `Str::isLength($value, $start, $end)` |
 | `letters($var, $in_charset, $out_charset)` | `Encode::letters($value, $inCharset, $outCharset)` |
 | `letter($var, $in_charset, $out_charset)` | `Encode::letter($value, $inCharset, $outCharset)` |
-| `timeRange($time, $start, $end)` | `Time::range($time, $start, $end)` |
-| `timeChange($time, $type, $format)` | `Time::parse()`、`Time::format()` |
+| `timeRange($time, $start, $end)` | `Time::range($time, TimeRangeOptions::make(...), ...)` |
+| `timeChange($time, $type, $format)` | `Time::change($value, TimeOutput::Timestamp / Text, $format)` |
 | `timeMilli($mtime)` | `Time::milli()`、`Time::milliFormat()`、`Time::milliParse()` |
 | `timeFormat($time, $param)` | `Time::duration($seconds, $labels, $zero, TimeUnit, $before)`、`Time::decompose()` |
 | `strEncode($data)` | `Encode::encodeAll($data)` |
@@ -439,7 +439,7 @@ return Envelope::success($data, '请求成功');
 | `strDecode($data)` | `Encode::decodeAll($data)` |
 | `strDecodeMerge($data)` | `Encode::decodeAll($data)`（递归辅助已合并） |
 | `ipv4($data, $type)` | `Ip::toLong()`、`Ip::fromLong()` |
-| `convert($data, $type)` | `Encode::convert($value, $type)` |
+| `convert($data, $type)` | `Encode::convert($value, EncodeConvert::ToHex / FromHex)` |
 | `throwable($th, $type, $param)` | 改为抛异常，由接入层映射为信封 |
 
 ### 7.11 `\fxapp\View`

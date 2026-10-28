@@ -108,7 +108,7 @@ var_dump($bare->language()); // NULL
 | `make(Catalog $catalog, ?LocaleResolver $resolver = null, string $locale = 'zh-cn', string $prefix = '!@', string $ignore = '!#'): self` | 创建语言服务，检测器缺省按目录语言生成允许列表 | 语言服务 |
 | `get(?string $name = null, array $vars = [], ?string $locale = null): mixed` | 取词条；`$name` 为 `null` 时返回全部词条；字符串替换占位符，数组原样返回 | 词条内容 |
 | `has(string $name, ?string $locale = null): bool` | 判断词条是否存在 | 是否存在 |
-| `phrase(string\|array\|null $name, ?string $locale = null, bool $capitalize = false): mixed` | 对应 1.6.1 的 `langList` + `langParse`：列表逐项取词后拼接；`!@` 前缀去标记直通、`!#` 前缀返回空串，`$capitalize` 对应 `lang()` 的首字母大写 | 拼接结果 |
+| `phrase(string\|array\|null $name, ?string $locale = null, array $vars = [], bool $capitalize = false): mixed` | 对应 1.6.1 的 `langList` + `langParse`：列表逐项取词后拼接；`!@` 前缀去标记直通、`!#` 前缀返回空串，`$vars` 替换占位符，`$capitalize` 对应 `lang()` 的首字母大写 | 拼接结果 |
 | `withPrefix(string $prefix): self` / `withIgnore(string $ignore): self` | 替换直通与忽略标记，空串表示关闭 | 新实例 |
 | `detect(?array $query = null, ?CookieJar $cookies = null, ?ServerContext $server = null): self` | 检测并切换语言，返回新实例 | 新语言服务 |
 | `withLocale(string $locale): self` | 切换语言，返回新实例 | 新语言服务 |

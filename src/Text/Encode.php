@@ -42,20 +42,19 @@ final class Encode
     }
 
     /**
-     * 按类型转换字符串。
+     * 按方向转换字符串。
      *
-     * 支持 `hexstr`（字符串转十六进制）与 `strhex`（十六进制转字符串），其它类型原样返回。
+     * `ToHex` 把字符串转为十六进制，`FromHex` 把十六进制还原为字符串。
      *
      * @param string $value 待转换内容
-     * @param string $type 转换类型
+     * @param EncodeConvert $convert 转换方向
      * @return string 转换结果
      */
-    public static function convert(string $value, string $type): string
+    public static function convert(string $value, EncodeConvert $convert): string
     {
-        return match (strtolower($type)) {
-            'hexstr' => bin2hex($value),
-            'strhex' => self::fromHex($value),
-            default => $value,
+        return match ($convert) {
+            EncodeConvert::ToHex => bin2hex($value),
+            EncodeConvert::FromHex => self::fromHex($value),
         };
     }
 

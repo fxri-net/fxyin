@@ -93,11 +93,18 @@ echo strlen(Uuid::make()) . ' / '
 | `queryDecode(string $query)` | 解析查询串，基于 `parse_str` 语义 | `array` |
 | `urlEncode(string $value)` | 按 `rawurlencode` 编码，`/` 也会被编码为 `%2F` | `string` |
 | `urlDecode(string $value)` | 按 `rawurldecode` 解码，不把 `+` 当空格 | `string` |
-| `convert(string $value, string $type)` | `hexstr` 字符串转十六进制、`strhex` 十六进制转字符串，其它类型原样返回 | `string` |
+| `convert(string $value, EncodeConvert $convert)` | `ToHex` 字符串转十六进制、`FromHex` 十六进制转字符串 | `string` |
 | `encodeAll(array $data)` | 嵌套数组编码为 RFC 3986 查询串 | `string` |
 | `decodeAll(string $query)` | 查询串还原为嵌套数组 | `array` |
 | `letter(string $value, string $inCharset = 'UTF-8', string $outCharset = 'GB2312')` | 单个字符取首字母：英文转大写，中文按 GBK 区间映射 A-Z | `string` |
 | `letters(string $value, string $inCharset = 'UTF-8', string $outCharset = 'GB2312')` | 逐字符取首字母并拼接 | `string` |
+
+### EncodeConvert
+
+| 分支 | 含义 |
+| --- | --- |
+| `ToHex` | 字符串转十六进制 |
+| `FromHex` | 十六进制转字符串 |
 
 ### Ip
 
@@ -120,8 +127,8 @@ echo strlen(Uuid::make()) . ' / '
 | `decompose(int $seconds)` | 把秒数按 30 天/月、12 月/年分解为年、月、天、时、分、秒 | `array` |
 | `duration(int $seconds, array $labels = [], bool $zero = false, ?TimeUnit $max = null, bool $before = true)` | 拼接「1个月2小时」；标签留空关闭该单位，`$zero` 输出零值，`$max` 指定最高单位，`$before` 为 false 时只保留最高单位 | `string` |
 | `truncate(int $timestamp, DateGranularity $granularity = DateGranularity::DateTime)` | 截断到粒度起点：`Date` 归零时刻，`Time` 把日期重置为 1970-01-01，`DateTime` 原样返回 | `int` |
-| `change(int\|string $value, ?string $type = null, string $format = 'Y-m-d H:i:s')` | 字符串先解析为时间戳；类型 `1` 按格式截断后返回时间戳，`2` 返回格式化字符串；失败返回 `null` | `int\|string\|null` |
-| `range(string\|array $time, array $start = [], array $end = [])` | 解析逗号串或两项数组，缺项用起止配置补齐，按各自类型输出 | `array` |
+| `change(int\|string $value, ?TimeOutput $output = null, string $format = 'Y-m-d H:i:s')` | 字符串先解析为时间戳；`Timestamp` 按格式截断后返回时间戳，`Text` 返回格式化字符串，`null` 返回原始时间戳；失败返回 `null` | `int\|string\|null` |
+| `range(string\|array $time, ?TimeRangeOptions $start = null, ?TimeRangeOptions $end = null)` | 解析逗号串或两项数组，缺项用起止配置补齐，按各自 `TimeOutput` 输出 | `array` |
 | `relative(int $timestamp, array $options = [])` | 生成「3小时前」「2天后」等相对描述，`$options['now']` 可指定当前时间戳 | `string` |
 
 ### DateGranularity
@@ -146,6 +153,25 @@ echo strlen(Uuid::make()) . ' / '
 | `Second` | 秒 | 秒 |
 
 `label(): string` 返回默认标签；`Time::duration()` 的 `$labels` 以枚举值为键覆盖标签，空串表示关闭该单位。
+
+### TimeOutput
+
+| 分支 | 含义 |
+| --- | --- |
+| `Timestamp` | 按格式截断后返回时间戳 |
+| `Text` | 按格式返回字符串 |
+
+`Time::change()` 传 `null` 时返回原始时间戳；`Time::range()` 的起止配置缺省用 `Timestamp`。
+
+### TimeRangeOptions
+
+| 属性 | 默认 | 说明 |
+| --- | --- | --- |
+| `default` | 0 | 缺项时使用的默认值 |
+| `output` | `TimeOutput::Timestamp` | 输出形态 |
+| `format` | `Y-m-d H:i:s` | 时间格式 |
+
+`TimeRangeOptions::make(...)` 用同名参数创建实例；`Time::range()` 的 `$start` 缺省为 `make(0)`，`$end` 缺省为 `make(time())`。
 
 ### Uuid
 

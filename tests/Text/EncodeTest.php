@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fxri\Tests\Text;
 
 use Fxri\Text\Encode;
+use Fxri\Text\EncodeConvert;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -14,13 +15,12 @@ use PHPUnit\Framework\TestCase;
 final class EncodeTest extends TestCase
 {
     /**
-     * 字符串与十六进制互换，未知类型原样返回。
+     * 字符串与十六进制互换。
      */
     public function testConvert(): void
     {
-        self::assertSame('4142', Encode::convert('AB', 'hexstr'));
-        self::assertSame('AB', Encode::convert('4142', 'strhex'));
-        self::assertSame('abc', Encode::convert('abc', 'unknown'));
+        self::assertSame('4142', Encode::convert('AB', EncodeConvert::ToHex));
+        self::assertSame('AB', Encode::convert('4142', EncodeConvert::FromHex));
     }
 
     /**
@@ -30,7 +30,7 @@ final class EncodeTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        Encode::convert('abc', 'strhex');
+        Encode::convert('abc', EncodeConvert::FromHex);
     }
 
     /**

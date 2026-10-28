@@ -34,6 +34,7 @@ outline: [2, 3]
 | `Safe::token` | `Token`（新）/ `LegacyToken`（旧） |
 | `Safe::rsapri` / `rsapub` | `Rsa::privateEncrypt()` / `publicDecrypt()` |
 | `Text::timeFormat` / `timeMilli` | `Time::duration()` / `milliFormat()` / `milliParse()` |
+| `Text::timeChange` / `timeRange` / `convert` | `TimeOutput` / `TimeRangeOptions` / `EncodeConvert` 枚举与值对象 |
 | `Text::uuid` 格式化现有串 | `Uuid::format()` |
 | `Base::lang` 标记与首字母 | `Language::phrase(..., true)` |
 | `Param::object` / `append` | `Cast::emptyToObject()` / `Merger::append()` |

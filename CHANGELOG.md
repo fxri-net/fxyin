@@ -17,7 +17,7 @@
 - 新增 `HttpClient\Curl` / `CurlResponse` / `CurlOptions`，以 URL 串发起请求、读取响应头与下载
 - 新增 `RandomCharset::Alpha`，`Random::string()` 可单独限定首字符集
 - 新增 `File\VideoInfo` 解析视频时长/分辨率/编码，`Security\LegacyToken` 读写 1.x 旧令牌
-- 新增 `Time::decompose/duration`、`TimeUnit`、`Time::milliFormat/milliParse`、`Uuid::format`，补齐时长分解、毫秒双向转换与标识串格式化
+- 新增 `Time::decompose/duration`、`TimeUnit`、`TimeOutput`、`TimeRangeOptions`、`Time::milliFormat/milliParse`、`Uuid::format`、`EncodeConvert`，时长、时间输出与编码转换全部改用枚举/值对象
 - 新增 `Cast::emptyToObject()` 与 `Merger::append()`，并让 `Language::phrase()` 支持 `!@`/`!#` 标记与首字母大写
 - 补齐 1.6.1 能力：`File\Loader`、`Data\Cast`/`Hierarchy`、字段距离/首字母/除法/别名/转义、`Rsa::normalizePem`、`Http\BranchContext`/`XmlFormatter`、`Client::download`、`Time::range`/`change`/`relative`、`Encode` 嵌套编码与首字母等
 

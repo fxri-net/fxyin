@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Fxri\Tests\Text;
 
 use Fxri\Text\Time;
+use Fxri\Text\TimeOutput;
+use Fxri\Text\TimeRangeOptions;
 use Fxri\Text\TimeUnit;
 use PHPUnit\Framework\TestCase;
 
@@ -18,8 +20,8 @@ final class TimeTest extends TestCase
      */
     public function testChange(): void
     {
-        self::assertSame('2026-10-28', Time::change('2026-10-28 12:00:00', '2', 'Y-m-d'));
-        self::assertSame(strtotime('2026-10-28'), Time::change('2026-10-28 12:00:00', '1', 'Y-m-d'));
+        self::assertSame('2026-10-28', Time::change('2026-10-28 12:00:00', TimeOutput::Text, 'Y-m-d'));
+        self::assertSame(strtotime('2026-10-28'), Time::change('2026-10-28 12:00:00', TimeOutput::Timestamp, 'Y-m-d'));
         self::assertSame(1000, Time::change(1000));
         self::assertNull(Time::change('not-a-time'));
     }
@@ -31,8 +33,8 @@ final class TimeTest extends TestCase
     {
         $range = Time::range(
             '2026-10-28 00:00:00,2026-10-28 23:59:59',
-            [0, '2', 'Y-m-d'],
-            [0, '2', 'Y-m-d'],
+            TimeRangeOptions::make(0, TimeOutput::Text, 'Y-m-d'),
+            TimeRangeOptions::make(0, TimeOutput::Text, 'Y-m-d'),
         );
 
         self::assertSame(['2026-10-28', '2026-10-28'], $range);

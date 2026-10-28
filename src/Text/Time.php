@@ -19,15 +19,15 @@ final class Time
     /**
      * 转换时间。
      *
-     * 字符串先解析为时间戳；类型 `1` 按格式截断后返回时间戳，`2` 返回格式化字符串，
-     * 其它值返回时间戳；无法解析时返回 null。
+     * 字符串先解析为时间戳；`Timestamp` 按格式截断后返回时间戳，`Text` 返回格式化字符串，
+     * `null` 返回原始时间戳；无法解析时返回 null。
      *
      * @param int|string $value 时间戳或时间串
-     * @param string|null $type 转换类型
+     * @param TimeOutput|null $output 输出形态
      * @param string $format 格式
      * @return int|string|null 转换结果
      */
-    public static function change(int|string $value, ?string $type = null, string $format = 'Y-m-d H:i:s'): int|string|null
+    public static function change(int|string $value, ?TimeOutput $output = null, string $format = 'Y-m-d H:i:s'): int|string|null
     {
         if (is_string($value) && !is_numeric($value)) {
             $parsed = strtotime($value);
@@ -38,10 +38,10 @@ final class Time
         }
 
         $timestamp = (int) $value;
-        if ('1' === $type) {
+        if (TimeOutput::Timestamp === $output) {
             return strtotime(date($format, $timestamp)) ?: null;
         }
-        if ('2' === $type) {
+        if (TimeOutput::Text === $output) {
             return date($format, $timestamp);
         }
 
@@ -239,36 +239,23 @@ final class Time
     /**
      * 解析时间范围。
      *
-     * 输入可为一个逗号分隔的字符串或两项数组；缺项用开始、结束的默认值补齐，
-     * 按各自类型返回时间戳或格式化字符串。
+     * 输入可为一个逗号分隔的字符串或两项数组；缺项用起止配置补齐，
+     * 按各自输出形态返回时间戳或格式化字符串。
      *
      * @param string|array<array-key, mixed> $time 时间范围
-     * @param array<array-key, mixed> $start 开始配置：默认值、类型、格式
-     * @param array<array-key, mixed> $end 结束配置：默认值、类型、格式
+     * @param TimeRangeOptions|null $start 开始配置，null 表示默认值 0、时间戳输出
+     * @param TimeRangeOptions|null $end 结束配置，null 表示当前时间、时间戳输出
      * @return array{0: int|string|null, 1: int|string|null} 起止时间
      */
-    public static function range(string|array $time, array $start = [], array $end = []): array
+    public static function range(string|array $time, ?TimeRangeOptions $start = null, ?TimeRangeOptions $end = null): array
     {
         $values = is_string($time) ? explode(',', $time) : array_values($time);
-
-        $startValue = $start[0] ?? 0;
-        $startType = $start[1] ?? '1';
-        $startFormat = $start[2] ?? 'Y-m-d H:i:s';
-        $endValue = $end[0] ?? time();
-        $endType = $end[1] ?? '1';
-        $endFormat = $end[2] ?? 'Y-m-d H:i:s';
+        $startOptions = $start ?? TimeRangeOptions::make(0);
+        $endOptions = $end ?? TimeRangeOptions::make(time());
 
         return [
-            self::change(
-                trim(Type::toString($values[0] ?? $startValue)),
-                is_string($startType) ? $startType : '1',
-                is_string($startFormat) && '' !== $startFormat ? $startFormat : 'Y-m-d H:i:s',
-            ),
-            self::change(
-                trim(Type::toString($values[1] ?? $endValue)),
-                is_string($endType) ? $endType : '1',
-                is_string($endFormat) && '' !== $endFormat ? $endFormat : 'Y-m-d H:i:s',
-            ),
+            self::change(trim(Type::toString($values[0] ?? $startOptions->default)), $startOptions->output, $startOptions->format),
+            self::change(trim(Type::toString($values[1] ?? $endOptions->default)), $endOptions->output, $endOptions->format),
         ];
     }
 

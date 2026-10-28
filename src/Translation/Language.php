@@ -150,10 +150,11 @@ final class Language
      *
      * @param string|array<array-key, mixed>|null $name 词条或词条列表
      * @param string|null $locale 语言，缺省为当前语言
+     * @param array<array-key, mixed> $vars 占位符参数
      * @param bool $capitalize 是否把结果首字母大写
      * @return mixed 拼接结果或原始词条
      */
-    public function phrase(string|array|null $name, ?string $locale = null, bool $capitalize = false): mixed
+    public function phrase(string|array|null $name, ?string $locale = null, array $vars = [], bool $capitalize = false): mixed
     {
         $locale ??= $this->locale;
 
@@ -162,16 +163,16 @@ final class Language
         }
 
         if (!is_array($name)) {
-            $value = $this->phraseItem(Type::toString($name), $locale);
+            $value = $this->phraseItem(Type::toString($name), $locale, $vars);
 
             return $capitalize && is_string($value) ? ucfirst($value) : $value;
         }
 
         $parts = [];
         foreach ($name as $item) {
-            $value = is_array($item) ? $this->phrase($item, $locale) : $this->phraseItem(Type::toString($item), $locale);
+            $value = is_array($item) ? $this->phrase($item, $locale, $vars) : $this->phraseItem(Type::toString($item), $locale, $vars);
             if (is_array($value)) {
-                $value = $this->phrase($value, $locale);
+                $value = $this->phrase($value, $locale, $vars);
             }
             $text = Type::toString($value);
             if ('' === $text) {
@@ -290,9 +291,10 @@ final class Language
      *
      * @param string $name 词条
      * @param string $locale 语言
+     * @param array<array-key, mixed> $vars 占位符参数
      * @return mixed 词条内容
      */
-    private function phraseItem(string $name, string $locale): mixed
+    private function phraseItem(string $name, string $locale, array $vars): mixed
     {
         if ('' !== $this->prefix && str_starts_with($name, $this->prefix)) {
             return substr($name, strlen($this->prefix));
@@ -301,6 +303,6 @@ final class Language
             return '';
         }
 
-        return $this->get($name, [], $locale);
+        return $this->get($name, $vars, $locale);
     }
 }

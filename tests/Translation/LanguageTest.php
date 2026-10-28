@@ -63,8 +63,9 @@ final class LanguageTest extends TestCase
         self::assertSame('', $language->phrase('!#ignored'));
         self::assertSame('Hello风音', $language->phrase(['!@Hello', 'fxyin']));
         self::assertSame('风音删除', $language->phrase(['fxyin', '!#ignored', 'delete']));
-        self::assertSame('Hello', $language->phrase('hello', null, true));
-        self::assertSame('Hello world', $language->phrase(['hello', 'world'], 'en-us', true));
+        self::assertSame('Hello', $language->phrase('hello', null, capitalize: true));
+        self::assertSame('Hello world', $language->phrase(['hello', 'world'], 'en-us', capitalize: true));
+        self::assertSame('欢迎来到 风音', $language->phrase('welcome', null, ['name' => '风音']));
 
         $custom = $language->withPrefix('~')->withIgnore('#');
         self::assertSame('raw', $custom->phrase('~raw'));

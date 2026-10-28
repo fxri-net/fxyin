@@ -14,6 +14,7 @@ use Fxri\Text\Encode;
 use Fxri\Text\Ip;
 use Fxri\Text\Str;
 use Fxri\Text\Time;
+use Fxri\Text\TimeOutput;
 use Fxri\Text\Uuid;
 use PHPUnit\Framework\TestCase;
 
@@ -50,7 +51,7 @@ final class GoldenTest extends TestCase
      */
     public function testTimeGolden(): void
     {
-        self::assertSame('2026-10-28', Time::change('2026-10-28 12:00:00', '2', 'Y-m-d'));
+        self::assertSame('2026-10-28', Time::change('2026-10-28 12:00:00', TimeOutput::Text, 'Y-m-d'));
         self::assertSame('1小时前', Time::relative(1000, ['now' => 4600]));
         self::assertSame('2小时后', Time::relative(8200, ['now' => 1000]));
     }
