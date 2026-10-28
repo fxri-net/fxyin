@@ -69,6 +69,29 @@ final class RsaTest extends TestCase
     }
 
     /**
+     * 规范化后的 PEM 与标准输出一致。
+     */
+    public function testNormalizePem(): void
+    {
+        $pem = self::pair()['public_key'];
+        $compact = str_replace(["\r", "\n", ' '], '', $pem);
+
+        self::assertSame($pem, Rsa::normalizePem($pem));
+        self::assertSame(str_replace(' ', '', $pem), Rsa::normalizePem($compact));
+    }
+
+    /**
+     * 空内容被拒绝。
+     */
+    public function testNormalizeEmptyPem(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('PEM 内容为空');
+
+        Rsa::normalizePem('-----BEGIN PUBLIC KEY----------END PUBLIC KEY-----');
+    }
+
+    /**
      * 返回测试用密钥对。
      *
      * @return array{private_key: string, public_key: string} PEM 格式密钥对

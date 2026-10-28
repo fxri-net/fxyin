@@ -120,6 +120,42 @@ final class Rsa
     }
 
     /**
+     * 规范化 PEM 内容。
+     *
+     * 支持传入 PEM 文本或文件路径；去掉多余空白后按 64 字符重新折行，保留头尾标记。
+     *
+     * @param string $pem PEM 文本或文件路径
+     * @return string 规范化后的 PEM
+     */
+    public static function normalizePem(#[\SensitiveParameter] string $pem): string
+    {
+        if (is_file($pem)) {
+            $contents = file_get_contents($pem);
+            if (false === $contents) {
+                throw new InvalidArgumentException('无法读取 PEM 文件：' . $pem);
+            }
+            $pem = $contents;
+        }
+
+        preg_match_all('/-----BEGIN[^-]+-----|-----END[^-]+-----/', $pem, $matches);
+        $headers = $matches[0];
+
+        $body = preg_replace('/-----BEGIN[^-]+-----|-----END[^-]+-----/', '', $pem) ?? '';
+        $body = preg_replace('/\s+/', '', $body) ?? '';
+        if ('' === $body) {
+            throw new InvalidArgumentException('PEM 内容为空');
+        }
+
+        $lines = str_split($body, 64);
+        if (2 <= count($headers)) {
+            array_unshift($lines, $headers[0]);
+            $lines[] = $headers[1];
+        }
+
+        return implode("\n", $lines) . "\n";
+    }
+
+    /**
      * 签名。
      *
      * @param string $data 原始内容

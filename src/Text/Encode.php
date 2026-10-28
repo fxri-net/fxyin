@@ -42,6 +42,49 @@ final class Encode
     }
 
     /**
+     * 按类型转换字符串。
+     *
+     * 支持 `hexstr`（字符串转十六进制）与 `strhex`（十六进制转字符串），其它类型原样返回。
+     *
+     * @param string $value 待转换内容
+     * @param string $type 转换类型
+     * @return string 转换结果
+     */
+    public static function convert(string $value, string $type): string
+    {
+        return match (strtolower($type)) {
+            'hexstr' => bin2hex($value),
+            'strhex' => self::fromHex($value),
+            default => $value,
+        };
+    }
+
+    /**
+     * 解码嵌套查询串。
+     *
+     * @param string $query 查询串
+     * @return array<array-key, mixed> 解码结果
+     */
+    public static function decodeAll(string $query): array
+    {
+        $result = [];
+        parse_str($query, $result);
+
+        return $result;
+    }
+
+    /**
+     * 编码嵌套数组为查询串。
+     *
+     * @param array<array-key, mixed> $data 待编码数据
+     * @return string 查询串
+     */
+    public static function encodeAll(array $data): string
+    {
+        return http_build_query($data, '', '&', PHP_QUERY_RFC3986);
+    }
+
+    /**
      * 十六进制解码。
      *
      * @param string $value 待解码内容
@@ -95,6 +138,89 @@ final class Encode
     }
 
     /**
+     * 取单个字符的首字母。
+     *
+     * 英文字母返回大写；中文按 GBK 编码区间映射到 A-Z；无法识别时返回原字符。
+     *
+     * @param string $value 字符
+     * @param string $inCharset 输入字符集
+     * @param string $outCharset 输出字符集
+     * @return string 首字母
+     */
+    public static function letter(string $value, string $inCharset = 'UTF-8', string $outCharset = 'GB2312'): string
+    {
+        if ('' === $value) {
+            return '';
+        }
+
+        $first = mb_substr($value, 0, 1, 'UTF-8');
+        if (1 === preg_match('/^[A-Za-z]$/', $first)) {
+            return strtoupper($first);
+        }
+
+        $converted = @iconv($inCharset, $outCharset, $first);
+        if (false === $converted || '' === $converted) {
+            $converted = mb_convert_encoding($first, $outCharset, $inCharset);
+        }
+        if (!is_string($converted) || strlen($converted) < 2) {
+            return $value;
+        }
+
+        $code = ord($converted[0]) * 256 + ord($converted[1]) - 65536;
+        $ranges = [
+            [-20319, -20284, 'A'],
+            [-20283, -19776, 'B'],
+            [-19775, -19219, 'C'],
+            [-19218, -18711, 'D'],
+            [-18710, -18527, 'E'],
+            [-18526, -18240, 'F'],
+            [-18239, -17923, 'G'],
+            [-17922, -17418, 'H'],
+            [-17417, -16475, 'J'],
+            [-16474, -16213, 'K'],
+            [-16212, -15641, 'L'],
+            [-15640, -15166, 'M'],
+            [-15165, -14923, 'N'],
+            [-14922, -14915, 'O'],
+            [-14914, -14631, 'P'],
+            [-14630, -14150, 'Q'],
+            [-14149, -14091, 'R'],
+            [-14090, -13319, 'S'],
+            [-13318, -12839, 'T'],
+            [-12838, -12557, 'W'],
+            [-12556, -11848, 'X'],
+            [-11847, -11056, 'Y'],
+            [-11055, -10247, 'Z'],
+        ];
+        foreach ($ranges as [$start, $end, $letter]) {
+            if ($code >= $start && $code <= $end) {
+                return $letter;
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * 取字符串的首字母组。
+     *
+     * @param string $value 字符串
+     * @param string $inCharset 输入字符集
+     * @param string $outCharset 输出字符集
+     * @return string 首字母拼接结果
+     */
+    public static function letters(string $value, string $inCharset = 'UTF-8', string $outCharset = 'GB2312'): string
+    {
+        $letters = [];
+        $length = mb_strlen($value, 'UTF-8');
+        for ($index = 0; $index < $length; ++$index) {
+            $letters[] = self::letter(mb_substr($value, $index, 1, 'UTF-8'), $inCharset, $outCharset);
+        }
+
+        return implode('', $letters);
+    }
+
+    /**
      * 解析查询串。
      *
      * @param string $query 查询串
@@ -139,5 +265,22 @@ final class Encode
     public static function urlEncode(string $value): string
     {
         return rawurlencode($value);
+    }
+
+    /**
+     * 校验后解码十六进制。
+     *
+     * 长度为奇数或含非十六进制字符时按解码失败处理，避免底层函数告警。
+     *
+     * @param string $value 待解码内容
+     * @return string 解码结果
+     */
+    private static function fromHex(string $value): string
+    {
+        if (0 !== strlen($value) % 2 || 1 !== preg_match('/^[0-9a-fA-F]*$/', $value)) {
+            throw new InvalidArgumentException('十六进制解码失败');
+        }
+
+        return self::hexDecode($value);
     }
 }

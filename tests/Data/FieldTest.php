@@ -145,4 +145,65 @@ final class FieldTest extends TestCase
 
         self::assertSame('FROM_UNIXTIME(FROM_UNIXTIME(1), ?)', $built->sql());
     }
+
+    /**
+     * 字段别名按分隔符补全或去前导。
+     */
+    public function testAlias(): void
+    {
+        $field = Field::make();
+
+        self::assertSame('u.name', $field->alias('name', 'u'));
+        self::assertSame('u.name', $field->alias('u.name', 'x'));
+        self::assertSame('name', $field->alias('.name', 'u'));
+        self::assertSame('name', $field->alias('name'));
+    }
+
+    /**
+     * 字段转义统一包装反引号，重复调用不叠加。
+     */
+    public function testEscape(): void
+    {
+        $field = Field::make();
+
+        self::assertSame('`user`.`name`', $field->escape('user.name'));
+        self::assertSame('`user`.`name`', $field->escape('`user`.`name`'));
+        self::assertSame('`name`', $field->escape('name'));
+    }
+
+    /**
+     * 安全除法在除数为 0 时返回 0。
+     */
+    public function testDivision(): void
+    {
+        $built = Field::make()->division('part', 'total');
+
+        self::assertSame('IF(`total`=0,0,`part`/`total`)', $built->sql());
+        self::assertSame([], $built->bindings());
+    }
+
+    /**
+     * 距离片段使用球面公式，单位为公里。
+     */
+    public function testDistance(): void
+    {
+        $built = Field::make()->distance('lng_start', 'lat_start', 'lng_end', 'lat_end');
+
+        self::assertStringContainsString('ACOS(', $built->sql());
+        self::assertStringContainsString('*6378.137', $built->sql());
+        self::assertStringContainsString('`lat_start`', $built->sql());
+        self::assertSame([], $built->bindings());
+    }
+
+    /**
+     * 首字母片段按 GBK 区间映射。
+     */
+    public function testInitial(): void
+    {
+        $built = Field::make()->initial('name');
+
+        self::assertStringStartsWith('ELT(INTERVAL(', $built->sql());
+        self::assertStringContainsString('`name` USING gbk', $built->sql());
+        self::assertStringContainsString("UPPER(LEFT(`name`,1))", $built->sql());
+    }
 }

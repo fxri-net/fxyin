@@ -68,17 +68,11 @@ outline: [2, 3]
 | Text | 18 | 9 | 9 | 0 |
 | View | 1 | 0 | 1 | 0 |
 
-需新增项集中在：
+需新增项只剩：
 
-- 语言：`Base::lang/langList/langParse` → `Translation\Language`
-- 文件加载：`Base::load` → `File\Loader`
-- 数据：`storeUpper/Level`、`fieldDistance/Initial/Division`、`fieldAlias/Escape`、`paramRepair/Exist`
-- 参数：`array`、`object`
-- 安全：`rsapem`
-- 服务端：`branch`
-- HTTP 客户端：`httpDown`
-- 文本：`splice`、`letters/letter`、`timeRange/Change/Format`、`strEncodeMerge/strDecodeMerge`、`convert`
-- 视图：`echo` 的 XML 渲染
+- 路由：`App::run` → 可选 `Application\Router`。
+
+其余能力均已落到 v2 入口：语言、文件加载、数据层级/字段/参数、参数转换、PEM 规范化、分支上下文、HTTP 下载、文本时间/编码、XML 响应与目录创建。
 
 完整映射见 `tests/Parity/legacy-api.json`。
 
@@ -93,22 +87,22 @@ outline: [2, 3]
 
 | 1.x | v2 目标 | 状态 |
 | --- | --- | --- |
-| `App::init` | `Application\Bootstrap` | 需新增 |
+| `App::init` | `Application\Bootstrap` | 等价 |
 | `App::run` | `Application\Router`（可选） | 需新增 |
-| `Config::load/has/get` | `Config\Loader`、`Config` | 等价 |
-| `Config::set` | `Config\Store::set` | 需新增 |
-| `Lang::range/set/load/has/get` | `Translation\Catalog`、`Language` | 需新增 |
-| `Lang::detect`、Cookie/列表配置 | `Translation\LocaleResolver` | 需新增 |
+| `Config::load/has/get` | `ConfigLoader`、`Config` | 等价 |
+| `Config::set` | `Config\Store::set` | 等价 |
+| `Lang::range/set/load/has/get` | `Translation\Catalog`、`Language` | 等价 |
+| `Lang::detect`、Cookie/列表配置 | `Translation\LocaleResolver` | 等价 |
 | `Cookie::get/set` | `CookieJar` | 等价 |
-| `Dir::create` | `Filesystem::createDirectory` | 需新增 |
-| `Env::init/load/has/get` | `Bootstrap`、`Environment` | 混合 |
-| `Env::set` | `Config\Store::set` | 需新增 |
+| `Dir::create` | `Filesystem::createDirectory` | 等价 |
+| `Env::init/load/has/get` | `Application\Bootstrap`、`Environment` | 等价 |
+| `Env::set` | `Config\Store::set` | 等价 |
 | `Loader::*`、`Facade::__callStatic` | Composer、`Application\Services` | 设计移除 |
 
 ## 六、资源
 
-- 语言包 6 份：`zh-cn`/`en-us` × `base`/`env`/`phrase`。
-- 默认配置 4 份：`app`、`branch`、`env`、`facade`（仅迁入 v2 仍适用的键，`facade` 的 1.x 响应/条件配置不进入 v2 默认值）。
+- 语言包 6 份：`zh-cn`/`en-us` × `base`/`env`/`phrase`，全部随包提供。
+- 默认配置 4 份：`app`、`branch`、`env`、`facade`；v2 迁入 `app`、`branch`、`env` 三份，`facade` 的 1.x 响应/条件配置不进入 v2 默认值。
 
 ## 七、设计上不支持
 

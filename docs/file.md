@@ -72,8 +72,16 @@ echo PHP_EOL;
 | `exists(string $path)` | 路径是否存在，等价于 `file_exists`，目录同样算存在 | `bool` |
 | `listFiles(string $directory)` | 列出目录**当前层**的文件与子目录，返回 `glob` 给出的完整路径；目录不可读或无匹配时返回空数组 | `array` |
 | `makeDirectory(string $directory, int $permissions = 0o777)` | 递归创建目录；已存在时直接返回，创建失败且目录仍不存在时抛 `RuntimeException` | `void` |
+| `createDirectory(string $directory, int $permissions = 0o777)` | `makeDirectory` 的兼容命名，语义完全一致 | `void` |
 | `deleteDirectory(string $directory)` | 递归删除目录及其内容；目录不存在时直接返回，删除文件或目录失败抛 `RuntimeException` | `void` |
 | `moveDirectory(string $source, string $destination)` | 移动目录；源不存在抛 `RuntimeException`，目标父目录会自动创建，`rename` 失败抛 `RuntimeException` | `void` |
+
+### Loader
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `load(string $file)` | 执行副作用脚本，同一真实路径只执行一次；文件不存在返回 `false` | `bool` |
+| `read(string $file)` | 读取文件返回值，同一路径结果缓存；文件不存在返回 `false` | `mixed` |
 
 ### Path
 

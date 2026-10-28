@@ -104,6 +104,7 @@ var_dump(Hash::equals('abc', 'abc'));   // bool(true)
 | `decrypt(string $payload, string $privateKey): string` | base64 非法抛 `InvalidArgumentException`，分块解密失败抛 `RuntimeException` | `string` |
 | `sign(string $data, string $privateKey): string` | `OPENSSL_ALGO_SHA256` 签名，结果为 base64 | `string` |
 | `verify(string $data, string $signature, string $publicKey): bool` | SHA-256 验签，签名 base64 非法时直接返回 `false` | `bool` |
+| `normalizePem(string $pem): string` | 接受 PEM 文本或文件路径，去掉空白后按 64 字符折行并保留头尾标记；空内容抛 `InvalidArgumentException` | `string` |
 
 公钥、私钥不合法时抛 `InvalidArgumentException`（文案分别为「公钥不合法」「私钥不合法」）。
 

@@ -1,230 +1,641 @@
 {
-  "version": "1.6.1",
-  "statuses": {
-    "equiv": "v2 已有等价能力",
-    "add": "v2 需新增",
-    "covered": "由更安全的等价能力覆盖，不提供旧接口",
-    "removed": "2.0 设计上移除，能力由 v2 其他入口承接"
-  },
-  "facades": {
-    "Base": {
-      "load": { "target": "File\\Loader", "status": "add" },
-      "lang": { "target": "Translation\\Language", "status": "add" },
-      "langList": { "target": "Translation\\Language::phrase", "status": "add" },
-      "langParse": { "target": "Translation\\Language::phrase", "status": "add" },
-      "config": { "target": "Kernel::config / Config\\Store", "status": "equiv" },
-      "cookie": { "target": "Http\\Cookie\\CookieJar", "status": "equiv" },
-      "env": { "target": "Http\\ServerContext / Config\\Environment", "status": "equiv" },
-      "dump": { "target": "Support\\Dump", "status": "equiv" },
-      "json": { "target": "Param\\Json", "status": "equiv" },
-      "ipv4": { "target": "Text\\Ip", "status": "equiv" },
-      "crypt": { "target": "Security\\Cipher / LegacyCipher", "status": "equiv" },
-      "throwable": { "target": "抛异常，由接入层映射", "status": "equiv" },
-      "echo": { "target": "Http\\Envelope / Responder", "status": "equiv" }
+    "version": "1.6.1",
+    "statuses": {
+        "equiv": "v2 已有等价能力",
+        "add": "v2 需新增",
+        "covered": "由更安全的等价能力覆盖，不提供旧接口",
+        "removed": "2.0 设计上移除，能力由 v2 其他入口承接"
     },
-    "Client": {
-      "ip": { "target": "Http\\ClientInfo::ip", "status": "equiv" },
-      "browser": { "target": "Http\\ClientInfo::browser", "status": "equiv" },
-      "system": { "target": "Http\\ClientInfo::system", "status": "equiv" },
-      "param": { "target": "Http\\RequestContext", "status": "equiv" }
+    "facades": {
+        "Base": {
+            "load": {
+                "target": "File\\Loader",
+                "status": "equiv"
+            },
+            "lang": {
+                "target": "Translation\\Language",
+                "status": "equiv"
+            },
+            "langList": {
+                "target": "Translation\\Language::phrase",
+                "status": "equiv"
+            },
+            "langParse": {
+                "target": "Translation\\Language::phrase",
+                "status": "equiv"
+            },
+            "config": {
+                "target": "Kernel::config / Config\\Store",
+                "status": "equiv"
+            },
+            "cookie": {
+                "target": "Http\\Cookie\\CookieJar",
+                "status": "equiv"
+            },
+            "env": {
+                "target": "Http\\ServerContext / Config\\Environment",
+                "status": "equiv"
+            },
+            "dump": {
+                "target": "Support\\Dump",
+                "status": "equiv"
+            },
+            "json": {
+                "target": "Param\\Json",
+                "status": "equiv"
+            },
+            "ipv4": {
+                "target": "Text\\Ip",
+                "status": "equiv"
+            },
+            "crypt": {
+                "target": "Security\\Cipher / LegacyCipher",
+                "status": "equiv"
+            },
+            "throwable": {
+                "target": "抛异常，由接入层映射",
+                "status": "equiv"
+            },
+            "echo": {
+                "target": "Http\\Envelope / Responder",
+                "status": "equiv"
+            }
+        },
+        "Client": {
+            "ip": {
+                "target": "Http\\ClientInfo::ip",
+                "status": "equiv"
+            },
+            "browser": {
+                "target": "Http\\ClientInfo::browser",
+                "status": "equiv"
+            },
+            "system": {
+                "target": "Http\\ClientInfo::system",
+                "status": "equiv"
+            },
+            "param": {
+                "target": "Http\\RequestContext",
+                "status": "equiv"
+            }
+        },
+        "Data": {
+            "where": {
+                "target": "Sql\\WhereBuilder",
+                "status": "equiv"
+            },
+            "whereSafe": {
+                "target": "Sql\\WhereBuilder 绑定参数",
+                "status": "covered"
+            },
+            "whereFilter": {
+                "target": "Sql\\WhereBuilder 绑定参数",
+                "status": "covered"
+            },
+            "whereBuild": {
+                "target": "Sql\\WhereBuilder",
+                "status": "equiv"
+            },
+            "whereAssemble": {
+                "target": "Sql\\WhereBuilder",
+                "status": "equiv"
+            },
+            "whereMake": {
+                "target": "Sql\\WhereBuilder / Expression",
+                "status": "equiv"
+            },
+            "insert": {
+                "target": "Sql\\StatementBuilder",
+                "status": "equiv"
+            },
+            "update": {
+                "target": "Sql\\StatementBuilder",
+                "status": "equiv"
+            },
+            "updateContrast": {
+                "target": "Data\\Diff",
+                "status": "equiv"
+            },
+            "storeUpperLevel": {
+                "target": "Data\\Hierarchy",
+                "status": "equiv"
+            },
+            "storeLowerLevel": {
+                "target": "Data\\Hierarchy",
+                "status": "equiv"
+            },
+            "fieldDistance": {
+                "target": "Data\\Field::distance / Sql\\Expression::distance",
+                "status": "equiv"
+            },
+            "fieldInitial": {
+                "target": "Data\\Field::initial / Sql\\Expression::initial",
+                "status": "equiv"
+            },
+            "fieldDivision": {
+                "target": "Data\\Field::division / Sql\\Expression::division",
+                "status": "equiv"
+            },
+            "fieldJson": {
+                "target": "Data\\Field::json",
+                "status": "equiv"
+            },
+            "fieldText": {
+                "target": "Data\\Field::text",
+                "status": "equiv"
+            },
+            "fieldDate": {
+                "target": "Data\\Field::date",
+                "status": "equiv"
+            },
+            "fieldAlias": {
+                "target": "Data\\Field::alias",
+                "status": "equiv"
+            },
+            "fieldEscape": {
+                "target": "Data\\Field::escape",
+                "status": "equiv"
+            },
+            "htmlFilter": {
+                "target": "Data\\Html::escape",
+                "status": "equiv"
+            },
+            "htmlRemove": {
+                "target": "Data\\Html::strip",
+                "status": "equiv"
+            },
+            "listToTree": {
+                "target": "Data\\Tree::fromList",
+                "status": "equiv"
+            },
+            "paramRepair": {
+                "target": "Data\\Param::repair",
+                "status": "equiv"
+            },
+            "paramFilter": {
+                "target": "Data\\Param::filter",
+                "status": "equiv"
+            },
+            "paramEmpty": {
+                "target": "Data\\Param::missing",
+                "status": "equiv"
+            },
+            "paramExist": {
+                "target": "Data\\Param::exist",
+                "status": "equiv"
+            }
+        },
+        "File": {
+            "formatSize": {
+                "target": "Support\\Formatter::size",
+                "status": "equiv"
+            },
+            "getList": {
+                "target": "File\\Filesystem::listFiles",
+                "status": "equiv"
+            },
+            "moveDirectory": {
+                "target": "File\\Filesystem::moveDirectory",
+                "status": "equiv"
+            },
+            "deleteDirectory": {
+                "target": "File\\Filesystem::deleteDirectory",
+                "status": "equiv"
+            },
+            "getMediaInfo": {
+                "target": "File\\MediaInfo",
+                "status": "equiv"
+            }
+        },
+        "Math": {
+            "rand": {
+                "target": "Support\\Random::string",
+                "status": "equiv"
+            }
+        },
+        "Param": {
+            "init": {
+                "target": "由调用方显式传入",
+                "status": "removed"
+            },
+            "define": {
+                "target": "Param\\Shape / Pipeline",
+                "status": "equiv"
+            },
+            "array": {
+                "target": "Data\\Cast::toArray",
+                "status": "equiv"
+            },
+            "object": {
+                "target": "Data\\Cast::toObject",
+                "status": "equiv"
+            },
+            "pick": {
+                "target": "Param\\Picker::only",
+                "status": "equiv"
+            },
+            "append": {
+                "target": "Param\\Pipeline",
+                "status": "equiv"
+            },
+            "merge": {
+                "target": "Param\\Merger::merge",
+                "status": "equiv"
+            },
+            "cover": {
+                "target": "Param\\Merger::merge",
+                "status": "equiv"
+            },
+            "url": {
+                "target": "Param\\Url",
+                "status": "equiv"
+            },
+            "json": {
+                "target": "Param\\Json",
+                "status": "equiv"
+            }
+        },
+        "Safe": {
+            "crypt": {
+                "target": "Security\\Cipher / LegacyCipher",
+                "status": "equiv"
+            },
+            "md5": {
+                "target": "Security\\Hash::md5",
+                "status": "equiv"
+            },
+            "token": {
+                "target": "Security\\Token",
+                "status": "equiv"
+            },
+            "rsapri": {
+                "target": "Security\\Rsa",
+                "status": "equiv"
+            },
+            "rsapub": {
+                "target": "Security\\Rsa",
+                "status": "equiv"
+            },
+            "rsapem": {
+                "target": "Security\\Rsa::normalizePem",
+                "status": "equiv"
+            }
+        },
+        "Server": {
+            "echo": {
+                "target": "Http\\Envelope",
+                "status": "equiv"
+            },
+            "ip": {
+                "target": "Http\\ClientInfo::ip",
+                "status": "equiv"
+            },
+            "system": {
+                "target": "Http\\ClientInfo::system",
+                "status": "equiv"
+            },
+            "format": {
+                "target": "Http\\Envelope::toArray / 项目序列化",
+                "status": "equiv"
+            },
+            "env": {
+                "target": "Http\\ServerContext",
+                "status": "equiv"
+            },
+            "branch": {
+                "target": "Http\\BranchContext",
+                "status": "equiv"
+            }
+        },
+        "Service": {
+            "http": {
+                "target": "Http\\HttpClient\\Client",
+                "status": "equiv"
+            },
+            "httpDown": {
+                "target": "Http\\HttpClient\\Client::download",
+                "status": "equiv"
+            }
+        },
+        "Text": {
+            "uuid": {
+                "target": "Text\\Uuid",
+                "status": "equiv"
+            },
+            "implode": {
+                "target": "Text\\Str::implode",
+                "status": "equiv"
+            },
+            "explode": {
+                "target": "Text\\Str::explode",
+                "status": "equiv"
+            },
+            "splice": {
+                "target": "Text\\Str::splice",
+                "status": "equiv"
+            },
+            "strlen": {
+                "target": "Text\\Str::length",
+                "status": "equiv"
+            },
+            "letters": {
+                "target": "Text\\Encode::letters",
+                "status": "equiv"
+            },
+            "letter": {
+                "target": "Text\\Encode::letter",
+                "status": "equiv"
+            },
+            "timeRange": {
+                "target": "Text\\Time::range",
+                "status": "equiv"
+            },
+            "timeChange": {
+                "target": "Text\\Time::change",
+                "status": "equiv"
+            },
+            "timeMilli": {
+                "target": "Text\\Time::milli",
+                "status": "equiv"
+            },
+            "timeFormat": {
+                "target": "Text\\Time::relative",
+                "status": "equiv"
+            },
+            "strEncode": {
+                "target": "Text\\Encode::base64Encode",
+                "status": "equiv"
+            },
+            "strEncodeMerge": {
+                "target": "Text\\Encode::encodeAll",
+                "status": "equiv"
+            },
+            "strDecode": {
+                "target": "Text\\Encode::base64Decode",
+                "status": "equiv"
+            },
+            "strDecodeMerge": {
+                "target": "Text\\Encode::decodeAll",
+                "status": "equiv"
+            },
+            "ipv4": {
+                "target": "Text\\Ip",
+                "status": "equiv"
+            },
+            "convert": {
+                "target": "Text\\Encode::convert",
+                "status": "equiv"
+            },
+            "throwable": {
+                "target": "抛异常，由接入层映射",
+                "status": "equiv"
+            }
+        },
+        "View": {
+            "echo": {
+                "target": "Http\\XmlFormatter",
+                "status": "equiv"
+            }
+        }
     },
-    "Data": {
-      "where": { "target": "Sql\\WhereBuilder", "status": "equiv" },
-      "whereSafe": { "target": "Sql\\WhereBuilder 绑定参数", "status": "covered" },
-      "whereFilter": { "target": "Sql\\WhereBuilder 绑定参数", "status": "covered" },
-      "whereBuild": { "target": "Sql\\WhereBuilder", "status": "equiv" },
-      "whereAssemble": { "target": "Sql\\WhereBuilder", "status": "equiv" },
-      "whereMake": { "target": "Sql\\WhereBuilder / Expression", "status": "equiv" },
-      "insert": { "target": "Sql\\StatementBuilder", "status": "equiv" },
-      "update": { "target": "Sql\\StatementBuilder", "status": "equiv" },
-      "updateContrast": { "target": "Data\\Diff", "status": "equiv" },
-      "storeUpperLevel": { "target": "Data\\Hierarchy", "status": "add" },
-      "storeLowerLevel": { "target": "Data\\Hierarchy", "status": "add" },
-      "fieldDistance": { "target": "Data\\Field / Sql\\Expression", "status": "add" },
-      "fieldInitial": { "target": "Data\\Field / Sql\\Expression", "status": "add" },
-      "fieldDivision": { "target": "Data\\Field / Sql\\Expression", "status": "add" },
-      "fieldJson": { "target": "Data\\Field::json", "status": "equiv" },
-      "fieldText": { "target": "Data\\Field::text", "status": "equiv" },
-      "fieldDate": { "target": "Data\\Field::date", "status": "equiv" },
-      "fieldAlias": { "target": "Data\\Field::alias", "status": "add" },
-      "fieldEscape": { "target": "Data\\Field::escape", "status": "add" },
-      "htmlFilter": { "target": "Data\\Html::escape", "status": "equiv" },
-      "htmlRemove": { "target": "Data\\Html::strip", "status": "equiv" },
-      "listToTree": { "target": "Data\\Tree::fromList", "status": "equiv" },
-      "paramRepair": { "target": "Data\\Param::repair", "status": "add" },
-      "paramFilter": { "target": "Data\\Param::filter", "status": "equiv" },
-      "paramEmpty": { "target": "Data\\Param::missing", "status": "equiv" },
-      "paramExist": { "target": "Data\\Param::exist", "status": "add" }
+    "globals": {
+        "is_json": {
+            "target": "Support\\Type::isJson",
+            "status": "equiv"
+        },
+        "is_blank": {
+            "target": "Support\\Type::isBlank",
+            "status": "equiv"
+        },
+        "is_time": {
+            "target": "Support\\Type::isTime",
+            "status": "equiv"
+        },
+        "is_function": {
+            "target": "Support\\Type::isCallable",
+            "status": "equiv"
+        },
+        "is_mobile": {
+            "target": "Support\\Type::isMobile",
+            "status": "equiv"
+        },
+        "is_email": {
+            "target": "Support\\Type::isEmail",
+            "status": "equiv"
+        },
+        "is_zipcode": {
+            "target": "Support\\Type::isZipcode",
+            "status": "equiv"
+        },
+        "is_ipv4": {
+            "target": "Support\\Type::isIpv4",
+            "status": "equiv"
+        },
+        "is_ipv6": {
+            "target": "Support\\Type::isIpv6",
+            "status": "equiv"
+        },
+        "is_url": {
+            "target": "Support\\Type::isUrl",
+            "status": "equiv"
+        },
+        "is_ip": {
+            "target": "Support\\Type::isIp",
+            "status": "equiv"
+        },
+        "fxy_lang": {
+            "target": "Kernel::trans / Translation\\Language",
+            "status": "equiv"
+        },
+        "fxy_config": {
+            "target": "Kernel::config / Config\\Store",
+            "status": "equiv"
+        },
+        "fxy_cookie": {
+            "target": "Http\\Cookie\\CookieJar",
+            "status": "equiv"
+        },
+        "fxy_env": {
+            "target": "Http\\ServerContext",
+            "status": "equiv"
+        },
+        "fxy_dump": {
+            "target": "Support\\Dump",
+            "status": "equiv"
+        },
+        "fxy_json": {
+            "target": "Param\\Json",
+            "status": "equiv"
+        },
+        "fxy_echo": {
+            "target": "Http\\Envelope / Responder",
+            "status": "equiv"
+        }
     },
-    "File": {
-      "formatSize": { "target": "Support\\Formatter::size", "status": "equiv" },
-      "getList": { "target": "File\\Filesystem::listFiles", "status": "equiv" },
-      "moveDirectory": { "target": "File\\Filesystem::moveDirectory", "status": "equiv" },
-      "deleteDirectory": { "target": "File\\Filesystem::deleteDirectory", "status": "equiv" },
-      "getMediaInfo": { "target": "File\\MediaInfo", "status": "equiv" }
+    "runtime": {
+        "App": {
+            "init": {
+                "target": "Application\\Bootstrap",
+                "status": "equiv"
+            },
+            "run": {
+                "target": "Application\\Router（可选）",
+                "status": "add"
+            }
+        },
+        "Config": {
+            "load": {
+                "target": "Config\\Loader",
+                "status": "equiv"
+            },
+            "has": {
+                "target": "Config::has",
+                "status": "equiv"
+            },
+            "get": {
+                "target": "Config::get",
+                "status": "equiv"
+            },
+            "set": {
+                "target": "Config\\Store::set",
+                "status": "equiv"
+            }
+        },
+        "Lang": {
+            "range": {
+                "target": "Translation\\Language::withLocale",
+                "status": "equiv"
+            },
+            "set": {
+                "target": "Translation\\Catalog::set",
+                "status": "equiv"
+            },
+            "load": {
+                "target": "Translation\\Catalog::load",
+                "status": "equiv"
+            },
+            "has": {
+                "target": "Translation\\Catalog::has",
+                "status": "equiv"
+            },
+            "get": {
+                "target": "Translation\\Language::get",
+                "status": "equiv"
+            },
+            "detect": {
+                "target": "Translation\\LocaleResolver",
+                "status": "equiv"
+            },
+            "setLangDetectVar": {
+                "target": "Translation\\LocaleResolver",
+                "status": "equiv"
+            },
+            "setLangCookieName": {
+                "target": "Translation\\LocaleResolver",
+                "status": "equiv"
+            },
+            "setLangCookieExpire": {
+                "target": "Translation\\LocaleResolver",
+                "status": "equiv"
+            },
+            "setAllowLangList": {
+                "target": "Translation\\LocaleResolver",
+                "status": "equiv"
+            }
+        },
+        "Cookie": {
+            "get": {
+                "target": "Http\\Cookie\\CookieJar::get",
+                "status": "equiv"
+            },
+            "set": {
+                "target": "Http\\Cookie\\CookieJar::set",
+                "status": "equiv"
+            }
+        },
+        "Dir": {
+            "create": {
+                "target": "File\\Filesystem::createDirectory",
+                "status": "equiv"
+            }
+        },
+        "Env": {
+            "init": {
+                "target": "Application\\Bootstrap",
+                "status": "equiv"
+            },
+            "load": {
+                "target": "Config\\Environment::fromFile",
+                "status": "equiv"
+            },
+            "has": {
+                "target": "Config\\Environment::has",
+                "status": "equiv"
+            },
+            "get": {
+                "target": "Config\\Environment::get",
+                "status": "equiv"
+            },
+            "set": {
+                "target": "Config\\Store::set",
+                "status": "equiv"
+            }
+        },
+        "Loader": {
+            "autoload": {
+                "target": "Composer PSR-4",
+                "status": "removed"
+            },
+            "register": {
+                "target": "Composer PSR-4",
+                "status": "removed"
+            }
+        },
+        "Facade": {
+            "__callStatic": {
+                "target": "Application\\Services",
+                "status": "removed"
+            }
+        }
     },
-    "Math": {
-      "rand": { "target": "Support\\Random::string", "status": "equiv" }
+    "resources": {
+        "language": [
+            "zh-cn/base.php",
+            "zh-cn/env.php",
+            "zh-cn/phrase.php",
+            "en-us/base.php",
+            "en-us/env.php",
+            "en-us/phrase.php"
+        ],
+        "config": [
+            "app.php",
+            "branch.php",
+            "env.php",
+            "facade.php"
+        ]
     },
-    "Param": {
-      "init": { "target": "由调用方显式传入", "status": "removed" },
-      "define": { "target": "Param\\Shape / Pipeline", "status": "equiv" },
-      "array": { "target": "Data\\Cast::toArray", "status": "add" },
-      "object": { "target": "Data\\Cast::toObject", "status": "add" },
-      "pick": { "target": "Param\\Picker::only", "status": "equiv" },
-      "append": { "target": "Param\\Pipeline", "status": "equiv" },
-      "merge": { "target": "Param\\Merger::merge", "status": "equiv" },
-      "cover": { "target": "Param\\Merger::merge", "status": "equiv" },
-      "url": { "target": "Param\\Url", "status": "equiv" },
-      "json": { "target": "Param\\Json", "status": "equiv" }
-    },
-    "Safe": {
-      "crypt": { "target": "Security\\Cipher / LegacyCipher", "status": "equiv" },
-      "md5": { "target": "Security\\Hash::md5", "status": "equiv" },
-      "token": { "target": "Security\\Token", "status": "equiv" },
-      "rsapri": { "target": "Security\\Rsa", "status": "equiv" },
-      "rsapub": { "target": "Security\\Rsa", "status": "equiv" },
-      "rsapem": { "target": "Security\\Rsa::normalizePem", "status": "add" }
-    },
-    "Server": {
-      "echo": { "target": "Http\\Envelope", "status": "equiv" },
-      "ip": { "target": "Http\\ClientInfo::ip", "status": "equiv" },
-      "system": { "target": "Http\\ClientInfo::system", "status": "equiv" },
-      "format": { "target": "Http\\Envelope::toArray / 项目序列化", "status": "equiv" },
-      "env": { "target": "Http\\ServerContext", "status": "equiv" },
-      "branch": { "target": "Http\\BranchContext", "status": "add" }
-    },
-    "Service": {
-      "http": { "target": "Http\\HttpClient\\Client", "status": "equiv" },
-      "httpDown": { "target": "Http\\HttpClient\\Client::download", "status": "add" }
-    },
-    "Text": {
-      "uuid": { "target": "Text\\Uuid", "status": "equiv" },
-      "implode": { "target": "Text\\Str::implode", "status": "equiv" },
-      "explode": { "target": "Text\\Str::explode", "status": "equiv" },
-      "splice": { "target": "Text\\Str::splice", "status": "add" },
-      "strlen": { "target": "Text\\Str::length", "status": "equiv" },
-      "letters": { "target": "Text\\Encode::convert", "status": "add" },
-      "letter": { "target": "Text\\Encode::convert", "status": "add" },
-      "timeRange": { "target": "Text\\Time::range", "status": "add" },
-      "timeChange": { "target": "Text\\Time::change", "status": "add" },
-      "timeMilli": { "target": "Text\\Time::milli", "status": "equiv" },
-      "timeFormat": { "target": "Text\\Time::format", "status": "add" },
-      "strEncode": { "target": "Text\\Encode::base64Encode", "status": "equiv" },
-      "strEncodeMerge": { "target": "Text\\Encode::encodeAll", "status": "add" },
-      "strDecode": { "target": "Text\\Encode::base64Decode", "status": "equiv" },
-      "strDecodeMerge": { "target": "Text\\Encode::decodeAll", "status": "add" },
-      "ipv4": { "target": "Text\\Ip", "status": "equiv" },
-      "convert": { "target": "Text\\Encode::convert", "status": "add" },
-      "throwable": { "target": "抛异常，由接入层映射", "status": "equiv" }
-    },
-    "View": {
-      "echo": { "target": "Http\\Renderer / Responder / XmlFormatter", "status": "add" }
+    "directories": {
+        "base": [
+            "autoload.php",
+            "config.php",
+            "frame",
+            "app/config",
+            "app/language",
+            "app/function",
+            "app/store",
+            "app/controller",
+            "app/controller/facade"
+        ],
+        "data": [
+            "config.php",
+            "app/config",
+            "app/controller",
+            "app/controller/facade_ext",
+            "app/controller/oracle",
+            "app/controller/think",
+            "app/function",
+            "app/language",
+            "app/store"
+        ]
     }
-  },
-  "globals": {
-    "is_json": { "target": "Support\\Type::isJson", "status": "equiv" },
-    "is_blank": { "target": "Support\\Type::isBlank", "status": "equiv" },
-    "is_time": { "target": "Support\\Type::isTime", "status": "equiv" },
-    "is_function": { "target": "Support\\Type::isCallable", "status": "equiv" },
-    "is_mobile": { "target": "Support\\Type::isMobile", "status": "equiv" },
-    "is_email": { "target": "Support\\Type::isEmail", "status": "equiv" },
-    "is_zipcode": { "target": "Support\\Type::isZipcode", "status": "equiv" },
-    "is_ipv4": { "target": "Support\\Type::isIpv4", "status": "equiv" },
-    "is_ipv6": { "target": "Support\\Type::isIpv6", "status": "equiv" },
-    "is_url": { "target": "Support\\Type::isUrl", "status": "equiv" },
-    "is_ip": { "target": "Support\\Type::isIp", "status": "equiv" },
-    "fxy_lang": { "target": "Kernel::trans / Translation\\Language", "status": "equiv" },
-    "fxy_config": { "target": "Kernel::config / Config\\Store", "status": "equiv" },
-    "fxy_cookie": { "target": "Http\\Cookie\\CookieJar", "status": "equiv" },
-    "fxy_env": { "target": "Http\\ServerContext", "status": "equiv" },
-    "fxy_dump": { "target": "Support\\Dump", "status": "equiv" },
-    "fxy_json": { "target": "Param\\Json", "status": "equiv" },
-    "fxy_echo": { "target": "Http\\Envelope / Responder", "status": "equiv" }
-  },
-  "runtime": {
-    "App": {
-      "init": { "target": "Application\\Bootstrap", "status": "add" },
-      "run": { "target": "Application\\Router（可选）", "status": "add" }
-    },
-    "Config": {
-      "load": { "target": "Config\\Loader", "status": "equiv" },
-      "has": { "target": "Config::has", "status": "equiv" },
-      "get": { "target": "Config::get", "status": "equiv" },
-      "set": { "target": "Config\\Store::set", "status": "add" }
-    },
-    "Lang": {
-      "range": { "target": "Translation\\Language::withLocale", "status": "add" },
-      "set": { "target": "Translation\\Catalog::set", "status": "add" },
-      "load": { "target": "Translation\\Catalog::load", "status": "add" },
-      "has": { "target": "Translation\\Catalog::has", "status": "add" },
-      "get": { "target": "Translation\\Language::get", "status": "add" },
-      "detect": { "target": "Translation\\LocaleResolver", "status": "add" },
-      "setLangDetectVar": { "target": "Translation\\LocaleResolver", "status": "add" },
-      "setLangCookieName": { "target": "Translation\\LocaleResolver", "status": "add" },
-      "setLangCookieExpire": { "target": "Translation\\LocaleResolver", "status": "add" },
-      "setAllowLangList": { "target": "Translation\\LocaleResolver", "status": "add" }
-    },
-    "Cookie": {
-      "get": { "target": "Http\\Cookie\\CookieJar::get", "status": "equiv" },
-      "set": { "target": "Http\\Cookie\\CookieJar::set", "status": "equiv" }
-    },
-    "Dir": {
-      "create": { "target": "File\\Filesystem::createDirectory", "status": "add" }
-    },
-    "Env": {
-      "init": { "target": "Application\\Bootstrap", "status": "add" },
-      "load": { "target": "Config\\Environment::fromFile", "status": "equiv" },
-      "has": { "target": "Config\\Environment::has", "status": "equiv" },
-      "get": { "target": "Config\\Environment::get", "status": "equiv" },
-      "set": { "target": "Config\\Store::set", "status": "add" }
-    },
-    "Loader": {
-      "autoload": { "target": "Composer PSR-4", "status": "removed" },
-      "register": { "target": "Composer PSR-4", "status": "removed" }
-    },
-    "Facade": {
-      "__callStatic": { "target": "Application\\Services", "status": "removed" }
-    }
-  },
-  "resources": {
-    "language": [
-      "zh-cn/base.php",
-      "zh-cn/env.php",
-      "zh-cn/phrase.php",
-      "en-us/base.php",
-      "en-us/env.php",
-      "en-us/phrase.php"
-    ],
-    "config": [
-      "app.php",
-      "branch.php",
-      "env.php",
-      "facade.php"
-    ]
-  },
-  "directories": {
-    "base": [
-      "autoload.php",
-      "config.php",
-      "frame",
-      "app/config",
-      "app/language",
-      "app/function",
-      "app/store",
-      "app/controller",
-      "app/controller/facade"
-    ],
-    "data": [
-      "config.php",
-      "app/config",
-      "app/controller",
-      "app/controller/facade_ext",
-      "app/controller/oracle",
-      "app/controller/think",
-      "app/function",
-      "app/language",
-      "app/store"
-    ]
-  }
 }

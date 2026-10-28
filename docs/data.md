@@ -85,6 +85,11 @@ var_export($diff->keys());      // array ( 0 => 'name', 1 => 'remark' )
 | `date(string\|Expression $column, DateGranularity $granularity = DateGranularity::DateTime, mixed $replace = null)` | 把 Unix 时间戳字段格式化为日期或时间；`$replace` 非 null 时用 `IF` 兜住 `0` 与 `NULL` | `Sql` |
 | `json(string\|Expression $column, string $path, FieldJsonMode $mode = FieldJsonMode::Quoted, mixed $replace = '')` | 取 JSON 字段中的键值，空路径抛 `InvalidArgumentException` | `Sql` |
 | `text(string\|Expression $column, mixed $replace = '', FieldTextMode $mode = FieldTextMode::Keep)` | 字段为空串或 `NULL` 时取兜底值，按模式决定是否转整数 | `Sql` |
+| `alias(string $field, string $alias = '', string $delimiter = '.')` | 字段不含分隔符时补别名前缀，以分隔符开头时去掉前导 | `string` |
+| `escape(string $field, string $delimiter = '.')` | 去掉既有反引号后按方言重新包装，重复调用不叠加 | `string` |
+| `distance(string\|Expression $lngStart, string\|Expression $latStart, string\|Expression $lngEnd, string\|Expression $latEnd)` | 球面距离片段，单位公里 | `Sql` |
+| `division(string\|Expression $dividend, string\|Expression $divisor)` | 除数为 0 时返回 0 的安全除法片段 | `Sql` |
+| `initial(string\|Expression $column)` | 按 GBK 区间把中文首字映射为 A-Z 的片段 | `Sql` |
 
 `$granularity` 决定 `FROM_UNIXTIME` 的格式串：
 
@@ -128,6 +133,29 @@ var_export($diff->keys());      // array ( 0 => 'name', 1 => 'remark' )
 | --- | --- | --- |
 | `fromList(array $list, int\|string $rootId = 0, string $idKey = 'id', string $parentKey = 'parent_id', string $childKey = '_child')` | 扁平列表转树，父级等于 `$rootId` 的行作为顶层 | `array<int, array<array-key, mixed>>` |
 | `toList(array $tree, string $childKey = '_child')` | 树按前序展开为扁平列表，输出不含 `$childKey` 字段 | `array<int, array<array-key, mixed>>` |
+
+### Hierarchy
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `ancestors(array $list, int\|string $id, string $idKey = 'id', string $parentKey = 'parent_id')` | 由近及远返回祖先主键，父级缺失或成环时截断 | `array<int, int\|string>` |
+| `descendants(array $list, int\|string $id, string $idKey = 'id', string $parentKey = 'parent_id')` | 按层级广度优先返回后代主键，重复与环状引用只记录一次 | `array<int, int\|string>` |
+
+### Cast
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `toArray(mixed $value, int $limit = -1)` | 对象按属性展开为数组，递归处理；`$limit` 为 0 时不处理，负数不限制 | `mixed` |
+| `toObject(mixed $value, int $limit = -1)` | 数组递归转为对象，空数组转为空对象以保证 JSON 输出 `{}` | `mixed` |
+
+### Param
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `exist(array $data, NullPolicy $policy = NullPolicy::Blank)` | 至少存在一个非空值时返回 `true` | `bool` |
+| `filter(array $data)` | 去掉 `null`，保留 `0`、空串与 `false` | `array<array-key, mixed>` |
+| `missing(array $data, NullPolicy $policy = NullPolicy::Blank)` | 按空值策略列出缺失键 | `array<int, array-key>` |
+| `repair(array $rows)` | 收集全部行的键并补空串，按主键名排序，保证每行结构一致 | `array<int, array<array-key, mixed>>` |
 
 ### Diff
 

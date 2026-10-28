@@ -90,6 +90,14 @@ echo $jar->signed('uid');   // 7
 | `contentType(): string` | 固定返回 `application/json; charset=utf-8` | `string` |
 | `format(Envelope $envelope): string` | 编码 `toArray()` 的结果，失败抛 `InvalidArgumentException` | `string` |
 
+### XmlFormatter
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `make(): self` | 创建 XML 格式化器 | `self` |
+| `contentType(): string` | 固定返回 `application/xml; charset=utf-8` | `string` |
+| `format(Envelope $envelope): string` | 输出 XML 声明与 `<response>` 根节点；数组按键名展开，列表项统一为 `item`，非法节点名替换为下划线 | `string` |
+
 ### Renderer
 
 | 方法 | 说明 | 返回 |
@@ -143,6 +151,15 @@ echo $jar->signed('uid');   // 7
 | `all(): array` | 全部变量 | `array<string, mixed>` |
 | `get(string $name, string $default = ''): string` | 取单个变量，缺失或值为空串时返回默认值 | `string` |
 | `has(string $name): bool` | 变量是否存在，值为空串也算存在 | `bool` |
+
+### BranchContext
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `resolve(string $host, array $store, string $default = ''): self` | 从分支配置解析主机：完整主机名优先，其次 `^` 前缀部分匹配，最后 `$` 包裹的完整正则；键内多个主机用逗号分隔 | `self` |
+| `branch(): string` | 命中的分支名，未命中时为默认分支 | `string` |
+| `config(): mixed` | 分支对应的配置，未命中时为 `null` | `mixed` |
+| `host(): string` | 原始主机名 | `string` |
 
 ### ClientInfo
 
@@ -221,6 +238,7 @@ echo $jar->signed('uid');   // 7
 | `make(object $client): self` | 校验实现了 `Psr\Http\Client\ClientInterface`，不符抛 `InvalidArgumentException` | `self` |
 | `send(object $request): object` | 校验请求实现 `Psr\Http\Message\RequestInterface`，调用 `sendRequest()` 并校验响应实现 `ResponseInterface` | `object` |
 | `client(): object` | 取底层客户端 | `object` |
+| `download(object $request, string $file): string` | 发送请求并把响应体写入文件；非 2xx 抛 `RuntimeException`，父目录自动创建 | `string` |
 | `withClient(object $client): self` | 换底层客户端，返回新实例 | `self` |
 
 ### ClientFactory

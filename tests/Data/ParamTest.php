@@ -59,4 +59,30 @@ final class ParamTest extends TestCase
     {
         self::assertSame(['b'], Param::missing(['a' => 1, 'b' => '']));
     }
+
+    /**
+     * 至少一个非空值即视为存在。
+     */
+    public function testExist(): void
+    {
+        self::assertTrue(Param::exist(['a' => '', 'b' => 1]));
+        self::assertFalse(Param::exist(['a' => '', 'b' => null]));
+        self::assertTrue(Param::exist(['a' => null, 'b' => 0]));
+    }
+
+    /**
+     * 多行数据补全缺失键并按主键排序。
+     */
+    public function testRepair(): void
+    {
+        $repaired = Param::repair([
+            ['b' => 2, 'a' => 1],
+            ['a' => 3],
+        ]);
+
+        self::assertSame([
+            ['a' => 1, 'b' => 2],
+            ['a' => 3, 'b' => ''],
+        ], $repaired);
+    }
 }

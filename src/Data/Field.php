@@ -29,6 +29,31 @@ final class Field
     }
 
     /**
+     * 生成字段别名。
+     *
+     * 字段已含分隔符时保持原样，否则补上别名前缀；以分隔符开头时去掉前导分隔符。
+     *
+     * @param string $field 字段
+     * @param string $alias 别名
+     * @param string $delimiter 分隔符
+     * @return string 处理后的字段
+     */
+    public function alias(string $field, string $alias = '', string $delimiter = '.'): string
+    {
+        if ('' === $delimiter) {
+            return $field;
+        }
+        if (!str_contains($field, $delimiter) && '' !== trim($alias)) {
+            return $alias . $delimiter . $field;
+        }
+        if (str_starts_with($field, $delimiter)) {
+            return substr($field, strlen($delimiter));
+        }
+
+        return $field;
+    }
+
+    /**
      * 生成时间字段片段。
      *
      * @param string|Expression $column 字段
@@ -54,6 +79,71 @@ final class Field
             'IF(' . $field . ' = 0 OR ' . $field . ' IS NULL, ?, ' . $formatted->sql() . ')',
             array_merge([$replace], $formatted->bindings()),
         );
+    }
+
+    /**
+     * 生成经纬度距离片段。
+     *
+     * @param string|Expression $lngStart 起点经度
+     * @param string|Expression $latStart 起点纬度
+     * @param string|Expression $lngEnd 终点经度
+     * @param string|Expression $latEnd 终点纬度
+     * @return Sql 片段，单位为公里
+     */
+    public function distance(
+        string|Expression $lngStart,
+        string|Expression $latStart,
+        string|Expression $lngEnd,
+        string|Expression $latEnd,
+    ): Sql {
+        return Sql::make(Expression::distance(
+            $this->column($lngStart),
+            $this->column($latStart),
+            $this->column($lngEnd),
+            $this->column($latEnd),
+        )->sql());
+    }
+
+    /**
+     * 生成安全除法片段。
+     *
+     * @param string|Expression $dividend 被除数
+     * @param string|Expression $divisor 除数
+     * @return Sql 片段
+     */
+    public function division(string|Expression $dividend, string|Expression $divisor): Sql
+    {
+        return Sql::make(Expression::division($this->column($dividend), $this->column($divisor))->sql());
+    }
+
+    /**
+     * 转义字段名。
+     *
+     * 已带反引号的字段先去掉引号再统一包装，重复调用不会叠加引号。
+     *
+     * @param string $field 字段名
+     * @param string $delimiter 分隔符
+     * @return string 带引号的字段名
+     */
+    public function escape(string $field, string $delimiter = '.'): string
+    {
+        $bare = str_replace('`', '', $field);
+        if ('' !== $delimiter) {
+            $bare = str_replace($delimiter, '.', $bare);
+        }
+
+        return $this->dialect->field($bare);
+    }
+
+    /**
+     * 生成中文首字母片段。
+     *
+     * @param string|Expression $column 字段
+     * @return Sql 片段
+     */
+    public function initial(string|Expression $column): Sql
+    {
+        return Sql::make(Expression::initial($this->column($column))->sql());
     }
 
     /**

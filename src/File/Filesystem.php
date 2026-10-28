@@ -14,6 +14,18 @@ use RuntimeException;
 final class Filesystem
 {
     /**
+     * 递归创建目录。
+     *
+     * @param string $directory 目录路径
+     * @param int $permissions 权限位
+     * @return void
+     */
+    public static function createDirectory(string $directory, int $permissions = 0o777): void
+    {
+        self::makeDirectory($directory, $permissions);
+    }
+
+    /**
      * 递归删除目录。
      *
      * @param string $directory 目录路径

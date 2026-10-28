@@ -93,6 +93,11 @@ echo strlen(Uuid::make()) . ' / '
 | `queryDecode(string $query)` | 解析查询串，基于 `parse_str` 语义 | `array` |
 | `urlEncode(string $value)` | 按 `rawurlencode` 编码，`/` 也会被编码为 `%2F` | `string` |
 | `urlDecode(string $value)` | 按 `rawurldecode` 解码，不把 `+` 当空格 | `string` |
+| `convert(string $value, string $type)` | `hexstr` 字符串转十六进制、`strhex` 十六进制转字符串，其它类型原样返回 | `string` |
+| `encodeAll(array $data)` | 嵌套数组编码为 RFC 3986 查询串 | `string` |
+| `decodeAll(string $query)` | 查询串还原为嵌套数组 | `array` |
+| `letter(string $value, string $inCharset = 'UTF-8', string $outCharset = 'GB2312')` | 单个字符取首字母：英文转大写，中文按 GBK 区间映射 A-Z | `string` |
+| `letters(string $value, string $inCharset = 'UTF-8', string $outCharset = 'GB2312')` | 逐字符取首字母并拼接 | `string` |
 
 ### Ip
 
@@ -111,6 +116,9 @@ echo strlen(Uuid::make()) . ' / '
 | `parse(int\|string $value)` | 整数原样返回，数字串转 `int`，其余交给 `strtotime`；失败抛 `InvalidArgumentException` | `int` |
 | `milli(?int $timestamp = null)` | 取毫秒时间戳；传参时按秒乘 1000，不传时取当前毫秒 | `int` |
 | `truncate(int $timestamp, DateGranularity $granularity = DateGranularity::DateTime)` | 截断到粒度起点：`Date` 归零时刻，`Time` 把日期重置为 1970-01-01，`DateTime` 原样返回 | `int` |
+| `change(int\|string $value, ?string $type = null, string $format = 'Y-m-d H:i:s')` | 字符串先解析为时间戳；类型 `1` 按格式截断后返回时间戳，`2` 返回格式化字符串；失败返回 `null` | `int\|string\|null` |
+| `range(string\|array $time, array $start = [], array $end = [])` | 解析逗号串或两项数组，缺项用起止配置补齐，按各自类型输出 | `array` |
+| `relative(int $timestamp, array $options = [])` | 生成「3小时前」「2天后」等相对描述，`$options['now']` 可指定当前时间戳 | `string` |
 
 ### DateGranularity
 

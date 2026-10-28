@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Fxri\Http\HttpClient;
 
+use Fxri\File\Filesystem;
+use Fxri\Support\Type;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -40,6 +42,30 @@ final class Client
     public function client(): object
     {
         return $this->client;
+    }
+
+    /**
+     * 下载响应体到文件。
+     *
+     * 只接受 2xx 响应，非成功状态直接抛异常，避免把错误页写成目标文件。
+     *
+     * @param object $request PSR-7 请求
+     * @param string $file 本地文件路径
+     * @return string 写入的文件路径
+     */
+    public function download(object $request, string $file): string
+    {
+        $response = $this->send($request);
+        $rawStatus = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 200;
+        $status = is_int($rawStatus) ? $rawStatus : (int) Type::toString($rawStatus);
+        if ($status < 200 || $status >= 300) {
+            throw new RuntimeException('下载失败：HTTP ' . $status);
+        }
+
+        $body = method_exists($response, 'getBody') ? Type::toString($response->getBody()) : '';
+        Filesystem::write($file, $body);
+
+        return $file;
     }
 
     /**
