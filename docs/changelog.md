@@ -6,6 +6,29 @@ outline: [2, 2]
 
 > 完整变更历史以随包发布的 CHANGELOG.md 为准，本页由 `pnpm sync:changelog-doc` 从根 CHANGELOG.md 自动同步，请勿手改。
 
+## 2.1.0
+
+> 2026-10-28 发布
+
+### ✨ 新增功能
+
+- 内置中英文语言包随包提供，`KernelBuilder` 默认装配并生成 `Translation\Language`，支持嵌套词条、`%name%`/`{:name}`/`sprintf` 占位符与请求语言检测
+- 默认配置随包提供，新增 `Config\Store` 运行期覆盖与 `Kernel::configStore()`，只读 `config()` 保持不变
+- 新增 `Translation\Catalog`、`Translator`、`LocaleResolver`、`Language`，项目语言目录可覆盖内置词条
+- 新增 `Application\Bootstrap`、`Services`、`Module` 与可选 `Router`，承接目录扫描、启动钩子、服务注册与控制器解析
+- 补齐 1.6.1 能力：`File\Loader`、`Data\Cast`/`Hierarchy`、字段距离/首字母/除法/别名/转义、`Rsa::normalizePem`、`Http\BranchContext`/`XmlFormatter`、`Client::download`、`Time::range`/`change`/`relative`、`Encode` 嵌套编码与首字母等
+
+### 🔧 功能调整
+
+- `KernelBuilder` 默认装配内置语言与默认配置，可用 `bare()`、`withoutBuiltinLanguage()`、`withoutDefaultConfig()` 关闭；`withConfigDir()` 的项目配置覆盖内置配置
+- 内核构造首参接受 `Config|Store`，`config()` 始终返回只读基底
+- 应用启动与路由均需显式调用，不接管请求生命周期
+
+### ⚡ 优化改进
+
+- 对等矩阵、golden 测试与文档站对等说明补齐，1.6.1 能力项全部标记为等价
+- 内置资源随包分发，发布包卫生检查覆盖 `resources`
+
 ## 2.0.1
 
 > 2026-10-28 发布
