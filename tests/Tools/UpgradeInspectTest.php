@@ -94,7 +94,7 @@ final class UpgradeInspectTest extends TestCase
         $data = json_decode($output, true, 512, JSON_THROW_ON_ERROR);
         self::assertIsArray($data);
         self::assertSame('非 ThinkPHP（core/start.php）', $data['framework']);
-        self::assertSame(['index.php'], $data['entry']);
+        self::assertSame(['index.php', 'core/start.php'], $data['entry']);
         self::assertFalse($data['composer']['json']);
         self::assertFalse($data['composer']['autoload']);
         self::assertContains('缺少 Composer 接入，需先补 composer.json 与 vendor/autoload.php', $data['blockers']);
@@ -122,6 +122,63 @@ final class UpgradeInspectTest extends TestCase
         self::assertSame(1, $data['counts']['fxy_functions']);
         self::assertSame(1, $data['byDirectory']['extend/fxri/data']);
         self::assertArrayHasKey('Base::config', array_column($data['topMethods'], 'count', 'method'));
+    }
+
+    /**
+     * 应用目录、命名空间、扩展目录与全局函数应取自项目配置。
+     */
+    public function testLayoutFollowsProjectConfig(): void
+    {
+        $root = $this->makeProject('layout');
+        $this->write($root . '/extend/fxri/base/config.php', <<<'PHP'
+            <?php
+            return [
+                'env' => [
+                    'facade' => [0 => '\\fxbase\\facade\\'],
+                ],
+                'loader' => [
+                    'fxapp' => [0 => __DIR__ . '/app/controller/'],
+                ],
+            ];
+            PHP);
+        $this->write($root . '/extend/fxri/data/config.php', <<<'PHP'
+            <?php
+            $root = dirname(dirname(dirname(__DIR__))) . DIRECTORY_SEPARATOR;
+            return [
+                'env' => [
+                    'base' => ['app' => $root . 'apps' . DIRECTORY_SEPARATOR],
+                    'facade' => [-1 => '\\fxbase\\facade_ext\\'],
+                ],
+                'loader' => [
+                    'fxapp' => [1 => __DIR__ . '/app/controller/'],
+                ],
+            ];
+            PHP);
+        $this->write($root . '/extend/fxri/base/app/controller/facade/Base.php', '<?php class Base {}');
+        $this->write($root . '/extend/fxri/base/app/function/common.php', '<?php function is_custom($value) { return true; }');
+        $this->write($root . '/extend/fxri/data/app/controller/facade_ext/Base.php', '<?php class Base {}');
+        $this->write($root . '/apps/controller/Index.php', '<?php \fxbase\Base::config("x"); \fxbase\facade_ext\Base::special(); is_custom($x);');
+
+        [$profileCode, $profileOutput] = $this->runTool(['profile', '--root=' . $root, '--json']);
+        self::assertSame(0, $profileCode, $profileOutput);
+        $profile = json_decode($profileOutput, true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($profile);
+        $layout = is_array($profile['layout'] ?? null) ? $profile['layout'] : [];
+        self::assertSame('apps', $layout['app']);
+        self::assertSame('fxbase', $layout['namespace']);
+        self::assertSame('extend/fxri/data/app/controller/facade_ext', $layout['extensionDirectory']);
+        self::assertSame(1, $layout['facadeClasses']);
+        self::assertSame(1, $layout['globals']);
+
+        [$scanCode, $scanOutput] = $this->runTool(['scan', '--root=' . $root, '--json']);
+        self::assertSame(0, $scanCode, $scanOutput);
+        $scan = json_decode($scanOutput, true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($scan);
+        self::assertSame('fxbase', $scan['namespace']);
+        self::assertSame(1, $scan['counts']['fxapp']);
+        self::assertSame(1, $scan['counts']['facade_ext_refs']);
+        self::assertSame(1, $scan['counts']['is_functions']);
+        self::assertArrayHasKey('apps', $scan['byDirectory']);
     }
 
     /**

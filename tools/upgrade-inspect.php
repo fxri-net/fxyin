@@ -19,14 +19,29 @@ declare(strict_types=1);
 /** 1.x 扩展配置：应用目录写在 env.base.app */
 const APP_DIRECTORY_CONFIG = 'extend/fxri/data/config.php';
 
+/** 1.x 框架默认配置：门面命名空间与基础加载目录写在 env.facade / loader.fxapp */
+const BASE_CONFIG = 'extend/fxri/base/config.php';
+
+/** 1.x 框架根目录 */
+const FRAMEWORK_ROOT = 'extend/fxri';
+
+/** 扩展应用目录：项目扩展、门面扩展与 oracle 都放在这里 */
+const DATA_DIRECTORY = 'extend/fxri/data';
+
 /** 应用目录配置缺失或无法解析时的兜底候选 */
 const FALLBACK_APP_DIRECTORIES = ['app', 'application'];
 
 /** 对等矩阵：升级建议的第二来源，避免人工表与矩阵漂移 */
 const PARITY_MATRIX = 'tests/Parity/legacy-api.json';
 
-/** 扩展门面目录：项目在 1.x 里追加门面方法的位置 */
-const FACADE_EXTENSION_DIRECTORY = 'extend/fxri/data/app/controller/facade_ext';
+/** 配置解析失败时的兜底门面类，取自 1.6.1 的 facade 目录 */
+const FALLBACK_FACADE_CLASSES = ['Base', 'Client', 'Data', 'File', 'Math', 'Param', 'Safe', 'Server', 'Service', 'Text', 'View'];
+
+/** 配置解析失败时的兜底全局函数，取自 1.6.1 的 function 目录 */
+const FALLBACK_GLOBALS = ['is_blank', 'is_json', 'is_time', 'is_function', 'is_mobile', 'is_email', 'is_zipcode', 'is_ipv4', 'is_ipv6', 'is_url', 'is_ip', 'fxy_lang', 'fxy_config', 'fxy_cookie', 'fxy_env', 'fxy_dump', 'fxy_json', 'fxy_echo'];
+
+/** 入口候选：不同宿主框架的入口位置 */
+const ENTRY_CANDIDATES = ['index.php', 'public/index.php', 'public/router.php', 'extend/fxri/bootstrap.php', 'core/start.php'];
 
 /** 人工措辞表：比矩阵目标更贴项目语境的表述，键与 PHP 一致按不区分大小写匹配 */
 const SUGGESTION_MAP = [
@@ -56,12 +71,6 @@ const SUGGESTION_MAP = [
 
 /** 目录名排除：第三方依赖与运行产物 */
 const EXCLUDED_DIRECTORIES = ['vendor', 'runtime', 'node_modules', '.git'];
-
-/** 路径排除：1.x 框架本体与独立安全模块不属于本次迁移 */
-const EXCLUDED_PATHS = ['/extend/fxri/base/', '/extend/fxri/safe/', '/extend/fxri/safe_local/'];
-
-/** 1.x 框架门面类，用于区分项目自有扩展方法 */
-const FRAMEWORK_CLASSES = ['Base', 'Client', 'Data', 'File', 'Math', 'Param', 'Safe', 'Server', 'Service', 'Text', 'View'];
 
 /**
  * 程序入口。
@@ -249,10 +258,11 @@ function buildProfile(string $root): array
     $composerRaw = is_file($composerFile) ? (string) file_get_contents($composerFile) : '';
     $lock = readJsonFile($root . '/composer.lock');
     $constraint = phpConstraint($composer, $composerRaw);
+    $layout = projectLayout($root);
     $scan = scanProject($root);
-    $modules = listSubdirectories($root . '/extend/fxri');
+    $modules = listSubdirectories($root . '/' . FRAMEWORK_ROOT);
     $entry = [];
-    foreach (['index.php', 'public/index.php', 'public/router.php', 'extend/fxri/bootstrap.php'] as $candidate) {
+    foreach (ENTRY_CANDIDATES as $candidate) {
         if (is_file($root . '/' . $candidate)) {
             $entry[] = $candidate;
         }
@@ -289,10 +299,20 @@ function buildProfile(string $root): array
         'entry' => $entry,
         'composer' => $composerStatus,
         'modules' => $modules,
-        'extension' => inspectExtension($root),
+        'extension' => inspectExtension($root, $layout),
         'usage' => [
             'fxapp' => $scan['counts']['fxapp'],
             'tier' => $tier,
+        ],
+        'layout' => [
+            'app' => $layout['app'],
+            'namespace' => $layout['namespace'],
+            'extensionNamespace' => $layout['extensionNamespace'],
+            'extensionDirectory' => $layout['extensionDirectory'],
+            'facadeClasses' => count($layout['facadeClasses']),
+            'globals' => count($layout['globals']),
+            'entries' => $layout['entries'],
+            'configured' => $layout['configured'],
         ],
         'blockers' => $blockers,
         'notes' => $notes,
@@ -308,8 +328,20 @@ function buildProfile(string $root): array
  */
 function scanProject(string $root): array
 {
+    $layout = projectLayout($root);
+    $namespace = (string) $layout['namespace'];
+    $extensionNamespace = is_string($layout['extensionNamespace']) ? $layout['extensionNamespace'] : $namespace . '\\facade_ext';
+    $methodPattern = '/\\\\' . nsPattern($namespace) . '\\\\([A-Za-z_][A-Za-z0-9_]*)::([A-Za-z_][A-Za-z0-9_]*)/';
+    $callPattern = '/\\\\' . nsPattern($namespace) . '\\\\([A-Za-z_][A-Za-z0-9_]*)::/';
+    $globals = $layout['globals'];
+    $isGlobals = array_values(array_filter($globals, static fn (string $name): bool => str_starts_with($name, 'is_')));
+    if ([] === $isGlobals) {
+        $isGlobals = array_values(array_filter(FALLBACK_GLOBALS, static fn (string $name): bool => str_starts_with($name, 'is_')));
+    }
+    $globalsPattern = '/\b(?:' . implode('|', array_map(static fn (string $name): string => preg_quote($name, '/'), $isGlobals)) . ')\s*\(/';
+
     $directories = scanDirectories($root);
-    $files = collectPhpFiles($root, $directories);
+    $files = collectPhpFiles($root, $directories, $layout['excludedPaths']);
     $counts = [
         'fxapp' => 0,
         'echo_indexes' => 0,
@@ -330,27 +362,27 @@ function scanProject(string $root): array
             continue;
         }
 
-        $counts['fxapp'] += countPattern('/\\\\fxapp\\\\([A-Za-z_][A-Za-z0-9_]*)::([A-Za-z_][A-Za-z0-9_]*)/', $code);
+        $counts['fxapp'] += countPattern($methodPattern, $code);
         $counts['echo_indexes'] += countPattern('/\$echo\[\d\]/', $code);
         $counts['dot_codes'] += countPattern('/([\'"])[12]\.\d(?:\.\d)?\1/', $code);
-        $counts['is_functions'] += countPattern('/\bis_(?:blank|json|time|function|mobile|email|zipcode|ipv4|ipv6|url|ip)\s*\(/', $code);
+        $counts['is_functions'] += countPattern($globalsPattern, $code);
         $counts['fxy_functions'] += countPattern('/\bfxy_[a-z_]+\s*\(/', $code);
         $counts['fxyin_refs'] += countPattern('/\\\\fxyin\\\\/', $code);
         $counts['facade_extends'] += countPattern('/extends\s+\\\\fxyin\\\\Facade/', $code);
-        $counts['facade_ext_refs'] += countPattern('/\\\\fxapp\\\\facade_ext\\\\/', $code);
-        $counts['oracle_refs'] += countPattern('/\\\\fxapp\\\\oracle\\\\/', $code);
+        $counts['facade_ext_refs'] += countPattern('/\\\\' . nsPattern($extensionNamespace) . '\\\\/', $code);
+        $counts['oracle_refs'] += countPattern('/\\\\' . nsPattern($namespace) . '\\\\oracle\\\\/', $code);
 
         $relative = relativePath($root, $file);
         foreach (array_keys($byDirectory) as $directory) {
             if ($relative === $directory || str_starts_with($relative, $directory . '/')) {
-                $byDirectory[$directory] += countPattern('/\\\\fxapp\\\\([A-Za-z_][A-Za-z0-9_]*)::/', $code);
+                $byDirectory[$directory] += countPattern($callPattern, $code);
 
                 break;
             }
         }
 
         $matches = [];
-        if (preg_match_all('/\\\\fxapp\\\\([A-Za-z_][A-Za-z0-9_]*)::([A-Za-z_][A-Za-z0-9_]*)/', $code, $matches, PREG_SET_ORDER)) {
+        if (preg_match_all($methodPattern, $code, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
                 $key = $match[1] . '::' . $match[2];
                 $methods[$key] = ($methods[$key] ?? 0) + 1;
@@ -359,18 +391,19 @@ function scanProject(string $root): array
     }
 
     arsort($methods);
-    $extensionMethods = facadeExtensionMethods($root);
+    $extensionMethods = facadeExtensionMethods($root, $layout);
     $topMethods = [];
     foreach (array_slice($methods, 0, 20, true) as $method => $count) {
         $topMethods[] = [
             'method' => $method,
             'count' => $count,
-            'suggestion' => suggestFor($method, $extensionMethods),
+            'suggestion' => suggestFor($method, $extensionMethods, $layout['facadeClasses']),
         ];
     }
 
     return [
         'root' => $root,
+        'namespace' => $namespace,
         'files' => count($files),
         'counts' => $counts,
         'byDirectory' => $byDirectory,
@@ -594,12 +627,16 @@ function detectFramework(string $root, ?array $lock, string $composerRaw): strin
  * 盘点扩展目录。
  *
  * @param string $root 项目根
+ * @param array<string, mixed> $layout 项目布局
  * @return array<string, mixed> 扩展目录画像
  */
-function inspectExtension(string $root): array
+function inspectExtension(string $root, array $layout): array
 {
-    $app = $root . '/extend/fxri/data/app';
+    $app = $root . '/' . DATA_DIRECTORY . '/app';
     $controller = $app . '/controller';
+    if (is_string($layout['extensionDirectory'])) {
+        $controller = dirname($root . '/' . $layout['extensionDirectory']);
+    }
     $storeFile = $app . '/store/common.php';
     $storeCode = is_file($storeFile) ? (string) file_get_contents($storeFile) : '';
 
@@ -635,20 +672,27 @@ function inspectExtension(string $root): array
  * @param list<string> $directories 相对目录
  * @return list<string> 文件路径
  */
-function collectPhpFiles(string $root, array $directories): array
+function collectPhpFiles(string $root, array $directories, array $excludedPaths = ['/extend/fxri/base/']): array
 {
     $files = [];
     foreach ($directories as $directory) {
         $path = $root . '/' . $directory;
+        if (is_file($path)) {
+            if ('php' === strtolower((string) pathinfo($path, PATHINFO_EXTENSION))) {
+                $files[] = str_replace('\\', '/', $path);
+            }
+
+            continue;
+        }
         if (!is_dir($path)) {
             continue;
         }
         $iterator = new RecursiveIteratorIterator(
             new RecursiveCallbackFilterIterator(
                 new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
-                static function (SplFileInfo $file): bool {
+                static function (SplFileInfo $file) use ($excludedPaths): bool {
                     $path = str_replace('\\', '/', $file->getPathname());
-                    foreach (EXCLUDED_PATHS as $excluded) {
+                    foreach ($excludedPaths as $excluded) {
                         if (str_contains($path . '/', $excluded)) {
                             return false;
                         }
@@ -747,18 +791,94 @@ function listSubdirectories(string $path): array
 }
 
 /**
- * 解析项目声明的应用目录。
+ * 解析项目布局。
  *
- * 1.x 在 `extend/fxri/data/config.php` 的 `env.base.app` 里声明应用目录，
- * 取值可能是 `application`、`app` 或其它名称，因此不按目录名硬编码。
- * 只做静态解析，不 include 项目文件。
+ * 1.x 的路径与命名空间都写在两份配置里：`extend/fxri/base/config.php` 给默认值（索引 0），
+ * `extend/fxri/data/config.php` 按索引覆盖。这里只做静态解析，不 include 项目文件；
+ * 解析失败时回落到目录探测与 1.6.1 的默认清单，并在报告里标注。
  *
  * @param string $root 项目根
- * @return string|null 相对项目根的应用目录
+ * @return array<string, mixed> 布局
  */
-function resolveAppDirectory(string $root): ?string
+function projectLayout(string $root): array
 {
-    $file = $root . '/' . APP_DIRECTORY_CONFIG;
+    static $cache = [];
+    $key = str_replace('\\', '/', (string) realpath($root));
+    if (isset($cache[$key])) {
+        return $cache[$key];
+    }
+
+    $baseFile = $root . '/' . BASE_CONFIG;
+    $dataFile = $root . '/' . APP_DIRECTORY_CONFIG;
+    $baseTokens = configTokens($baseFile);
+    $dataTokens = configTokens($dataFile);
+
+    $app = null;
+    if (null !== $dataTokens) {
+        $app = resolveConfiguredApp($dataTokens, $root, dirname($dataFile));
+    }
+
+    $namespace = 'fxapp';
+    $extensionNamespace = null;
+    if (null !== $baseTokens) {
+        $namespace = resolveNamespace($baseTokens);
+    }
+    if (null !== $dataTokens) {
+        $extensionNamespace = resolveExtensionNamespace($dataTokens);
+    }
+
+    $loaderDirectories = [];
+    if (null !== $baseTokens) {
+        $loaderDirectories = array_merge($loaderDirectories, loaderDirectories($baseTokens, $root, dirname($baseFile)));
+    }
+    if (null !== $dataTokens) {
+        $loaderDirectories = array_merge($loaderDirectories, loaderDirectories($dataTokens, $root, dirname($dataFile)));
+    }
+
+    $extensionDirectory = null;
+    if (null !== $extensionNamespace) {
+        $segment = lastSegment($extensionNamespace);
+        foreach ($loaderDirectories as $directory) {
+            $candidate = $directory . '/' . $segment;
+            if (is_dir($candidate)) {
+                $extensionDirectory = relativeTo($root, $candidate);
+
+                break;
+            }
+        }
+    }
+
+    $excludedPaths = ['/extend/fxri/base/'];
+    foreach (listSubdirectories($root . '/' . FRAMEWORK_ROOT) as $module) {
+        if (!in_array($module, ['base', 'data'], true)) {
+            $excludedPaths[] = '/extend/fxri/' . $module . '/';
+        }
+    }
+
+    $layout = [
+        'app' => $app,
+        'namespace' => $namespace,
+        'extensionNamespace' => $extensionNamespace,
+        'extensionDirectory' => $extensionDirectory,
+        'facadeClasses' => facadeClasses($root, $loaderDirectories),
+        'globals' => globalFunctions($root),
+        'excludedPaths' => $excludedPaths,
+        'entries' => entryPaths($root),
+        'configured' => null !== $dataTokens && null !== $app,
+    ];
+    $cache[$key] = $layout;
+
+    return $layout;
+}
+
+/**
+ * 读取配置文件的精简标记。
+ *
+ * @param string $file 配置文件
+ * @return array<int, array{0: int, 1: string, 2: int}|string>|null 标记
+ */
+function configTokens(string $file): ?array
+{
     if (!is_file($file)) {
         return null;
     }
@@ -767,19 +887,330 @@ function resolveAppDirectory(string $root): ?string
         return null;
     }
 
-    $tokens = significantTokens(token_get_all($code));
-    $base = valueTokens($tokens, 'base');
-    if (null === $base) {
-        return null;
-    }
-    $app = valueTokens($base, 'app');
+    return significantTokens(token_get_all($code));
+}
+
+/**
+ * 解析配置声明的应用目录。
+ *
+ * @param array<int, array{0: int, 1: string, 2: int}|string> $tokens 配置标记
+ * @param string $root 项目根
+ * @param string $configDir 配置目录
+ * @return string|null 相对项目根的应用目录
+ */
+function resolveConfiguredApp(array $tokens, string $root, string $configDir): ?string
+{
+    $env = valueTokens($tokens, 'env');
+    $base = null === $env ? null : valueTokens($env, 'base');
+    $app = null === $base ? null : valueTokens($base, 'app');
     if (null === $app) {
         return null;
     }
 
-    $path = evaluatePathTokens($app, $root, dirname($file));
+    $path = evaluatePathTokens($app, $root, $configDir);
 
     return null === $path ? null : relativeTo($root, $path);
+}
+
+/**
+ * 解析门面根命名空间。
+ *
+ * 1.x 把基础门面声明为 `env.facade[0]`（形如 `\fxapp\facade\`），去掉末级即根命名空间。
+ *
+ * @param array<int, array{0: int, 1: string, 2: int}|string> $tokens 配置标记
+ * @return string 根命名空间
+ */
+function resolveNamespace(array $tokens): string
+{
+    foreach (facadeNamespaces($tokens) as $key => $value) {
+        if (0 === $key) {
+            $namespace = namespaceRoot($value);
+            if ('' !== $namespace) {
+                return $namespace;
+            }
+        }
+    }
+
+    return 'fxapp';
+}
+
+/**
+ * 解析项目扩展门面的命名空间。
+ *
+ * 扩展门面声明在 `env.facade` 的非 0 索引上，形如 `\fxapp\facade_ext\`。
+ *
+ * @param array<int, array{0: int, 1: string, 2: int}|string> $tokens 配置标记
+ * @return string|null 扩展命名空间
+ */
+function resolveExtensionNamespace(array $tokens): ?string
+{
+    foreach (facadeNamespaces($tokens) as $key => $value) {
+        if (0 !== $key && '' !== $value) {
+            return trim($value, '\\');
+        }
+    }
+
+    return null;
+}
+
+/**
+ * 取配置里声明的门面命名空间。
+ *
+ * @param array<int, array{0: int, 1: string, 2: int}|string> $tokens 配置标记
+ * @return array<int|string, string> 索引 => 命名空间
+ */
+function facadeNamespaces(array $tokens): array
+{
+    $env = valueTokens($tokens, 'env');
+    $facade = null === $env ? null : valueTokens($env, 'facade');
+    if (null === $facade) {
+        return [];
+    }
+
+    $namespaces = [];
+    foreach (arrayPairs($facade) as $key => $value) {
+        foreach ($value as $token) {
+            if (is_array($token) && T_CONSTANT_ENCAPSED_STRING === $token[0]) {
+                $namespaces[$key] = trim(literalValue($token[1]), '\\');
+
+                break;
+            }
+        }
+    }
+
+    return $namespaces;
+}
+
+/**
+ * 取配置里声明的门面与扩展加载目录。
+ *
+ * @param array<int, array{0: int, 1: string, 2: int}|string> $tokens 配置标记
+ * @param string $root 项目根
+ * @param string $configDir 配置目录
+ * @return list<string> 绝对目录
+ */
+function loaderDirectories(array $tokens, string $root, string $configDir): array
+{
+    $loader = valueTokens($tokens, 'loader');
+    $fxapp = null === $loader ? null : valueTokens($loader, 'fxapp');
+    if (null === $fxapp) {
+        return [];
+    }
+
+    $directories = [];
+    foreach (arrayPairs($fxapp) as $value) {
+        $path = evaluatePathTokens($value, $root, $configDir);
+        if (null !== $path && is_dir($path)) {
+            $directories[] = rtrim(str_replace('\\', '/', $path), '/');
+        }
+    }
+
+    return $directories;
+}
+
+/**
+ * 列出门面类名。
+ *
+ * @param string $root 项目根
+ * @param list<string> $loaderDirectories 加载目录
+ * @return list<string> 门面类名
+ */
+function facadeClasses(string $root, array $loaderDirectories): array
+{
+    $candidates = [];
+    foreach ($loaderDirectories as $directory) {
+        $candidates[] = $directory . '/facade';
+    }
+    $candidates[] = $root . '/' . FRAMEWORK_ROOT . '/base/app/controller/facade';
+
+    foreach ($candidates as $directory) {
+        if (!is_dir($directory)) {
+            continue;
+        }
+        $classes = [];
+        foreach (directPhpFiles($directory) as $file) {
+            $classes[] = basename($file, '.php');
+        }
+        sort($classes);
+        if ([] !== $classes) {
+            return $classes;
+        }
+    }
+
+    return FALLBACK_FACADE_CLASSES;
+}
+
+/**
+ * 列出 1.x 全局函数。
+ *
+ * @param string $root 项目根
+ * @return list<string> 函数名
+ */
+function globalFunctions(string $root): array
+{
+    $files = glob($root . '/' . FRAMEWORK_ROOT . '/*/app/function/*.php') ?: [];
+    $functions = [];
+    foreach ($files as $file) {
+        $code = file_get_contents($file);
+        if (false === $code) {
+            continue;
+        }
+        $tokens = significantTokens(token_get_all($code));
+        $count = count($tokens);
+        for ($i = 0; $i < $count; ++$i) {
+            $token = $tokens[$i];
+            if (!is_array($token) || T_FUNCTION !== $token[0]) {
+                continue;
+            }
+            $next = $tokens[$i + 1] ?? null;
+            if (!is_array($next) || T_STRING !== $next[0]) {
+                continue;
+            }
+            if (str_starts_with($next[1], 'is_') || str_starts_with($next[1], 'fxy_')) {
+                $functions[] = $next[1];
+            }
+        }
+    }
+    $functions = array_values(array_unique($functions));
+    sort($functions);
+
+    return [] === $functions ? FALLBACK_GLOBALS : $functions;
+}
+
+/**
+ * 确定入口路径。
+ *
+ * ThinkPHP 系入口在 `public`，非 TP 项目入口在根目录；按存在性选择，不写死。
+ *
+ * @param string $root 项目根
+ * @return list<string> 相对路径
+ */
+function entryPaths(string $root): array
+{
+    if (is_dir($root . '/public')) {
+        return ['public'];
+    }
+
+    $entries = [];
+    foreach (ENTRY_CANDIDATES as $candidate) {
+        if (!str_contains($candidate, '/') && is_file($root . '/' . $candidate)) {
+            $entries[] = $candidate;
+        }
+    }
+
+    return $entries;
+}
+
+/**
+ * 把数组内容按顶层逗号拆成 键 => 值标记。
+ *
+ * @param array<int, array{0: int, 1: string, 2: int}|string> $tokens 数组内容标记
+ * @return array<int|string, array<int, array{0: int, 1: string, 2: int}|string>> 键 => 值标记
+ */
+function arrayPairs(array $tokens): array
+{
+    $segments = [];
+    $current = [];
+    $depth = 0;
+    foreach ($tokens as $token) {
+        $text = is_array($token) ? $token[1] : $token;
+        if (',' === $text && 0 === $depth) {
+            $segments[] = $current;
+            $current = [];
+
+            continue;
+        }
+        if ('[' === $text || '(' === $text) {
+            ++$depth;
+        } elseif (']' === $text || ')' === $text) {
+            --$depth;
+        }
+        $current[] = $token;
+    }
+    if ([] !== $current) {
+        $segments[] = $current;
+    }
+
+    $pairs = [];
+    foreach ($segments as $segment) {
+        $arrow = null;
+        foreach ($segment as $index => $token) {
+            if (is_array($token) && T_DOUBLE_ARROW === $token[0]) {
+                $arrow = $index;
+
+                break;
+            }
+        }
+        if (null === $arrow || 0 === $arrow) {
+            continue;
+        }
+        $keyToken = $segment[$arrow - 1];
+        $key = is_array($keyToken) && T_CONSTANT_ENCAPSED_STRING === $keyToken[0]
+            ? literalValue($keyToken[1])
+            : (is_array($keyToken) ? $keyToken[1] : $keyToken);
+        $pairs[$key] = array_slice($segment, $arrow + 1);
+    }
+
+    return $pairs;
+}
+
+/**
+ * 取路径最后一段。
+ *
+ * @param string $path 路径或命名空间
+ * @return string 最后一段
+ */
+function lastSegment(string $path): string
+{
+    $value = trim($path, '\\/');
+    $position = strrpos($value, '\\');
+    if (false !== $position) {
+        return substr($value, $position + 1);
+    }
+    $position = strrpos($value, '/');
+
+    return false === $position ? $value : substr($value, $position + 1);
+}
+
+/**
+ * 把命名空间转成正则里的字面片段。
+ *
+ * @param string $namespace 命名空间
+ * @return string 正则片段
+ */
+function nsPattern(string $namespace): string
+{
+    return str_replace('\\', '\\\\', $namespace);
+}
+
+/**
+ * 去掉命名空间最后一段。
+ *
+ * @param string $namespace 命名空间
+ * @return string 根命名空间
+ */
+function namespaceRoot(string $namespace): string
+{
+    $value = trim($namespace, '\\');
+    $position = strrpos($value, '\\');
+
+    return false === $position ? $value : substr($value, 0, $position);
+}
+
+/**
+ * 解析项目声明的应用目录。
+ *
+ * 1.x 在 `extend/fxri/data/config.php` 的 `env.base.app` 里声明应用目录，
+ * 取值可能是 `application`、`app`、`apps` 或其它名称，因此不按目录名硬编码。
+ *
+ * @param string $root 项目根
+ * @return string|null 相对项目根的应用目录
+ */
+function resolveAppDirectory(string $root): ?string
+{
+    $layout = projectLayout($root);
+
+    return is_string($layout['app']) ? $layout['app'] : null;
 }
 
 /**
@@ -788,12 +1219,13 @@ function resolveAppDirectory(string $root): ?string
  * 应用目录取自项目配置；配置缺失或无法静态解析时才按存在性兜底探测常见命名。
  *
  * @param string $root 项目根
- * @return list<string> 相对项目根的目录列表
+ * @return list<string> 相对项目根的目录或文件列表
  */
 function scanDirectories(string $root): array
 {
+    $layout = projectLayout($root);
     $directories = [];
-    $app = resolveAppDirectory($root);
+    $app = is_string($layout['app']) ? $layout['app'] : null;
     if (null !== $app && is_dir($root . '/' . $app)) {
         $directories[] = $app;
     } else {
@@ -803,10 +1235,12 @@ function scanDirectories(string $root): array
             }
         }
     }
-    $directories[] = 'extend/fxri/data';
-    $directories[] = 'public';
+    $directories[] = DATA_DIRECTORY;
+    foreach ($layout['entries'] as $entry) {
+        $directories[] = $entry;
+    }
 
-    return $directories;
+    return array_values(array_unique($directories));
 }
 
 /**
@@ -1046,12 +1480,17 @@ function tierFor(int $count): string
  * 与框架 API 区分开，避免给出「见 2.0 API 对照」的误导建议。
  *
  * @param string $root 项目根
+ * @param array<string, mixed> $layout 项目布局
  * @return array<string, true> 形如 `safe::rsapriext` 的小写集合
  */
-function facadeExtensionMethods(string $root): array
+function facadeExtensionMethods(string $root, array $layout): array
 {
     $methods = [];
-    foreach (directPhpFiles($root . '/' . FACADE_EXTENSION_DIRECTORY) as $file) {
+    $directory = is_string($layout['extensionDirectory']) ? $layout['extensionDirectory'] : null;
+    if (null === $directory || !is_dir($root . '/' . $directory)) {
+        return $methods;
+    }
+    foreach (directPhpFiles($root . '/' . $directory) as $file) {
         $class = basename($file, '.php');
         $code = file_get_contents($file);
         if (false === $code) {
@@ -1082,9 +1521,10 @@ function facadeExtensionMethods(string $root): array
  *
  * @param string $method 形如 Base::config
  * @param array<string, true> $extensionMethods 项目扩展方法集合
+ * @param list<string> $facadeClasses 门面类名
  * @return string 建议
  */
-function suggestFor(string $method, array $extensionMethods = []): string
+function suggestFor(string $method, array $extensionMethods = [], array $facadeClasses = []): string
 {
     static $map = null;
     if (null === $map) {
@@ -1103,8 +1543,9 @@ function suggestFor(string $method, array $extensionMethods = []): string
         return '项目扩展方法，随 facade_ext 迁移';
     }
     $class = explode('::', $method, 2)[0];
+    $classes = [] === $facadeClasses ? FALLBACK_FACADE_CLASSES : $facadeClasses;
 
-    return in_array($class, FRAMEWORK_CLASSES, true) ? '项目扩展或服务方法，随扩展目录迁移' : '项目自有方法，保留实现';
+    return in_array($class, $classes, true) ? '项目扩展或服务方法，随扩展目录迁移' : '项目自有方法，保留实现';
 }
 
 /**
@@ -1182,6 +1623,8 @@ function formatProfileMarkdown(array $profile): string
 {
     $extension = is_array($profile['extension']) ? $profile['extension'] : [];
     $usage = is_array($profile['usage']) ? $profile['usage'] : [];
+    $layout = is_array($profile['layout']) ? $profile['layout'] : [];
+    $namespace = '\\' . (string) ($layout['namespace'] ?? 'fxapp') . '\\';
     $lines = [
         '# 升级体检报告',
         '',
@@ -1193,7 +1636,11 @@ function formatProfileMarkdown(array $profile): string
             . '，lock=' . ($profile['composer']['lock'] ? '是' : '否')
             . '，autoload=' . ($profile['composer']['autoload'] ? '是' : '否'),
         '- 扩展模块：' . ([] === $profile['modules'] ? '无' : implode('、', $profile['modules'])),
-        '- 体量档位：' . $usage['tier'] . '（`\\fxapp\\*::` ' . $usage['fxapp'] . ' 处）',
+        '- 应用目录：' . (is_string($layout['app'] ?? null) ? '`' . $layout['app'] . '`' : '未解析（按存在性兜底）')
+            . '，门面命名空间：`' . $namespace . '`',
+        '- 扩展目录：' . (is_string($layout['extensionDirectory'] ?? null) ? '`' . $layout['extensionDirectory'] . '`' : '未解析')
+            . '，门面类 ' . ($layout['facadeClasses'] ?? 0) . ' 个、全局函数 ' . ($layout['globals'] ?? 0) . ' 个',
+        '- 体量档位：' . $usage['tier'] . '（`' . $namespace . '*::` ' . $usage['fxapp'] . ' 处）',
         '',
         '## 阻塞项',
         '',
@@ -1244,6 +1691,7 @@ function formatProfileMarkdown(array $profile): string
 function formatScanMarkdown(array $scan): string
 {
     $counts = is_array($scan['counts']) ? $scan['counts'] : [];
+    $namespace = '\\' . (string) ($scan['namespace'] ?? 'fxapp') . '\\';
     $lines = [
         '# 旧 API 扫描',
         '',
@@ -1254,7 +1702,7 @@ function formatScanMarkdown(array $scan): string
         '',
         '| 项 | 数量 |',
         '| --- | --- |',
-        '| `\\fxapp\\*::` | ' . $counts['fxapp'] . ' |',
+        '| `' . $namespace . '*::` | ' . $counts['fxapp'] . ' |',
         '| `$echo[n]` | ' . $counts['echo_indexes'] . ' |',
         '| 点分模式号 | ' . $counts['dot_codes'] . ' |',
         '| `is_*` | ' . $counts['is_functions'] . ' |',
@@ -1266,7 +1714,7 @@ function formatScanMarkdown(array $scan): string
         '',
         '## 目录分布',
         '',
-        '| 目录 | `\\fxapp\\*::` |',
+        '| 目录 | `' . $namespace . '*::` |',
         '| --- | --- |',
     ];
     foreach ($scan['byDirectory'] as $directory => $count) {
