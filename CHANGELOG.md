@@ -16,6 +16,9 @@
 - 新增 `Security\Rsa::privateEncrypt()` / `publicDecrypt()` 与 `RsaPadding`，支持私钥加密、公钥解密与无填充
 - 新增 `HttpClient\Curl` / `CurlResponse`，以 URL 串发起请求、读取响应头与下载
 - 新增 `RandomCharset::Alpha`，`Random::string()` 可单独限定首字符集
+- 新增 `File\VideoInfo` 解析视频时长/分辨率/编码，`Security\LegacyToken` 读写 1.x 旧令牌
+- 新增 `Time::decompose/duration`、`Time::milliFormat/milliParse`、`Uuid::format`，补齐时长分解、毫秒双向转换与标识串格式化
+- 新增 `Cast::emptyToObject()` 与 `Merger::append()`，并让 `Language::phrase()` 支持 `!@`/`!#` 标记与首字母大写
 - 补齐 1.6.1 能力：`File\Loader`、`Data\Cast`/`Hierarchy`、字段距离/首字母/除法/别名/转义、`Rsa::normalizePem`、`Http\BranchContext`/`XmlFormatter`、`Client::download`、`Time::range`/`change`/`relative`、`Encode` 嵌套编码与首字母等
 
 ### 🔧 功能调整
@@ -28,7 +31,7 @@
 
 ### ⚡ 优化改进
 
-- 逐方法复核 92 个门面、18 个全局函数与 27 个运行时方法，修正 `Text` 编解码/长度、`Math` 随机、`View` 序列化、`Env` 叠加与 `Data` 层级等矩阵目标
+- 逐方法复核 92 个门面、18 个全局函数与 27 个运行时方法，修正 `Text` 编解码/长度/时长/毫秒、`Math` 随机、`View` 序列化、`Env`/`fxy_env` 叠加、`Data` 层级、`Param` 对象/追加、`Uuid` 格式化、`File` 视频信息与旧令牌等矩阵目标
 - 对等矩阵、golden 测试与文档站对等说明补齐，1.6.1 能力项全部有可落地的 v2 目标（等价或覆盖）
 - 内置资源随包分发，发布包卫生检查覆盖 `resources`；`ext-curl` 列为建议依赖，未安装时 URL 级 HTTP 调用抛出明确异常
 

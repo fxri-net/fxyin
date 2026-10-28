@@ -41,7 +41,7 @@
                 "status": "equiv"
             },
             "json": {
-                "target": "Param\\Json",
+                "target": "Param\\Json / Encode::decodeAll（非 JSON 串按查询串解码）",
                 "status": "equiv"
             },
             "ipv4": {
@@ -195,8 +195,8 @@
                 "status": "equiv"
             },
             "moveDirectory": {
-                "target": "File\\Filesystem::moveDirectory",
-                "status": "equiv"
+                "target": "File\\Filesystem::moveDirectory（整目录 rename，1.x 为内容扁平合并）",
+                "status": "covered"
             },
             "deleteDirectory": {
                 "target": "File\\Filesystem::deleteDirectory",
@@ -456,7 +456,7 @@
             "status": "equiv"
         },
         "fxy_env": {
-            "target": "Http\\ServerContext",
+            "target": "Config\\Store（env 命名空间）",
             "status": "equiv"
         },
         "fxy_dump": {

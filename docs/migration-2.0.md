@@ -365,9 +365,9 @@ return Envelope::success($data, '请求成功');
 | --- | --- |
 | `formatSize($size)` | `Formatter::size($bytes)` |
 | `getList($path, $ext, $limit)` | `Filesystem::findFiles($directory, $extensions, $maxDepth)` |
-| `moveDirectory($oldpath, $newpath)` | `Filesystem::moveDirectory()` |
+| `moveDirectory($oldpath, $newpath)` | `Filesystem::moveDirectory()`（整目录移动，不再扁平合并内容） |
 | `deleteDirectory($path)` | `Filesystem::deleteDirectory()` |
-| `getMediaInfo($var, $type)` | `MediaInfo::mime()`、`MediaInfo::extension()` |
+| `getMediaInfo($var, $type)` | `VideoInfo::inspect()` 取视频元信息；类型互查用 `MediaInfo::mime()`、`MediaInfo::extension()` |
 
 ### 7.5 `\fxapp\Math`
 
@@ -394,12 +394,12 @@ return Envelope::success($data, '请求成功');
 
 | 旧方法 | 新写法 |
 | --- | --- |
-| `crypt($data, $type, $param)` | `Cipher::encrypt()`、`Cipher::decrypt()`；旧数据用 `LegacyCipher::decrypt()` |
+| `crypt($data, $type, $param)` | 新数据用 `Cipher::encrypt()` / `decrypt()`；旧数据用 `LegacyCipher::encrypt()` / `decrypt()` |
 | `md5($data, $type)` | `Hash::md5($data, HashLength::Full32)` |
-| `token($data, $type)` | `Token::make()` 签发、`Token::verify()` 校验 |
-| `rsapri($data, $type, $param)` | `Rsa::sign()`、`Rsa::decrypt()` |
-| `rsapub($data, $type, $param)` | `Rsa::verify()`、`Rsa::encrypt()` |
-| `rsapem($data)` | 无等价实现，`Rsa::generate()` 直接产出密钥 |
+| `token($data, $type)` | 新令牌用 `Token::make()` / `verify()`；旧令牌用 `LegacyToken::encode()` / `decode()` |
+| `rsapri($data, $type, $param)` | 私钥加密用 `Rsa::privateEncrypt()`；签名与解密用 `Rsa::sign()` / `decrypt()` |
+| `rsapub($data, $type, $param)` | 公钥解密用 `Rsa::publicDecrypt()`；验签与加密用 `Rsa::verify()` / `encrypt()` |
+| `rsapem($data)` | `Rsa::normalizePem()` |
 
 ### 7.8 `\fxapp\Server`
 
