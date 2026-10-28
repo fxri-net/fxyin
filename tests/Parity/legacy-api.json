@@ -265,7 +265,7 @@
                 "status": "equiv"
             },
             "token": {
-                "target": "Security\\Token",
+                "target": "Security\\Token / LegacyToken（旧格式）",
                 "status": "equiv"
             },
             "rsapri": {

@@ -18,6 +18,25 @@ final class LegacyCipherTest extends TestCase
     private const PAYLOAD = 'zGWi1LQTXdVpPac4UC2BIw==';
 
     /**
+     * 加密结果可由同一口令解回。
+     */
+    public function testEncryptRoundTrip(): void
+    {
+        $payload = LegacyCipher::encrypt('风音-fxri', '00000000');
+
+        self::assertSame('风音-fxri', LegacyCipher::decrypt($payload, '00000000'));
+    }
+
+    /**
+     * 未传口令时拒绝加密。
+     */
+    public function testEncryptMissingPassword(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        LegacyCipher::encrypt('风音');
+    }
+
+    /**
      * 固定向量可解回原始明文。
      */
     public function testFixedVector(): void
