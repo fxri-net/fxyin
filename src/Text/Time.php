@@ -87,40 +87,36 @@ final class Time
      * `$before` 为 false 时只保留最高单位。对应 1.6.1 `timeFormat()` 的 switch/show/max/before。
      *
      * @param int $seconds 秒数
-     * @param array<string, string> $labels 单位标签，键为 year/month/day/hour/minute/second
+     * @param array<string, string> $labels 单位标签覆盖，键为 TimeUnit 的值
      * @param bool $zero 是否输出 0 值单位
-     * @param string|null $max 最高单位，null 表示 year
+     * @param TimeUnit|null $max 最高单位，null 表示年
      * @param bool $before 是否输出最高单位以下的更细单位
      * @return string 时长文本
      */
-    public static function duration(int $seconds, array $labels = [], bool $zero = false, ?string $max = null, bool $before = true): string
+    public static function duration(int $seconds, array $labels = [], bool $zero = false, ?TimeUnit $max = null, bool $before = true): string
     {
-        if ([] === $labels) {
-            $labels = [
-                'year' => '年',
-                'month' => '个月',
-                'day' => '天',
-                'hour' => '小时',
-                'minute' => '分钟',
-                'second' => '秒',
-            ];
-        }
-
-        $order = ['year', 'month', 'day', 'hour', 'minute', 'second'];
-        $maxUnit = in_array($max, $order, true) ? (string) $max : 'year';
+        $maxUnit = $max ?? TimeUnit::Year;
+        $order = [TimeUnit::Year, TimeUnit::Month, TimeUnit::Day, TimeUnit::Hour, TimeUnit::Minute, TimeUnit::Second];
+        $chain = [
+            [TimeUnit::Second, 60],
+            [TimeUnit::Minute, 60],
+            [TimeUnit::Hour, 24],
+            [TimeUnit::Day, 30],
+            [TimeUnit::Month, 12],
+            [TimeUnit::Year, 0],
+        ];
 
         // 从秒开始逐级向上取余，最高单位直接取剩余值，与 1.x 把最高单位除数置 0 的做法一致
-        $chain = ['second' => 60, 'minute' => 60, 'hour' => 24, 'day' => 30, 'month' => 12, 'year' => 0];
         $parts = [];
         $remaining = max(0, $seconds);
-        foreach ($chain as $unit => $divisor) {
+        foreach ($chain as [$unit, $divisor]) {
             if ($unit === $maxUnit) {
-                $parts[$unit] = $remaining;
+                $parts[$unit->value] = $remaining;
 
                 break;
             }
 
-            $parts[$unit] = 0 === $divisor ? $remaining : $remaining % $divisor;
+            $parts[$unit->value] = 0 === $divisor ? $remaining : $remaining % $divisor;
             if (0 === $divisor) {
                 break;
             }
@@ -130,12 +126,12 @@ final class Time
 
         $result = '';
         foreach ($order as $unit) {
-            if (!isset($parts[$unit]) || (!$before && $unit !== $maxUnit)) {
+            $value = $parts[$unit->value] ?? null;
+            if (null === $value || (!$before && $unit !== $maxUnit)) {
                 continue;
             }
 
-            $label = $labels[$unit] ?? '';
-            $value = $parts[$unit];
+            $label = $labels[$unit->value] ?? $unit->label();
             if ('' === $label || (!$zero && 0 === $value)) {
                 continue;
             }

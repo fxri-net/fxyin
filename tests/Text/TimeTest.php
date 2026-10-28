@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fxri\Tests\Text;
 
 use Fxri\Text\Time;
+use Fxri\Text\TimeUnit;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -63,8 +64,8 @@ final class TimeTest extends TestCase
 
         self::assertSame('1个月2小时3分钟4秒', Time::duration($seconds));
         self::assertSame('0年1个月0天2小时3分钟4秒', Time::duration($seconds, zero: true));
-        self::assertSame('30天2小时3分钟4秒', Time::duration($seconds, max: 'day'));
-        self::assertSame('1个月', Time::duration($seconds, max: 'month', before: false));
+        self::assertSame('30天2小时3分钟4秒', Time::duration($seconds, max: TimeUnit::Day));
+        self::assertSame('1个月', Time::duration($seconds, max: TimeUnit::Month, before: false));
         self::assertSame(
             '1个月2小时',
             Time::duration($seconds, ['year' => '', 'month' => '个月', 'day' => '', 'hour' => '小时', 'minute' => '', 'second' => '']),

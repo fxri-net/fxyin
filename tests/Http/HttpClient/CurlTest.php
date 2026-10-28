@@ -6,6 +6,7 @@ namespace Fxri\Tests\Http\HttpClient;
 
 use Fxri\File\Filesystem;
 use Fxri\Http\HttpClient\Curl;
+use Fxri\Http\HttpClient\CurlOptions;
 use Fxri\Param\Json;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -103,6 +104,21 @@ final class CurlTest extends TestCase
         self::assertSame('POST', $data['method']);
         self::assertSame('a=1&b%5Bc%5D=2', $data['body']);
         self::assertSame('abc', $data['trace']);
+    }
+
+    /**
+     * 传输选项可通过值对象定制。
+     */
+    public function testOptions(): void
+    {
+        $options = CurlOptions::make(timeout: 5, verify: false, userAgent: 'fxri-test');
+
+        self::assertSame(5, $options->timeout);
+        self::assertFalse($options->verify);
+        self::assertSame('fxri-test', $options->userAgent);
+
+        $response = Curl::request($this->url('/json'), [], ['X-Trace' => 'opt'], 'GET', $options);
+        self::assertSame(200, $response->status());
     }
 
     /**

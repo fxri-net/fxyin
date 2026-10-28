@@ -18,20 +18,58 @@ final class VideoInfo
     /**
      * 读取视频信息。
      *
-     * `$command` 传数组时按「二进制 + 参数」直接执行，不经 shell；传字符串时按 `%s` 占位
-     * 代入经 `escapeshellarg()` 处理的文件路径，模板由调用方保证可信。
+     * `$command` 按「二进制 + 参数」数组直接执行，不经 shell；这是推荐入口。
      *
      * @param string $file 视频文件路径
-     * @param array<array-key, string>|string $command 探测命令
+     * @param array<array-key, string> $command 探测命令
      * @return array<string, mixed> 视频信息
      */
-    public static function inspect(string $file, array|string $command): array
+    public static function inspect(string $file, array $command): array
+    {
+        self::assertFile($file);
+
+        return self::parse($file, self::run(array_values($command)));
+    }
+
+    /**
+     * 按 1.x 命令模板读取视频信息。
+     *
+     * 模板中的 `%s` 会替换为经 `escapeshellarg()` 处理的文件路径，其余部分由调用方保证可信；
+     * 仅用于迁移 1.x 配置里的命令字符串，新代码请用 `inspect()`。
+     *
+     * @param string $file 视频文件路径
+     * @param string $template 命令模板
+     * @return array<string, mixed> 视频信息
+     */
+    public static function inspectTemplate(string $file, string $template): array
+    {
+        self::assertFile($file);
+
+        return self::parse($file, self::run(sprintf($template, escapeshellarg($file))));
+    }
+
+    /**
+     * 校验视频文件存在。
+     *
+     * @param string $file 视频文件路径
+     * @return void
+     */
+    private static function assertFile(string $file): void
     {
         if (!is_file($file)) {
             throw new InvalidArgumentException('视频文件不存在：' . $file);
         }
+    }
 
-        $output = self::run($command, $file);
+    /**
+     * 解析探测输出。
+     *
+     * @param string $file 视频文件路径
+     * @param string $output 命令输出
+     * @return array<string, mixed> 视频信息
+     */
+    private static function parse(string $file, string $output): array
+    {
         $data = [];
         $hasDuration = false;
         $seconds = 0.0;
@@ -74,14 +112,11 @@ final class VideoInfo
     /**
      * 执行探测命令并返回输出。
      *
-     * @param array<array-key, string>|string $command 探测命令
-     * @param string $file 视频文件路径
+     * @param list<string>|string $command 探测命令
      * @return string 命令输出
      */
-    private static function run(array|string $command, string $file): string
+    private static function run(array|string $command): string
     {
-        $command = is_string($command) ? sprintf($command, escapeshellarg($file)) : array_values($command);
-
         $process = proc_open($command, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (!is_resource($process)) {
             throw new RuntimeException('无法执行媒体探测命令');

@@ -132,13 +132,14 @@ echo PHP_EOL;
 
 ### VideoInfo
 
-执行外部探测命令并解析输出，承接 1.x `File::getMediaInfo()` 的视频分支。命令支持两种形态：`[二进制, ...参数]` 数组不经 shell；含 `%s` 的字符串模板会先用 `escapeshellarg()` 替换文件路径，模板由调用方保证可信。
+执行外部探测命令并解析输出，承接 1.x `File::getMediaInfo()` 的视频分支。推荐用数组命令 `[二进制, ...参数]`，不经 shell；`inspectTemplate()` 保留 1.x 的 `%s` 命令模板，仅用于迁移。
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `inspect(string $file, array\|string $command)` | 解析 `Duration/start/bitrate`、`Video`、`Audio` 三段输出，补充 `seconds`、`play_time` 与 `size`；文件不存在抛 `InvalidArgumentException`，命令失败且无输出抛 `RuntimeException` | `array<string, mixed>` |
+| `inspect(string $file, array $command)` | 按数组命令执行并解析 `Duration/start/bitrate`、`Video`、`Audio` 三段输出，补充 `seconds`、`play_time` 与 `size` | `array<string, mixed>` |
+| `inspectTemplate(string $file, string $template)` | 按 1.x 命令模板执行，`%s` 替换为 `escapeshellarg()` 处理后的文件路径；模板需可信 | `array<string, mixed>` |
 
-返回字段：`duration`、`seconds`、`start`、`bitrate`、`vcodec`、`vformat`、`resolution`、`width`、`height`、`acodec`、`asamplerate`、`play_time`、`size`；未匹配到的段落不会出现对应键。
+文件不存在抛 `InvalidArgumentException`；命令失败且无输出抛 `RuntimeException`。返回字段：`duration`、`seconds`、`start`、`bitrate`、`vcodec`、`vformat`、`resolution`、`width`、`height`、`acodec`、`asamplerate`、`play_time`、`size`；未匹配到的段落不会出现对应键。
 
 ## 注意事项
 

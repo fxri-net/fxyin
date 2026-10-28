@@ -20,15 +20,6 @@ use RuntimeException;
  */
 final class Curl
 {
-    /** 默认连接超时秒数 */
-    private const CONNECT_TIMEOUT = 10;
-
-    /** 默认最大重定向次数 */
-    private const MAX_REDIRECTS = 5;
-
-    /** 默认请求超时秒数 */
-    private const TIMEOUT = 30;
-
     /**
      * 下载响应体到文件。
      *
@@ -37,10 +28,10 @@ final class Curl
      * @param string $url 地址
      * @param string $file 本地文件路径
      * @param array<array-key, mixed> $headers 请求头
-     * @param array<array-key, mixed> $options 选项
+     * @param CurlOptions|null $options 传输选项
      * @return string 写入的文件路径
      */
-    public static function download(string $url, string $file, array $headers = [], array $options = []): string
+    public static function download(string $url, string $file, array $headers = [], ?CurlOptions $options = null): string
     {
         $response = self::request($url, '', $headers, 'GET', $options);
         if (!$response->isSuccess()) {
@@ -59,10 +50,10 @@ final class Curl
      * @param array<array-key, mixed>|string $data 数据
      * @param array<array-key, mixed> $headers 请求头
      * @param string $method 请求方法
-     * @param array<array-key, mixed> $options 选项
+     * @param CurlOptions|null $options 传输选项
      * @return string 响应正文
      */
-    public static function send(string $url, array|string $data = '', array $headers = [], string $method = 'GET', array $options = []): string
+    public static function send(string $url, array|string $data = '', array $headers = [], string $method = 'GET', ?CurlOptions $options = null): string
     {
         return self::request($url, $data, $headers, $method, $options)->body();
     }
@@ -73,22 +64,20 @@ final class Curl
      * GET 与 HEAD 的数组数据拼进查询串，其余方法作为请求体；默认校验证书与主机名、
      * 跟随重定向并优先 IPv4。响应体去掉 UTF-8 BOM。
      *
-     * 选项：`timeout`、`connect_timeout`、`follow`、`max_redirects`、`verify`、
-     * `ipv4`、`user_agent`，缺省值见类常量。
-     *
      * @param string $url 地址
      * @param array<array-key, mixed>|string $data 数据
      * @param array<array-key, mixed> $headers 请求头
      * @param string $method 请求方法
-     * @param array<array-key, mixed> $options 选项
+     * @param CurlOptions|null $options 传输选项
      * @return CurlResponse 响应快照
      */
-    public static function request(string $url, array|string $data = '', array $headers = [], string $method = 'GET', array $options = []): CurlResponse
+    public static function request(string $url, array|string $data = '', array $headers = [], string $method = 'GET', ?CurlOptions $options = null): CurlResponse
     {
         if (!extension_loaded('curl')) {
             throw new RuntimeException('未安装 ext-curl，无法发起 URL 级请求');
         }
 
+        $options ??= CurlOptions::make();
         $method = strtoupper(trim($method));
         if ('' === $method) {
             $method = 'GET';
@@ -122,16 +111,15 @@ final class Curl
         curl_setopt($handle, CURLOPT_URL, $target);
         curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($handle, CURLOPT_FOLLOWLOCATION, self::optionBool($options, 'follow', true));
-        curl_setopt($handle, CURLOPT_MAXREDIRS, self::optionInt($options, 'max_redirects', self::MAX_REDIRECTS));
-        curl_setopt($handle, CURLOPT_TIMEOUT, self::optionInt($options, 'timeout', self::TIMEOUT));
-        curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, self::optionInt($options, 'connect_timeout', self::CONNECT_TIMEOUT));
+        curl_setopt($handle, CURLOPT_FOLLOWLOCATION, $options->follow);
+        curl_setopt($handle, CURLOPT_MAXREDIRS, $options->maxRedirects);
+        curl_setopt($handle, CURLOPT_TIMEOUT, $options->timeout);
+        curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, $options->connectTimeout);
 
-        $verify = self::optionBool($options, 'verify', true);
-        curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, $verify);
-        curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, $verify ? 2 : 0);
+        curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, $options->verify);
+        curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, $options->verify ? 2 : 0);
 
-        if (self::optionBool($options, 'ipv4', true) && defined('CURLOPT_IPRESOLVE') && defined('CURL_IPRESOLVE_V4')) {
+        if ($options->ipv4 && defined('CURLOPT_IPRESOLVE') && defined('CURL_IPRESOLVE_V4')) {
             curl_setopt($handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
         }
 
@@ -144,8 +132,8 @@ final class Curl
             curl_setopt($handle, CURLOPT_POSTFIELDS, $body);
         }
 
-        $agent = $options['user_agent'] ?? null;
-        if (is_string($agent) && '' !== $agent) {
+        $agent = $options->userAgent;
+        if (null !== $agent && '' !== $agent) {
             curl_setopt($handle, CURLOPT_USERAGENT, $agent);
         }
 
@@ -183,36 +171,6 @@ final class Curl
         $content = ltrim($content, "\xEF\xBB\xBF");
 
         return new CurlResponse($status, $responseHeaders, $content);
-    }
-
-    /**
-     * 读取布尔选项。
-     *
-     * @param array<array-key, mixed> $options 选项
-     * @param string $key 键名
-     * @param bool $default 缺失或类型不符时的默认值
-     * @return bool 选项值
-     */
-    private static function optionBool(array $options, string $key, bool $default): bool
-    {
-        $value = $options[$key] ?? null;
-
-        return is_bool($value) ? $value : $default;
-    }
-
-    /**
-     * 读取整数选项。
-     *
-     * @param array<array-key, mixed> $options 选项
-     * @param string $key 键名
-     * @param int $default 缺失或非数值时的默认值
-     * @return int 选项值
-     */
-    private static function optionInt(array $options, string $key, int $default): int
-    {
-        $value = $options[$key] ?? null;
-
-        return is_numeric($value) ? (int) $value : $default;
     }
 
     /**

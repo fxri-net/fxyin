@@ -271,23 +271,27 @@ echo $jar->signed('uid');   // 7
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `request(string $url, array\|string $data = '', array $headers = [], string $method = 'GET', array $options = [])` | 发起请求，返回状态码、响应头与正文 | `CurlResponse` |
+| `request(string $url, array\|string $data = '', array $headers = [], string $method = 'GET', ?CurlOptions $options = null)` | 发起请求，返回状态码、响应头与正文 | `CurlResponse` |
 | `send(...)` | 同 `request()`，只返回正文 | `string` |
-| `download(string $url, string $file, array $headers = [], array $options = [])` | 下载到文件；非 2xx 抛 `RuntimeException`，父目录自动创建 | `string` 文件路径 |
-
-选项：
-
-| 键 | 默认 | 说明 |
-| --- | --- | --- |
-| `timeout` | 30 | 请求超时秒数 |
-| `connect_timeout` | 10 | 连接超时秒数 |
-| `follow` | `true` | 是否跟随重定向 |
-| `max_redirects` | 5 | 最大重定向次数 |
-| `verify` | `true` | 是否校验证书与主机名（1.x 默认关闭，v2 默认开启） |
-| `ipv4` | `true` | 是否优先 IPv4 |
-| `user_agent` | 未设置 | 自定义 UA |
+| `download(string $url, string $file, array $headers = [], ?CurlOptions $options = null)` | 下载到文件；非 2xx 抛 `RuntimeException`，父目录自动创建 | `string` 文件路径 |
 
 请求头接受 `['Name: value']` 列表与 `['Name' => 'value']` 映射两种写法。
+
+### CurlOptions
+
+不可变传输选项，替代 1.x 的字符串键选项数组。
+
+| 属性 | 默认 | 说明 |
+| --- | --- | --- |
+| `timeout` | 30 | 请求超时秒数 |
+| `connectTimeout` | 10 | 连接超时秒数 |
+| `follow` | `true` | 是否跟随重定向 |
+| `maxRedirects` | 5 | 最大重定向次数 |
+| `verify` | `true` | 是否校验证书与主机名（1.x 默认关闭，v2 默认开启） |
+| `ipv4` | `true` | 是否优先 IPv4 |
+| `userAgent` | `null` | 自定义 UA |
+
+`CurlOptions::make(...)` 用同名参数创建实例；属性均为 `public readonly`。
 
 ### CurlResponse
 
@@ -323,7 +327,7 @@ echo $jar->signed('uid');   // 7
 - `Client::make()` 与 `ClientFactory::has()` 依赖 PSR 接口已安装：接口不存在时 `is_a()` 为假，`make()` 直接抛异常，`detect()` 找不到实现也不会静默降级。
 - `Client::send()` 会校验请求与响应类型，返回的是 PSR-7 响应对象；`ClientFactory::fromClass()` 的 `$arguments` 按位置传给构造函数。
 - `HttpClient\Curl` 需要 `ext-curl`，未安装时 `request()` / `send()` / `download()` 都抛 `RuntimeException`；PSR-18 路线不依赖该扩展。
-- `Curl` 默认校验证书与主机名（`verify` 为 `true`），与 1.x `ssl_peer` / `ssl_host` 默认关闭相反；对接自签证书时才显式传 `['verify' => false]`。
+- `Curl` 默认校验证书与主机名（`CurlOptions::verify` 为 `true`），与 1.x `ssl_peer` / `ssl_host` 默认关闭相反；对接自签证书时才显式传 `verify: false`。
 - `Curl::download()` 只在 2xx 时写文件，非 2xx 直接抛异常且不改动目标路径；1.x 会把错误页写进去并用返回值区分。
 - `Curl` 的 GET 只拼接数组数据，字符串数据会被忽略；POST 等方法接受数组或原始字符串，数组按 RFC 3986 编码。
 - `CurlResponse::headers()` 的键为小写，重定向时只保留最后一跳的响应头；`header()` 查询不区分大小写。
