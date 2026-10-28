@@ -51,6 +51,7 @@ export default defineConfig({
           { text: '扩展目录', link: '/upgrade-2.0-extend' },
           { text: 'API 对照', link: '/migration-2.0' },
           { text: '检查清单', link: '/upgrade-2.0-checklist' },
+          { text: 'v1.6.1 对等矩阵', link: '/parity-1.6.1' },
         ],
       },
       {
@@ -97,6 +98,7 @@ export default defineConfig({
           { text: '扩展目录', link: '/upgrade-2.0-extend' },
           { text: 'API 对照', link: '/migration-2.0' },
           { text: '检查清单', link: '/upgrade-2.0-checklist' },
+          { text: 'v1.6.1 对等矩阵', link: '/parity-1.6.1' },
         ],
       },
       {
