@@ -17,13 +17,17 @@ final class Json
     /**
      * 解码为 PHP 值。
      *
+     * `$associative` 为 `true` 时对象解码为数组，为 `false` 时保留 `stdClass`，
+     * 对应 1.x `Param::json()` 的 `$param` 开关。
+     *
      * @param string $value 待解码内容
+     * @param bool $associative 是否把对象解码为数组
      * @return mixed 解码结果
      */
-    public static function decode(string $value): mixed
+    public static function decode(string $value, bool $associative = true): mixed
     {
         try {
-            return json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+            return json_decode($value, $associative, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
             throw new InvalidArgumentException('JSON 解析失败：' . $exception->getMessage(), 0, $exception);
         }

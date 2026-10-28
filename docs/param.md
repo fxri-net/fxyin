@@ -137,7 +137,7 @@ echo Url::withQuery('/user/list?page=2&kw=old#top', ['kw' => 'new', 'page' => nu
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `decode(string $value)` | 解码为 PHP 值，失败抛 `InvalidArgumentException` | `mixed` |
+| `decode(string $value, bool $associative = true)` | 解码为 PHP 值；`$associative` 为 false 时对象保留为 `stdClass`，失败抛 `InvalidArgumentException` | `mixed` |
 | `encode(mixed $value, int $flags = JSON_UNESCAPED_UNICODE \| JSON_UNESCAPED_SLASHES)` | 编码为 JSON 串，默认不转义中文与斜杠，失败抛 `InvalidArgumentException` | `string` |
 | `toArray(mixed $value)` | 数组原样返回；字符串尝试解码，空串、非法 JSON 或解码结果非数组时返回 `null` | `array<array-key, mixed>\|null` |
 

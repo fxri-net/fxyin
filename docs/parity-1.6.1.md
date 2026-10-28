@@ -145,6 +145,11 @@ outline: [2, 3]
 | `Server::env` | 改写 `$_SERVER` 的 `SERVER_NAME` / `REQUEST_URI` | 只写 `env.base.host/uri`，请求上下文通过 `RequestContext::fromGlobals($defaults)` 注入 |
 | `Client::param` 方法筛选 | `$method` 字符串按 `get/post/input/cli` 组合 | `RequestInput` 分源方法 + `all()` / `only()` 组合 |
 | `Text::timeFormat` 单位标签 | 语言包键 `millisecond/sec/...` | `Time::duration()` 默认中文标签，可用 `$labels` 覆盖 |
+| `File::formatSize` | 形如 `1.5MB`（无空格） | `Formatter::size()` 形如 `1.50 MB`，带千分位；单位增加 PB |
+| `Text::strlen` | 返回响应数组，含错误码 | `Str::isLength()` 返回布尔值 |
+| `Text::implode` / `explode` | 带 `$explode` 标志与 `$limit` 参数 | `Str::implode()` / `Str::explode()`；返回数组用 `Str::explode()`，限长用 `array_slice()` |
+| `Data::whereBuild` | 内置 `find_in_set`、`json array/object`、`field`、`like fuzzy` | v2 只内置通用比较；MySQL 专有条件用 `Expression` 或项目数据库层 |
+| `Base::ipv4` / `Safe::rsapem` / `Text::letters` 等 | 非法输入返回 `false` | 改为抛异常或类型化参数 |
 
 ## 八、相关文档
 

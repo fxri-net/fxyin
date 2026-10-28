@@ -388,7 +388,7 @@ return Envelope::success($data, '请求成功');
 | `merge($limit, $cover, $type, ...$args)` | `Merger::merge()`、`Merger::mergeKeepBlank()` |
 | `cover($args, $limit, $cover, $type)` | `Merger::merge()` |
 | `url($data)` | `Url::build()`、`Url::query()`、`Url::withQuery()` |
-| `json($var, $type, $param)` | `Json::encode()`、`Json::decode()` |
+| `json($var, $type, $param)` | `Json::encode()`、`Json::decode($value, $associative)`；非 JSON 串按查询串解码用 `Encode::decodeAll()` |
 
 ### 7.7 `\fxapp\Safe`
 
