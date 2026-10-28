@@ -4,9 +4,11 @@
 
 ## 定位
 
-这一层由四部分组成：`Fxri\Config\Config` 是只读容器，`Fxri\Config\ConfigLoader` 负责从目录读取并叠加，`Fxri\Config\Environment` 把 `.env` 文本解析成键值对，`Fxri\Translation\ArrayTranslator` 与 `Fxri\Translation\Loader\PhpFileLoader` 负责语言词条。
+这一层由五部分组成：`Fxri\Config\Config` 是只读容器，`Fxri\Config\Store` 在只读容器之上提供运行期覆盖，`Fxri\Config\ConfigLoader` 负责从目录读取并叠加，`Fxri\Config\Environment` 把 `.env` 文本解析成键值对，`Fxri\Translation\ArrayTranslator` 与 `Fxri\Translation\Loader\PhpFileLoader` 负责语言词条。
 
 `Config` 是内核里唯一必传的服务（见[内核与装配](./kernel)）：`KernelBuilder::build()` 会调用 `ConfigLoader` 把磁盘上的配置读成 `Config`，业务代码再用 `$kernel->config()->get()` 取值。`Config` 也可以脱离内核直接构造，测试里给一份内存数组即可。
+
+`KernelBuilder` 默认先加载随包提供的 `resources/config`（`app`、`branch`、`env`），再按 `withConfigDir()` 的登记顺序叠加项目配置；`withoutDefaultConfig()` 或 `bare()` 可关闭内置配置。内核以 `config()` 暴露只读视图，以 `configStore()` 暴露可写覆盖层，运行期 `set()` 不会修改只读基底。
 
 `ConfigLoader` 只认「目录 + `*.php` 文件」这一种组织方式，不递归子目录，不支持其他格式。文件名即顶层键，文件返回的数组整体挂在该键下，所以 `config/app.php` 的内容用 `app.name` 读取。
 
@@ -71,6 +73,19 @@ echo $translator->get('欢迎');                // 欢迎
 | `all(): array` | 返回全部配置数据 | `array<array-key, mixed>` |
 | `get(string $name, mixed $default = null): mixed` | 按点号路径取值，路径段中的 `/_` 还原为点，任一层不是数组或键不存在时返回默认值 | 配置值或默认值 |
 | `has(string $name): bool` | 按同样的路径规则判断键是否存在，值为 `null` 也算存在 | 是否存在 |
+
+### Store
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `make(?Config $base = null, array $overrides = []): self` | 用只读基底与运行期覆盖创建存储 | 配置存储 |
+| `base(): Config` | 取只读基底 | `Config` |
+| `get(string $name, mixed $default = null): mixed` | 先查覆盖层，再查基底；路径规则与 `Config::get()` 一致 | 配置值或默认值 |
+| `has(string $name): bool` | 覆盖层或基底任一存在即视为存在 | 是否存在 |
+| `set(string\|array $name, mixed $value = null): void` | 字符串路径按点号展开，数组整体递归合并；只写覆盖层 | 无 |
+| `all(): array` | 返回基底与覆盖层递归合并后的全部配置 | `array<array-key, mixed>` |
+
+`Store` 的覆盖层与基底分离：`set()` 之后 `base()` 与 `$kernel->config()` 都保持原值，只有 `configStore()` 的读取结果变化。需要让覆盖值生效到全局，应在启动阶段写入同一份 `Store`，而不是另建一份。
 
 ### ConfigLoader
 
@@ -146,3 +161,7 @@ echo $translator->get('欢迎');                // 欢迎
 - `ArrayTranslator` 未命中的词条原样返回，因此不会出现空串；要区分「已翻译」与「未翻译」用 `has()`。
 - `ArrayTranslator::withLocale()` 只换当前语言，不会为新语言补词条；用 `make()` 传入的多语言数组才能跨语言取词。
 - `PhpFileLoader::loadDirectory()` 用 `array_merge()` 合并，同名词条后者覆盖前者；需要按语言目录分层时，每个语言一个目录分别加载。
+- `KernelBuilder` 默认加载 `resources/config` 是 2.1.0 的行为变化；需要 2.0 的空配置环境时用 `withoutDefaultConfig()` 或 `bare()`。
+- `Store::get()` 的覆盖层优先：即使覆盖值是 `null`，也返回 `null` 而不是回落到基底；要恢复基底值需重新创建存储。
+- `Store::set()` 返回 `void`，与 1.6.1 `Config::set()` 一致；连续写入需要分行调用。
+- `resources/config/app.php` 只迁入 v2 仍适用的键，1.x 的 `param`（请求全局变量快照）与 `facade.php`（门面响应/条件配置）不进入 v2 默认值。

@@ -12,9 +12,9 @@
 
 配置文件由 `ConfigLoader` 在 `build()` 时读入（细节见[配置](./config)），翻译器只要求实现 Symfony 的 `TranslatorInterface`，日志只要求 PSR-3 的 `LoggerInterface`，HTTP 客户端只要求任意对象（约定为 PSR-18 客户端）。接入方适配器同样是任意对象，ThinkPHP 场景下的用法见[接入](./integration)。
 
-默认装配还会加载内置中英文语言包，生成 `Fxri\Translation\Language`（细节见[语言](./language)）；`withoutBuiltinLanguage()` 或 `bare()` 可关闭，`withLanguageDir()` 可追加项目语言目录并覆盖内置词条。
+默认装配还会加载内置中英文语言包与 `resources/config` 默认配置，生成 `Fxri\Translation\Language`（细节见[语言](./language)）；`withoutBuiltinLanguage()` / `withoutDefaultConfig()` 或 `bare()` 可分别关闭，`withLanguageDir()` 可追加项目语言目录并覆盖内置词条，`withConfigDir()` 追加的项目配置覆盖内置配置。
 
-内核装配完成后不可变：没有任何 `set*` 方法，`config()` 返回的 `Config` 也是只读容器。需要在运行期改变装配，只能重新 `build()` 一份新的内核。
+内核装配完成后不可变：自身没有任何 `set*` 方法，`config()` 返回的 `Config` 也是只读容器。需要运行期覆盖配置时走 `configStore()->set()`，覆盖只进存储层；需要改变装配本身，只能重新 `build()` 一份新的内核。
 
 ## 最小示例
 
@@ -35,8 +35,14 @@ $kernel = KernelBuilder::make()
     ]))
     ->build();
 
-// 未追加配置目录时配置为空，取默认值
-echo $kernel->config()->get('app.name', '未命名');   // 未命名
+// 默认已加载内置配置，项目配置可覆盖
+echo $kernel->config()->get('app.name', '未命名');        // 未命名
+echo $kernel->config()->get('app.lang.default');          // zh-cn
+
+// 运行期写入只进配置存储的覆盖层，只读配置不变
+$kernel->configStore()->set('app.lang.default', 'en-us');
+echo $kernel->configStore()->get('app.lang.default');     // en-us
+echo $kernel->config()->get('app.lang.default');          // zh-cn
 
 // 翻译走内核的 trans()，占位符参数键可省略百分号
 echo $kernel->trans('欢迎', ['name' => '风音框架']);  // 欢迎使用 风音框架
@@ -62,13 +68,14 @@ echo Package::describe();                            // fxri/fxyin 2.0.0-dev
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
 | `make(): self` | 创建构建器，构造方法私有，只能由此进入 | 构建器 |
-| `bare(): self` | 关闭内置语言等默认资源，只保留显式装配部分 | 新实例 |
+| `bare(): self` | 关闭内置语言与内置配置，只保留显式装配部分 | 新实例 |
 | `withoutBuiltinLanguage(): self` | 关闭内置语言包 | 新实例 |
-| `withConfigDir(string $directory): self` | 追加配置目录，后追加者覆盖先前的同名配置；目录不存在时抛 `InvalidArgumentException` | 新实例 |
+| `withoutDefaultConfig(): self` | 关闭内置默认配置 | 新实例 |
+| `withConfigDir(string $directory): self` | 追加配置目录，后追加者覆盖内置配置与先前目录的同名配置；目录不存在时抛 `InvalidArgumentException` | 新实例 |
 | `withLanguageDir(string $directory, string $locale = 'zh-cn'): self` | 追加项目语言目录，覆盖内置同名词条；目录不存在时抛 `InvalidArgumentException` | 新实例 |
 | `withLanguage(Language $language): self` | 显式指定语言服务，接管内置与项目语言装配 | 新实例 |
-| `withLocale(string $locale): self` | 指定默认语言，缺省为 `zh-cn` | 新实例 |
-| `withLocaleResolver(LocaleResolver $resolver): self` | 指定语言检测器，缺省按已加载语言生成允许列表 | 新实例 |
+| `withLocale(string $locale): self` | 指定默认语言，优先于配置 `app.lang.default` | 新实例 |
+| `withLocaleResolver(LocaleResolver $resolver): self` | 指定语言检测器，缺省用 `app.lang.name` 与 `app.lang.list` 装配 | 新实例 |
 | `withLogger(LoggerInterface $logger): self` | 指定 PSR-3 日志 | 新实例 |
 | `withTranslator(TranslatorInterface $translator): self` | 指定 Symfony 翻译器；指定后 `trans()` 走该实例 | 新实例 |
 | `withHttpClient(object $client): self` | 指定 HTTP 客户端 | 新实例 |
@@ -81,7 +88,8 @@ echo Package::describe();                            // fxri/fxyin 2.0.0-dev
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `config(): Config` | 取配置，构造内核时必须传入 | `Fxri\Config\Config` |
+| `config(): Config` | 取只读配置，构造内核时传入 `Config` 或 `Store` | `Fxri\Config\Config` |
+| `configStore(): Store` | 取配置存储，`set()` 只写覆盖层 | `Fxri\Config\Store` |
 | `language(): ?Language` | 取语言服务，关闭内置语言且未显式指定时为 `null` | `Fxri\Translation\Language` 或 `null` |
 | `logger(): LoggerInterface` | 取日志，未注入时为 `NullLogger` | PSR-3 日志 |
 | `translator(): TranslatorInterface` | 优先返回注入的翻译器，其次取语言服务的翻译器，都没有时为 `ArrayTranslator::make()` | Symfony 翻译器 |
@@ -89,7 +97,7 @@ echo Package::describe();                            // fxri/fxyin 2.0.0-dev
 | `adapter(): ?object` | 取接入方适配器，未注入时为 `null` | 对象或 `null` |
 | `trans(string $id, array $parameters = []): string` | 等价于 `translator()->trans($id, $parameters)` | 译文 |
 
-构造函数签名是 `__construct(Config $config, ?LoggerInterface $logger = null, ?TranslatorInterface $translator = null, ?object $httpClient = null, ?object $adapter = null, ?Language $language = null)`，虽是公开方法，常规路径仍建议走构建器。
+构造函数签名是 `__construct(Config|Store $config, ?LoggerInterface $logger = null, ?TranslatorInterface $translator = null, ?object $httpClient = null, ?object $adapter = null, ?Language $language = null)`，虽是公开方法，常规路径仍建议走构建器。
 
 ### Package
 
@@ -101,7 +109,8 @@ echo Package::describe();                            // fxri/fxyin 2.0.0-dev
 
 ## 注意事项
 
-- `withConfigDir()` 是追加语义，不是替换。想「覆盖某组配置」应把覆盖目录放在后面，而不是先清空已有目录。
+- `withConfigDir()` 是追加语义，不是替换。内置配置先加载，想「覆盖某组配置」应把覆盖目录放在后面。
+- 默认配置随包提供，`config()->get()` 在未追加项目配置时也有值；需要 2.0 的空配置环境时用 `withoutDefaultConfig()` 或 `bare()`。
 - `with*` 返回新实例，旧变量仍指向旧装配。写成 `$builder->withLogger($logger);` 而不接返回值，等于什么都没做。
 - `withHttpClient()` 与 `withAdapter()` 接受任意 `object`，类型不做校验；传错实现只会在使用处才暴露，注入前自行确认接口。
 - 日志与翻译器有缺省实现，因此完全不传装配项也能 `build()`；默认装配还会加载内置语言包，关闭后用 `ArrayTranslator` 兜底。HTTP 客户端与适配器没有缺省对象，取到的是 `null`，调用方需自行判空。

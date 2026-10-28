@@ -28,6 +28,7 @@ const EXPORT_IGNORED_PATHS = [
 /** 必须随分发包提供的运行资源 */
 const RESOURCE_PATHS = [
     '/resources/language',
+    '/resources/config',
 ];
 
 /** 内置语言包 */
@@ -38,6 +39,13 @@ const LANGUAGE_FILES = [
     '/resources/language/en-us/base.php',
     '/resources/language/en-us/env.php',
     '/resources/language/en-us/phrase.php',
+];
+
+/** 内置默认配置 */
+const CONFIG_FILES = [
+    '/resources/config/app.php',
+    '/resources/config/branch.php',
+    '/resources/config/env.php',
 ];
 
 $root = dirname(__DIR__);
@@ -72,6 +80,11 @@ foreach (RESOURCE_PATHS as $path) {
 foreach (LANGUAGE_FILES as $file) {
     if (!is_file($root . $file)) {
         $missingResources[] = '内置语言包缺失：' . $file;
+    }
+}
+foreach (CONFIG_FILES as $file) {
+    if (!is_file($root . $file)) {
+        $missingResources[] = '内置默认配置缺失：' . $file;
     }
 }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fxri;
 
 use Fxri\Config\ConfigLoader;
+use Fxri\Config\Store;
 use Fxri\Translation\Catalog;
 use Fxri\Translation\Language;
 use Fxri\Translation\LocaleResolver;
@@ -40,6 +41,9 @@ final class KernelBuilder
     /** 是否加载内置语言包 */
     private bool $builtinLanguage = true;
 
+    /** 是否加载内置配置 */
+    private bool $defaultConfig = true;
+
     /** @var list<array{0: string, 1: string}> 项目语言目录与归属语言 */
     private array $languageDirectories = [];
 
@@ -47,7 +51,7 @@ final class KernelBuilder
     private ?Language $language = null;
 
     /** 默认语言 */
-    private string $locale = Catalog::LOCALE;
+    private ?string $locale = null;
 
     /** 语言检测器 */
     private ?LocaleResolver $localeResolver = null;
@@ -68,6 +72,7 @@ final class KernelBuilder
     {
         $builder = clone $this;
         $builder->builtinLanguage = false;
+        $builder->defaultConfig = false;
 
         return $builder;
     }
@@ -79,14 +84,68 @@ final class KernelBuilder
      */
     public function build(): Kernel
     {
+        $config = $this->buildConfig();
+
         return new Kernel(
-            ConfigLoader::make(...$this->configDirectories)->load(),
+            $config,
             $this->logger,
             $this->translator,
             $this->httpClient,
             $this->adapter,
-            $this->buildLanguage(),
+            $this->buildLanguage($config),
         );
+    }
+
+    /**
+     * 组装配置存储。
+     *
+     * 内置配置先加载，项目配置目录按登记顺序覆盖。
+     *
+     * @return Store 配置存储
+     */
+    private function buildConfig(): Store
+    {
+        $directories = $this->configDirectories;
+        if ($this->defaultConfig) {
+            array_unshift($directories, self::RESOURCES . '/config');
+        }
+
+        return Store::make(ConfigLoader::make(...$directories)->load());
+    }
+
+    /**
+     * 组装语言服务。
+     *
+     * 内置语言包先加载，项目语言目录按登记顺序覆盖；默认语言与允许列表取自配置，
+     * 显式指定的语言服务与检测器优先。两者都未启用时返回 null。
+     *
+     * @param Store $config 配置存储
+     * @return Language|null 语言服务
+     */
+    private function buildLanguage(Store $config): ?Language
+    {
+        if (null !== $this->language) {
+            return $this->language;
+        }
+
+        if (!$this->builtinLanguage && [] === $this->languageDirectories) {
+            return null;
+        }
+
+        $catalog = $this->builtinLanguage ? Catalog::fromRoot(self::RESOURCES . '/language') : Catalog::make();
+
+        foreach ($this->languageDirectories as [$directory, $locale]) {
+            $catalog = $catalog->loadDirectory($directory, $locale);
+        }
+
+        $locale = $this->locale ?? self::configString($config, 'app.lang.default', Catalog::LOCALE);
+        $resolver = $this->localeResolver ?? LocaleResolver::make(
+            cookieName: self::configString($config, 'app.lang.name', 'lang'),
+            allowList: $this->allowList($config, $catalog),
+            locale: $locale,
+        );
+
+        return Language::make($catalog, $resolver, $locale);
     }
 
     /**
@@ -253,30 +312,46 @@ final class KernelBuilder
     }
 
     /**
-     * 组装语言服务。
+     * 关闭内置配置。
      *
-     * 内置语言包先加载，项目语言目录按登记顺序覆盖；两者都未启用时返回 null。
-     *
-     * @return Language|null 语言服务
+     * @return self 新实例
      */
-    private function buildLanguage(): ?Language
+    public function withoutDefaultConfig(): self
     {
-        if (null !== $this->language) {
-            return $this->language;
-        }
+        $builder = clone $this;
+        $builder->defaultConfig = false;
 
-        if (!$this->builtinLanguage && [] === $this->languageDirectories) {
-            return null;
-        }
+        return $builder;
+    }
 
-        $catalog = $this->builtinLanguage ? Catalog::fromRoot(self::RESOURCES . '/language') : Catalog::make();
+    /**
+     * 取允许语言列表。
+     *
+     * 配置 `app.lang.list` 为字符串数组时使用配置值，否则回落到语言目录已登记的语言。
+     *
+     * @param Store $config 配置存储
+     * @param Catalog $catalog 语言目录
+     * @return list<string> 允许语言
+     */
+    private function allowList(Store $config, Catalog $catalog): array
+    {
+        $list = $config->get('app.lang.list');
 
-        foreach ($this->languageDirectories as [$directory, $locale]) {
-            $catalog = $catalog->loadDirectory($directory, $locale);
-        }
+        return is_array($list) ? array_values(array_filter($list, 'is_string')) : $catalog->locales();
+    }
 
-        $resolver = $this->localeResolver ?? LocaleResolver::make()->withAllowList($catalog->locales());
+    /**
+     * 读取字符串配置。
+     *
+     * @param Store $config 配置存储
+     * @param string $name 点号路径
+     * @param string $default 缺失或非字符串时的默认值
+     * @return string 配置值
+     */
+    private static function configString(Store $config, string $name, string $default): string
+    {
+        $value = $config->get($name);
 
-        return Language::make($catalog, $resolver, $this->locale);
+        return is_string($value) && '' !== $value ? $value : $default;
     }
 }

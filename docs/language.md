@@ -13,6 +13,8 @@
 
 内置语言包位于 `resources/language/{zh-cn,en-us}/{base,env,phrase}.php`，`KernelBuilder::make()->build()` 默认加载；每个语言目录内的文件按文件名顺序合并到 `messages` 域，后者覆盖前者。项目语言目录通过 `withLanguageDir()` 追加，在同域内覆盖内置词条。
 
+`KernelBuilder` 组装语言服务时，默认语言取配置 `app.lang.default`，检测器的 Cookie 名取 `app.lang.name`、允许列表取 `app.lang.list`；`withLocale()` 与 `withLocaleResolver()` 可显式覆盖这些取值。
+
 ## 最小示例
 
 ```php

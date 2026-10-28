@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fxri\Tests;
 
+use Fxri\Config\Store;
 use Fxri\File\Filesystem;
 use Fxri\KernelBuilder;
 use Fxri\Translation\ArrayTranslator;
@@ -167,6 +168,80 @@ final class KernelBuilderTest extends TestCase
         $this->expectExceptionMessage('语言目录不存在');
 
         KernelBuilder::make()->withLanguageDir(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'fxri-missing-lang-' . bin2hex(random_bytes(6)));
+    }
+
+    /**
+     * 默认装配内置配置，并作为配置存储的基底。
+     */
+    public function testBuiltinConfig(): void
+    {
+        $kernel = KernelBuilder::make()->build();
+        $store = $kernel->configStore();
+
+        self::assertInstanceOf(Store::class, $store);
+        self::assertSame('PRC', $store->get('app.base.timezone'));
+        self::assertSame('zh-cn', $store->get('app.lang.default'));
+        self::assertSame('zh-cn', $kernel->config()->get('app.lang.default'));
+        self::assertSame('master', $kernel->config()->get('branch.default'));
+        self::assertSame('zh-cn', $kernel->config()->get('env.view.lang'));
+    }
+
+    /**
+     * 项目配置覆盖内置配置，并影响默认语言。
+     */
+    public function testConfigOverridesBuiltin(): void
+    {
+        $directory = $this->makeDirectory('app.php', "<?php\nreturn ['lang' => ['default' => 'en-us']];\n");
+
+        $kernel = KernelBuilder::make()->withConfigDir($directory)->build();
+
+        self::assertSame('en-us', $kernel->config()->get('app.lang.default'));
+        self::assertSame('en-us', $kernel->language()?->locale());
+    }
+
+    /**
+     * 关闭内置配置后基底为空，语言仍按内置语言包装配。
+     */
+    public function testWithoutDefaultConfig(): void
+    {
+        $kernel = KernelBuilder::make()->withoutDefaultConfig()->build();
+
+        self::assertSame([], $kernel->config()->all());
+        self::assertSame('zh-cn', $kernel->language()?->locale());
+    }
+
+    /**
+     * `bare()` 同时关闭内置配置与内置语言。
+     */
+    public function testBareDisablesBuiltinResources(): void
+    {
+        $kernel = KernelBuilder::make()->bare()->build();
+
+        self::assertSame([], $kernel->config()->all());
+        self::assertNull($kernel->language());
+    }
+
+    /**
+     * 运行期写入只进覆盖层，只读配置保持不变。
+     */
+    public function testConfigStoreSet(): void
+    {
+        $kernel = KernelBuilder::make()->build();
+        $kernel->configStore()->set('app.lang.default', 'en-us');
+
+        self::assertSame('en-us', $kernel->configStore()->get('app.lang.default'));
+        self::assertSame('zh-cn', $kernel->config()->get('app.lang.default'));
+    }
+
+    /**
+     * 显式指定默认语言时优先于配置。
+     */
+    public function testWithLocaleOverridesConfig(): void
+    {
+        $kernel = KernelBuilder::make()->withLocale('en-us')->build();
+
+        self::assertSame('en-us', $kernel->language()?->locale());
+        self::assertSame('zh-cn', $kernel->config()->get('app.lang.default'));
     }
 
     /**
