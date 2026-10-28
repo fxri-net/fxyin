@@ -23,6 +23,14 @@ const EXPORT_IGNORED_PATHS = [
     '/scripts',
     '/package.json',
     '/pnpm-lock.yaml',
+    '/phpstan-deprecation.neon',
+];
+
+/** 必须固定的行尾规则：平台自动转换会破坏资源字节，导致本地与 CI 校验结果不一致 */
+const LINE_ENDING_RULES = [
+    '* text=auto eol=lf',
+    '/resources/language/** text eol=lf',
+    '/resources/config/** text eol=lf',
 ];
 
 /** 必须随分发包提供的运行资源 */
@@ -64,6 +72,14 @@ foreach (EXPORT_IGNORED_PATHS as $path) {
     }
 }
 
+// 行尾规则是资源字节一致性的根因修复，被误删时门禁必须自己报出来
+$missingEol = [];
+foreach (LINE_ENDING_RULES as $rule) {
+    if (1 !== preg_match('/^' . preg_quote($rule, '/') . '$/m', $attributes)) {
+        $missingEol[] = $rule;
+    }
+}
+
 // 2.x 不再包含 1.x 的 app/ 目录，残留语言包会随分发包泄漏
 $stale = glob($root . '/app/language/*/*.php') ?: [];
 
@@ -88,10 +104,13 @@ foreach (CONFIG_FILES as $file) {
     }
 }
 
-if ([] !== $missing || [] !== $stale || [] !== $missingResources) {
+if ([] !== $missing || [] !== $stale || [] !== $missingResources || [] !== $missingEol) {
     fwrite(STDERR, '发布包卫生检查失败：' . PHP_EOL);
     foreach ($missing as $path) {
         fwrite(STDERR, '  - 缺少导出排除：' . $path . PHP_EOL);
+    }
+    foreach ($missingEol as $rule) {
+        fwrite(STDERR, '  - 缺少行尾规则：' . $rule . PHP_EOL);
     }
     foreach ($stale as $file) {
         fwrite(STDERR, '  - 残留 1.x 文件：app/language/' . basename(dirname($file)) . '/' . basename($file) . PHP_EOL);
