@@ -69,6 +69,7 @@ export default defineConfig({
           { text: '语言', link: '/language' },
           { text: '应用启动', link: '/application' },
           { text: '支撑', link: '/support' },
+          { text: 'IDE 元数据', link: '/ide' },
           { text: '接入', link: '/integration' },
         ],
       },
@@ -137,6 +138,7 @@ export default defineConfig({
         text: '支撑与协作',
         items: [
           { text: '支撑', link: '/support' },
+          { text: 'IDE 元数据', link: '/ide' },
           { text: '贡献指南', link: '/contributing' },
           { text: '常见问题', link: '/faq' },
         ],
