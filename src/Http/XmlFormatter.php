@@ -9,7 +9,7 @@ use Fxri\Support\Type;
 /**
  * XML 响应格式化器。
  *
- * 把固定四字段信封转成 XML，数组按键名展开，列表项统一使用 `item`。
+ * 把固定五字段信封转成 XML，数组按键名展开，列表项统一使用 `item`。
  */
 final class XmlFormatter implements Formatter
 {
@@ -54,6 +54,11 @@ final class XmlFormatter implements Formatter
     private function node(string $name, mixed $value): string
     {
         $name = $this->name($name);
+
+        // 空调试信息为对象，统一按数组展开
+        if (is_object($value)) {
+            $value = (array) $value;
+        }
 
         if (is_array($value)) {
             $children = '';

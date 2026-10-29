@@ -113,7 +113,7 @@ outline: [2, 3]
 - `Server::ip`：由 `HttpClient\Curl` + `Param\Json` 组合取公网地址。
 - `Server::system`：由 PHP 原生 `PHP_OS_FAMILY` 承接，不再做版本级名称映射。
 - 门面与全局函数：由 `Fxri\*`、`Application\Services` 覆盖。
-- 配置驱动的六元响应：由 `Envelope` 与项目响应工厂覆盖。
+- 配置驱动的六元响应：由 `Envelope` 的五键信封覆盖（`code`、`message`、`data`、`extend`、`debug`）。
 
 ### 7.1 行为差异清单
 
@@ -121,7 +121,7 @@ outline: [2, 3]
 
 | 项 | 1.6.1 | v2 |
 | --- | --- | --- |
-| 响应结构 | 配置驱动 6 元数组 | `Envelope` 固定四字段 |
+| 响应结构 | 配置驱动 6 元数组 | `Envelope` 固定五字段 |
 | 错误模型 | `throwable()` 直接终止进程 | 抛异常，由接入层映射 |
 | 对称加密 | 任意 openssl 算法/口令/IV | `Cipher` 固定 AES-256-GCM；旧数据 `LegacyCipher` |
 | `Client::ip` | 无条件信任转发头 | 默认只信直连，转发需可信代理 |

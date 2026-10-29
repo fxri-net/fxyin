@@ -8,7 +8,7 @@
 
 `Field` 是唯一依赖数据库方言的类。它把时间戳格式化、JSON 取值、文本兜底拼成 `Fxri\Sql\Sql` 片段，值一律走 `?` 占位符，方言只负责函数写法与字段引用。本层不连接数据库、不执行语句，调用方拿到 `sql()` 与 `bindings()` 后自行拼进 `SELECT` 或 `UPDATE`。默认方言是 `MysqlDialect`，其他数据库实现 `DialectInterface` 后传给 `Field::make()`。
 
-`Tree`、`Diff`、`Html`、`NullPolicy` 不依赖数据库：前两者处理数组结构，`Html` 处理输出前的转义与去标签，`NullPolicy` 把「null 与空串是否都算空」交给调用方显式声明。
+`Tree`、`Diff`、`Html`、`NullPolicy` 不依赖数据库：前两者处理数组结构，`Html` 处理输出前的转义与去标签，`NullPolicy` 把「null 与空串是否都算空」交给调用方显式声明。`Page` 是分页接口的响应数据壳，只负责把「当页记录 + 分页信息」固定成四个键，不查询也不校验。
 
 异常口径统一：格式不合法抛 `InvalidArgumentException` 或其子类 `Fxri\Exception\ValidationException`；差异比对未发现变化时抛 `Fxri\Exception\SameDataException`，调用方按异常分支处理，而不是检查返回值。
 
@@ -150,6 +150,19 @@ var_export($diff->keys());      // array ( 0 => 'name', 1 => 'remark' )
 | `toObject(mixed $value, int $limit = -1)` | 数组递归转为对象，空数组转为空对象以保证 JSON 输出 `{}` | `mixed` |
 
 `emptyToObject()` 是 1.x `Param::object()` 的兼容语义：只把空数组转对象、非空数组与列表保持数组；v2 新代码统一用 `toObject()`。
+
+### Page
+
+| 方法 | 说明 | 返回 |
+| --- | --- | --- |
+| `make(array $records, int $total, ?int $page = null, ?int $size = null): self` | 构造分页数据壳 | `self` |
+| `total(): int` | 取总条数 | `int` |
+| `records(): array` | 取当页记录 | `array<array-key, mixed>` |
+| `page(): ?int` | 取当前页码 | `int\|null` |
+| `size(): ?int` | 取每页条数 | `int\|null` |
+| `toArray(): array` | 转为 `total`、`records`、`page`、`size` 四键数组，值为 `null` 时保留键 | `array{total: int, records: array, page: int\|null, size: int\|null}` |
+
+分页接口把 `Page` 实例直接装进 `Envelope::success($page)`，输出时 `Envelope::toArray()` 会把它展开；非分页接口不构造 `Page`，直接把业务数据放进 `data`。
 
 ### Param
 

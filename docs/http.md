@@ -1,6 +1,6 @@
 # HTTP
 
-HTTP 层把一次请求的进出两端收敛成只读对象：入口是请求与访问者上下文，出口是固定四字段的响应信封，中间夹着可替换的格式化器、渲染器与 Cookie 容器。
+HTTP 层把一次请求的进出两端收敛成只读对象：入口是请求与访问者上下文，出口是固定五字段的响应信封，中间夹着可替换的格式化器、渲染器与 Cookie 容器。
 
 ## 定位
 
@@ -9,7 +9,7 @@ HTTP 层把一次请求的进出两端收敛成只读对象：入口是请求与
 | 环节 | 类 | 职责 |
 | --- | --- | --- |
 | 入口 | `ServerContext`、`RequestContext`、`RequestInput`、`ClientInfo` | 把 `$_SERVER`、PSR-7 请求与各类入参收敛成只读快照 |
-| 出口 | `Envelope`、`Formatter`、`JsonFormatter`、`Responder` | 固定四字段信封，按格式化器落成响应体 |
+| 出口 | `Envelope`、`Formatter`、`JsonFormatter`、`Responder` | 固定五字段信封，按格式化器落成响应体 |
 | 视图 | `View`、`Renderer` | 只做模板路径解析与安全校验，模板引擎由接入方实现 |
 | Cookie | `CookieJar`、`CookieOptions`、`SameSite` | 读写、删除与 HMAC 签名 |
 | 出站 | `HttpClient\Client`、`ClientFactory`、`HttpClient\Curl` | 包装 PSR-18 客户端，或直接以 URL 串发起请求，不绑定具体实现 |
@@ -37,9 +37,9 @@ use Fxri\Http\IpSource;
 use Fxri\Http\RequestContext;
 use Fxri\Http\Responder;
 
-// 1. 控制器返回统一 JSON 响应，键固定为 ok、code、message、data
+// 1. 控制器返回统一 JSON 响应，键固定为 code、message、data、extend、debug
 Responder::make()->send(Envelope::success(['id' => 7], '获取成功'));
-// {"ok":true,"code":"ok","message":"获取成功","data":{"id":7}}
+// {"code":200,"message":"获取成功","data":{"id":7},"extend":[],"debug":{}}
 
 // 2. 从全局变量取请求上下文与客户端地址
 // 以下按一次 Web 请求给出预期输出：REMOTE_ADDR 为 10.0.0.2，X-Forwarded-For 为 203.0.113.9
@@ -62,18 +62,21 @@ echo $jar->signed('uid');   // 7
 
 ### Envelope
 
-成功码固定为常量 `Envelope::OK`（值 `'ok'`），`code` 传空串会在构造期抛 `InvalidArgumentException`。
+对外固定五键：`code`、`message`、`data`、`extend`、`debug`；`success` 只在内部判断成败，不参与输出。`code` 是整数业务码，成功缺省为常量 `Envelope::SUCCESS`（值 `200`）。
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `make(bool $ok, string $code, mixed $data = null, string $message = ''): self` | 通用构造，注意 `$data` 在 `$message` 之前 | `self` |
-| `success(mixed $data = null, string $message = '', string $code = self::OK): self` | 构造成功响应 | `self` |
-| `failure(string $code, string $message = '', mixed $data = null): self` | 构造失败响应 | `self` |
-| `isOk(): bool` | 是否成功 | `bool` |
-| `code(): string` | 取业务码 | `string` |
+| `success(mixed $data = null, string $message = '', int $code = self::SUCCESS, array $extend = [], array $debug = []): self` | 构造成功响应 | `self` |
+| `failure(int $code, string $message = '', mixed $data = null, array $extend = [], array $debug = []): self` | 构造失败响应 | `self` |
+| `isSuccess(): bool` | 是否成功 | `bool` |
+| `code(): int` | 取业务码 | `int` |
 | `message(): string` | 取提示语 | `string` |
 | `data(): mixed` | 取业务数据 | `mixed` |
-| `toArray(): array` | 转为 `ok`、`code`、`message`、`data` 四键数组 | `array{ok: bool, code: string, message: string, data: mixed}` |
+| `extend(): array` | 取扩展参数 | `array<array-key, mixed>` |
+| `debug(): array` | 取调试信息 | `array<array-key, mixed>` |
+| `toArray(): array` | 转为五键数组；`debug` 为空时输出空对象 | `array{code: int, message: string, data: mixed, extend: array, debug: array\|object}` |
+
+分页接口的 `data` 使用 `Fxri\Data\Page` 的四键壳（`total`、`records`、`page`、`size`），见[数据](./data)。
 
 ### Formatter
 
@@ -109,7 +112,7 @@ echo $jar->signed('uid');   // 7
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
 | `make(?Formatter $formatter = null): self` | 创建实例，缺省用 `JsonFormatter::make()` | `self` |
-| `send(Envelope $envelope): string` | 未发头时设置 `Content-Type` 与状态码（成功 200、失败 400），随后 `echo` 正文 | `string` |
+| `send(Envelope $envelope): string` | 未发头时只设置 `Content-Type`，随后 `echo` 正文；HTTP 状态码由接入方决定 | `string` |
 | `format(Envelope $envelope): string` | 只格式化，不输出 | `string` |
 | `contentType(): string` | 透传格式化器的内容类型 | `string` |
 | `withFormatter(Formatter $formatter): self` | 换格式化器，返回新实例 | `self` |
@@ -305,10 +308,11 @@ echo $jar->signed('uid');   // 7
 
 ## 注意事项
 
-- `Envelope::make()` 的参数顺序是 `$ok, $code, $data, $message`，与 `success()`、`failure()` 都不同，按位置传参容易把提示语塞进 `data`。
-- `code` 不能是空串，构造期就抛 `InvalidArgumentException`；失败场景请给稳定的业务码，而不是用 `''` 表示「无码」。
-- `Responder::send()` 在 `headers_sent()` 为真时只写正文，`Content-Type` 与状态码都不会生效；模板已输出、`echo` 过调试信息之后别再指望 400 落到状态行。
-- 状态码只有 200 与 400 两档，其余语义靠 `code` 字段表达；需要 401、404、422 时自行调用 `http_response_code()` 或不用 `send()`。
+- `success()` 与 `failure()` 的参数顺序不同：前者是 `$data, $message, $code`，后者是 `$code, $message, $data`，按位置传参容易错位。
+- `code` 是整数业务码，成功缺省用 `Envelope::SUCCESS`；失败场景请给稳定的整数码，不要用 `0` 或负数兼表「无码」。
+- `Responder::send()` 在 `headers_sent()` 为真时只写正文，`Content-Type` 也不会生效；模板已输出、`echo` 过调试信息之后别再调 `send()`。
+- 框架不设置 HTTP 状态码，成功与失败都按默认 200 输出；需要 401、404、422 等语义时由接入方调用 `http_response_code()`。
+- `debug` 恒常输出：`toArray()` 里空数组会转成对象，保证 JSON 侧始终是 `{}` 而不是 `[]`。
 - `JsonFormatter` 走 `Fxri\Param\Json::encode()`，会追加 `JSON_THROW_ON_ERROR`：`NAN`、非法 UTF-8 等会抛 `InvalidArgumentException`，不是静默输出 `false`。
 - `Responder` 不可变，`withFormatter()` 返回新实例；拿到返回值后忘了重新赋值，用的还是旧的格式化器。
 - `View::render()` 的模板名不接受 `..`，且模板文件必须已存在，越界或拼错都抛 `InvalidArgumentException`；`Renderer` 接口只收「路径 + 数据」，模板引擎的缓存与转义由实现方负责。

@@ -21,13 +21,13 @@ use Throwable;
 final class ExceptionHandler
 {
     /** 参数校验失败码 */
-    public const INVALID = 'invalid';
+    public const INVALID = 422;
 
     /** 数据未变更码 */
-    public const UNCHANGED = 'unchanged';
+    public const UNCHANGED = 409;
 
     /** 内部错误码 */
-    public const INTERNAL = 'internal';
+    public const INTERNAL = 500;
 
     /**
      * 初始化。

@@ -44,7 +44,7 @@
 
 ### 之前返回的六元响应数组呢
 
-改为 `Envelope` 的固定四字段 `ok` / `code` / `message` / `data`，旧数组里的扩展位与时间位已移除。需要额外信息时放进 `data`，见[HTTP](./http)。若对外协议仍要求 `extend` 与 `time`，由项目侧响应工厂继续输出，见[扩展目录迁移](./upgrade-2.0-extend)。
+改为 `Envelope` 的固定五键 `code` / `message` / `data` / `extend` / `debug`：旧数组的 `time` 位移除，耗时等调试信息并入 `debug`；分页接口的 `data` 用 `Data\Page` 的四键壳。见[HTTP](./http)。
 
 ### 1.x 还会继续发版吗
 

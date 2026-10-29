@@ -4,45 +4,45 @@ declare(strict_types=1);
 
 namespace Fxri\Http;
 
-use InvalidArgumentException;
+use Fxri\Data\Page;
 
 /**
  * 响应信封。
  *
- * 固定 ok、code、message、data 四个字段，字段含义由类本身决定，
- * 不再依赖配置里的位置数组。
+ * 对外固定五个字段：code、message、data、extend、debug 的响应信封。
+ * success 只用于内部判断成败，不参与输出；code 为整数业务码。
  */
 final class Envelope
 {
     /** 成功码 */
-    public const OK = 'ok';
+    public const SUCCESS = 200;
 
     /**
      * 初始化。
      *
-     * @param bool $ok 是否成功
-     * @param string $code 业务码
+     * @param bool $success 是否成功
+     * @param int $code 业务码
      * @param string $message 提示语
      * @param mixed $data 业务数据
+     * @param array<array-key, mixed> $extend 扩展参数
+     * @param array<array-key, mixed> $debug 调试信息
      */
     private function __construct(
-        private readonly bool $ok,
-        private readonly string $code,
+        private readonly bool $success,
+        private readonly int $code,
         private readonly string $message,
         private readonly mixed $data,
+        private readonly array $extend,
+        private readonly array $debug,
     ) {
-        // 空串会让调用方无法区分成功与失败，构造期直接拒绝
-        if ('' === $code) {
-            throw new InvalidArgumentException('响应码不能为空串');
-        }
     }
 
     /**
      * 取业务码。
      *
-     * @return string 业务码
+     * @return int 业务码
      */
-    public function code(): string
+    public function code(): int
     {
         return $this->code;
     }
@@ -58,16 +58,38 @@ final class Envelope
     }
 
     /**
+     * 取调试信息。
+     *
+     * @return array<array-key, mixed> 调试信息
+     */
+    public function debug(): array
+    {
+        return $this->debug;
+    }
+
+    /**
+     * 取扩展参数。
+     *
+     * @return array<array-key, mixed> 扩展参数
+     */
+    public function extend(): array
+    {
+        return $this->extend;
+    }
+
+    /**
      * 构造失败响应。
      *
-     * @param string $code 业务码
+     * @param int $code 业务码
      * @param string $message 提示语
      * @param mixed $data 业务数据
+     * @param array<array-key, mixed> $extend 扩展参数
+     * @param array<array-key, mixed> $debug 调试信息
      * @return self 响应信封
      */
-    public static function failure(string $code, string $message = '', mixed $data = null): self
+    public static function failure(int $code, string $message = '', mixed $data = null, array $extend = [], array $debug = []): self
     {
-        return new self(false, $code, $message, $data);
+        return new self(false, $code, $message, $data, $extend, $debug);
     }
 
     /**
@@ -75,23 +97,9 @@ final class Envelope
      *
      * @return bool 是否成功
      */
-    public function isOk(): bool
+    public function isSuccess(): bool
     {
-        return $this->ok;
-    }
-
-    /**
-     * 创建实例。
-     *
-     * @param bool $ok 是否成功
-     * @param string $code 业务码
-     * @param mixed $data 业务数据
-     * @param string $message 提示语
-     * @return self 响应信封
-     */
-    public static function make(bool $ok, string $code, mixed $data = null, string $message = ''): self
-    {
-        return new self($ok, $code, $message, $data);
+        return $this->success;
     }
 
     /**
@@ -109,26 +117,30 @@ final class Envelope
      *
      * @param mixed $data 业务数据
      * @param string $message 提示语
-     * @param string $code 业务码
+     * @param int $code 业务码
+     * @param array<array-key, mixed> $extend 扩展参数
+     * @param array<array-key, mixed> $debug 调试信息
      * @return self 响应信封
      */
-    public static function success(mixed $data = null, string $message = '', string $code = self::OK): self
+    public static function success(mixed $data = null, string $message = '', int $code = self::SUCCESS, array $extend = [], array $debug = []): self
     {
-        return new self(true, $code, $message, $data);
+        return new self(true, $code, $message, $data, $extend, $debug);
     }
 
     /**
      * 转为数组。
      *
-     * @return array{ok: bool, code: string, message: string, data: mixed} 字段固定的数组
+     * @return array{code: int, message: string, data: mixed, extend: array<array-key, mixed>, debug: array<array-key, mixed>|object} 字段固定的数组
      */
     public function toArray(): array
     {
         return [
-            'ok' => $this->ok,
             'code' => $this->code,
             'message' => $this->message,
-            'data' => $this->data,
+            'data' => $this->data instanceof Page ? $this->data->toArray() : $this->data,
+            'extend' => $this->extend,
+            // 空调试信息输出空对象，保证外壳形态稳定
+            'debug' => [] === $this->debug ? new \stdClass() : $this->debug,
         ];
     }
 }

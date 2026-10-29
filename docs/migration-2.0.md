@@ -17,7 +17,7 @@ title: 2.0 API 对照
 | 入口 | `\fxyin\App::init()` 隐式初始化 | `KernelBuilder::make()->build()` 显式装配 |
 | 调用方式 | `\fxapp\Base::config()` 等静态门面 | `Kernel` 实例 + `Fxri\*` 纯静态工具类 |
 | 模式选择 | 点分数字串（`1.1.2`）与整型 `type` 参数 | 具名枚举 + 链式方法 |
-| 响应结构 | 配置驱动的 6 元位置数组 | `Envelope` 固定四字段 |
+| 响应结构 | 配置驱动的 6 元位置数组 | `Envelope` 固定五字段 |
 | 错误处理 | `fxy_echo` 返回数组、`throwable()` 直接 `exit` | 抛异常，由接入层统一映射为信封 |
 | PHP 版本 | 7.1 ~ 8.4 | 8.2 起 |
 
@@ -96,7 +96,7 @@ echo $kernel->trans('欢迎');
 | `Param::define()` | `1.1.1`、`1.1.2` … | `Shape` 链式组合，见 4.2 |
 | `Param::url()` | `1.1.1`、`1.1.3`、`1.1`、`1.2`、`2.1` | `Url::build()`、`Url::query()`、`Url::withQuery()` |
 | `facade.data.where` | `-1` ~ `6` | `WhereBuilder`，见 4.4 |
-| `facade.server.echo.template` | `0` ~ `5` | `Envelope` 固定四字段，见 4.5 |
+| `facade.server.echo.template` | `0` ~ `5` | `Envelope` 固定五字段，见 4.5 |
 | `facade.server.echo.format` | `1` ~ `5` | `Envelope::toArray()` |
 | `Data::fieldJson()` | `1`、`2` | `FieldJsonMode::Quoted`、`FieldJsonMode::Raw` |
 | `Data::fieldText()` | `1`、`2`、`3` | `FieldTextMode::Keep`、`ReplaceEmpty`、`CastInt` |
@@ -230,16 +230,16 @@ $where = WhereBuilder::make()
 
 ### 4.5 `server.echo` 两段配置 → `Envelope`
 
-旧响应由 `facade.server.echo.template`（6 个位置）与 `facade.server.echo.format`（5 个位置到键名的映射）两段配置驱动：
+旧响应由 `facade.server.echo.template`（6 个位置）与 `facade.server.echo.format`（5 个位置到键名的映射）两段配置驱动，2.0 统一为固定五键外壳：
 
 | 旧位置 | 旧含义 | 新字段 |
 | --- | --- | --- |
-| `0` | 逻辑状态 | `Envelope::$ok`（`ok`） |
-| `1` | 状态代码 | `Envelope::$code`（`code`） |
-| `2` | 提示信息 | `Envelope::$message`（`message`） |
-| `3` | 响应数据 | `Envelope::$data`（`data`） |
-| `4` | 扩展数据 | 并入 `message` 或 `data`，不再单独留位 |
-| `5` | 请求时间 | 由接入层自行补充，框架不再内置 |
+| `0` | 逻辑状态 | 内部的 `success`，只做判断，不输出 |
+| `1` | 状态代码 | `code`（整数业务码，成功缺省 200） |
+| `2` | 提示信息 | `message` |
+| `3` | 响应数据 | `data`；分页接口用 `Data\Page` 的四键壳 |
+| `4` | 扩展数据 | `extend` |
+| `5` | 请求时间 | `debug`（如 `debug.time`） |
 
 ~~~php
 // 1.x
@@ -253,8 +253,8 @@ return Envelope::success($data, '请求成功');
 
 注意两点行为变化：
 
-- `code` 由整型改为字符串，成功固定为 `Envelope::OK`（`'ok'`），构造期不接受空串。
-- 旧 `extend` 与 `time` 两个位置不再存在，需要保留时由接入层在 `Envelope::toArray()` 之外自行追加。
+- `code` 统一为整数，成功缺省为 `Envelope::SUCCESS`（`200`），失败用稳定的业务整数码。
+- `extend` 与 `time` 不再是可配置位置：`extend` 是正式的扩展字段，调试信息（含耗时）放 `debug`；`debug` 恒常输出，空时为空对象。
 
 ## 五、全局函数迁移
 
@@ -465,7 +465,7 @@ return Envelope::success($data, '请求成功');
 
 - 全仓检索 `\fxapp\`、`\fxyin\`、`fxy_echo`、`fxy_config`、`fxy_lang`、`fxy_env`、`fxy_cookie`、`fxy_dump`、`fxy_json`，除本文档外应归零。
 - 全仓检索点分模式号（形如 `'1.1.2'`）与 `facade.data.where`、`facade.server.echo`，应归零。
-- 旧响应数组的下标访问（`$echo[0]` ~ `$echo[5]`）改为 `Envelope::isOk()`、`code()`、`message()`、`data()`。
+- 旧响应数组的下标访问（`$echo[0]` ~ `$echo[5]`）改为 `Envelope::isSuccess()`、`code()`、`message()`、`data()`、`extend()`、`debug()`。
 - 旧 `\fxapp\Data::field*()` 生成的字符串 SQL 改为 `Data\Sql` 对象，绑定值随对象传递。
 - 加密：旧 `Safe::crypt()` 产出的密文只能用 `Security\LegacyCipher::decrypt()` 读取，新数据统一用 `Cipher`。
 - 依赖注入：把 `LoggerInterface`、`TranslatorInterface`、HTTP 客户端从门面静态调用改为 `KernelBuilder` 注入。
@@ -477,7 +477,7 @@ return Envelope::success($data, '请求成功');
 
 - 门面静态转发（`Facade::__callStatic`）与 `\fxapp\*` 类名：改由 `Fxri\*` 与 `Application\Services`。
 - 全局函数与 `app/function/` 目录约定：`Support\Type`、各服务，或 `Bootstrap::withFunctions()`。
-- 配置驱动的六元响应结构（`server.echo.template` / `server.echo.format`）：改为 `Envelope` 固定四字段，`extend`、`time` 两个响应位移除。
+- 配置驱动的六元响应结构（`server.echo.template` / `server.echo.format`）：改为 `Envelope` 固定五字段（`code`、`message`、`data`、`extend`、`debug`）。
 - 点分模式号与整型 `type`：改为具名枚举与链式 `Shape`。
 - `throwable()` 直接终止进程：改为抛异常，由接入层映射。
 - 数据库连接与事务：fxyin 不接管，仍由项目数据库层负责。
@@ -499,7 +499,7 @@ return Envelope::success($data, '请求成功');
 | `Base::config($name)` | `$kernel->config()->get($name, $default)` | 配置不再支持运行期写入 |
 | `Param::json($data, 'encode')` | `Param\Json::encode()`、`Json::decode()` | 模式改为方法 |
 | `Param::merge($limit, ...$args)` | `Merger::merge()`、`Merger::mergeKeepBlank()` | 深度与空值语义显式化 |
-| `Server::echo()` | `Envelope::make()`、`Envelope::success()` | 六元数组改为四字段信封 |
+| `Server::echo()` | `Envelope::success()`、`Envelope::failure()` | 六元数组改为五键信封 |
 | `Text::throwable($e)` | 抛异常，由接入层映射 | 不再直接终止进程 |
 | `Data::paramEmpty($data, $type)` | `Data\Param::missing($data, NullPolicy::Blank)` | 空值策略改为枚举 |
 | `Data::fieldJson(...)` | `Field::json(...)` | 见 7.3 |
@@ -519,9 +519,9 @@ return Envelope::success($data, '请求成功');
 
 | 维度 | 1.x | 2.0 |
 | --- | --- | --- |
-| 响应结构 | 配置驱动的六元位置数组 | `Envelope` 固定 `ok`、`code`、`message`、`data` |
-| 业务码类型 | 整型（如 `200`） | 字符串（成功为 `ok`） |
-| 扩展位与时间位 | `extend`、`time` 两个位置 | 移除，由接入方自行追加 |
+| 响应结构 | 配置驱动的六元位置数组 | `Envelope` 固定 `code`、`message`、`data`、`extend`、`debug` |
+| 业务码类型 | 整型（如 `200`） | 整型，成功缺省 `200` |
+| 扩展位与时间位 | `extend`、`time` 两个位置 | `extend` 为正式扩展字段，时间等调试信息并入 `debug` |
 | 错误处理 | 返回数组或直接 `exit` | 抛异常，由接入层映射 |
 | 条件构造 | 字符串片段与白名单过滤 | 绑定参数与 `Sql` 对象 |
 | 配置 | 允许加载期执行代码 | 只接受纯数组 |

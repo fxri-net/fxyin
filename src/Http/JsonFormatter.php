@@ -9,7 +9,7 @@ use Fxri\Param\Json;
 /**
  * JSON 响应格式化器。
  *
- * 默认实现，输出固定四字段的 JSON 对象。
+ * 默认实现，输出固定五字段的 JSON 对象。
  */
 final class JsonFormatter implements Formatter
 {

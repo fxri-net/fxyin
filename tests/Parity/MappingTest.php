@@ -61,7 +61,7 @@ final class MappingTest extends TestCase
     {
         $envelope = Envelope::success(['id' => 7], '获取成功');
 
-        self::assertSame('{"ok":true,"code":"ok","message":"获取成功","data":{"id":7}}', JsonFormatter::make()->format($envelope));
+        self::assertSame('{"code":200,"message":"获取成功","data":{"id":7},"extend":[],"debug":{}}', JsonFormatter::make()->format($envelope));
         self::assertStringContainsString('<response>', XmlFormatter::make()->format($envelope));
         self::assertStringContainsString('<id>7</id>', XmlFormatter::make()->format($envelope));
     }

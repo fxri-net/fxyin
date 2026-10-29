@@ -55,7 +55,7 @@ final class Responder
     /**
      * 输出响应。
      *
-     * 已发出响应头时只写正文，避免二次设置头触发告警。
+     * 只设置内容类型，HTTP 状态码由接入方决定；已发出响应头时只写正文。
      *
      * @param Envelope $envelope 响应信封
      * @return string 已输出的响应体
@@ -66,7 +66,6 @@ final class Responder
 
         if (!headers_sent()) {
             header('Content-Type: ' . $this->contentType());
-            http_response_code($envelope->isOk() ? 200 : 400);
         }
 
         echo $body;

@@ -85,10 +85,11 @@ php tools/upgrade-inspect.php baseline --root=/path/to/project --write --baselin
 ## 八、阶段 6：响应与异常
 
 - [ ] 新代码使用 `Envelope`
-- [ ] 旧代码的六元数组由项目 `LegacyResponse` 保持
-- [ ] 对外字段 `code`、`message`、`data`、`extend`、`time` 未变化
+- [ ] 旧代码的六元数组改为五键信封，`time` 并入 `debug`
+- [ ] 对外字段为 `code`、`message`、`data`、`extend`、`debug`
+- [ ] 分页接口的 `data` 使用 `Data\Page` 的四键壳
 - [ ] 异常统一映射为失败信封，不再直接输出堆栈
-- [ ] 新旧响应双跑比对无差异
+- [ ] 新旧响应双跑比对：键集合、`code` 类型与分页壳结构一致
 
 ## 九、阶段 7：验收与清理
 
@@ -150,7 +151,7 @@ php tools/upgrade-inspect.php baseline --root=/path/to/project --check --baselin
 | 入口 500，提示找不到类 | 同时保留了两套自动加载，或旧 `autoload.php` 仍被引用 | 删除旧引导，只保留 Composer |
 | 配置加载报错 | 配置文件仍在调用 `\fxapp\*` 或读取 `$_SERVER` | 按配置纯度规则拆分 |
 | 异常页输出堆栈 | 仍在使用 `Text::throwable()` 或宿主默认 Handler | 改用统一异常映射 |
-| 响应字段缺失 | 内部直接用了 `Envelope::toArray()`，丢了 `extend`、`time` | 用项目 `LegacyResponse` 保持协议 |
+| 响应字段缺失 | 内部直接用了 `Envelope::toArray()`，期望的旧 `time` 未出现 | `time` 已并入 `debug`，需要时由项目写入 `debug.time` |
 | 门面方法找不到 | `facade_ext` 还未迁入过渡层 | 补提供者，或改为显式类 |
 | 无 Composer 项目无法装 2.0 | 2.0 只通过 Composer 分发 | 先补 `composer.json` 与自动加载 |
 | `safe` 模块报错 | 误把它当成 fxyin 一并删除 | 保留原目录，单独排期 |

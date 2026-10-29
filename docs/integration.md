@@ -74,14 +74,14 @@ try {
 | `envelope(Throwable $error): Envelope` | 按异常类型映射为响应信封 | `Fxri\Http\Envelope` |
 | `respond(Throwable $error): string` | 先 `envelope()` 再 `Responder::send()`，输出响应体并返回 | 已输出的响应体 |
 
-类内还定义了三个失败码常量：`INVALID`（`'invalid'`）、`UNCHANGED`（`'unchanged'`）、`INTERNAL`（`'internal'`）。
+类内还定义了三个失败码常量：`INVALID`（`422`）、`UNCHANGED`（`409`）、`INTERNAL`（`500`）。
 
 映射规则按源码逐条对应：
 
-- `Fxri\Exception\ValidationException` 映射为 `Envelope::failure('invalid', $error->getMessage())`，业务码 `invalid`，提示语取异常消息。
-- `Fxri\Exception\SameDataException` 映射为 `Envelope::failure('unchanged', $error->getMessage())`，业务码 `unchanged`，提示语取异常消息。
-- 其余 `Throwable` 先调用 `$kernel->logger()->error($error->getMessage(), ['exception' => $error])` 记日志，再返回 `Envelope::failure('internal', '服务内部错误')`，不透传原始消息。
-- `Envelope::failure()` 的 `ok` 为 `false`；`Responder::send()` 置 `Content-Type` 为格式化器的内容类型（JSON 缺省为 `application/json; charset=utf-8`），状态码按 `isOk()` 取 200 或 400，已发出响应头时只写正文。
+- `Fxri\Exception\ValidationException` 映射为 `Envelope::failure(422, $error->getMessage())`，提示语取异常消息。
+- `Fxri\Exception\SameDataException` 映射为 `Envelope::failure(409, $error->getMessage())`，提示语取异常消息。
+- 其余 `Throwable` 先调用 `$kernel->logger()->error($error->getMessage(), ['exception' => $error])` 记日志，再返回 `Envelope::failure(500, '服务内部错误')`，不透传原始消息。
+- `Envelope::failure()` 的 `success` 为 `false`；`Responder::send()` 只置 `Content-Type` 为格式化器的内容类型（JSON 缺省为 `application/json; charset=utf-8`），HTTP 状态码由接入方决定，已发出响应头时只写正文。
 
 ## 注意事项
 
@@ -91,10 +91,11 @@ try {
 - 容器方法通过反射按位置传参，因此容器方法签名变化（如 `instance()` 增加必填参数）不会被静态分析提前发现，升级 ThinkPHP 后需回归这两处调用。
 - `envelope()` 对未知异常只返回 `internal` 与「服务内部错误」，原始消息只进日志；排查线上问题时从日志取 `exception` 上下文，而不是看响应体。
 - `ValidationException` 与 `SameDataException` 的消息会原样返回给调用方，构造消息时不要拼接 SQL、密钥、内部路径等敏感内容。
-- `respond()` 会直接 `echo` 并设置响应头与状态码。ThinkPHP 已有自己的响应生命周期，在控制器或中间件里应优先用 `envelope()` 把信封交回框架渲染，避免重复输出。
+- `respond()` 会直接 `echo` 并设置内容类型，不设置 HTTP 状态码。ThinkPHP 已有自己的响应生命周期，在控制器或中间件里应优先用 `envelope()` 把信封交回框架渲染，避免重复输出。
 - 映射只按异常类型判断，不看 `code` 或 HTTP 状态。`ValidationException` 继承 `InvalidArgumentException`、`SameDataException` 继承 `RuntimeException`，自定义异常若只继承这两个基类，不会命中前两条分支，仍落到 `internal`。
 - `isAvailable()` 只判 `think\App` 是否存在，不校验版本；绑定与解析依赖容器的 `instance()`、`make()` 方法名，换大版本前先跑一次绑定与解析验证。
 - 绑定的是内核实例本身，容器不会延迟构造内核；若需要容器按需构建，需接入方自行封装工厂，本适配器不提供。
-- 失败码是字符串 `invalid`、`unchanged`、`internal`，与成功码 `Envelope::OK`（`'ok'`）不是同一套取值，前端判断应看 `ok` 字段而不是比对 `code` 的具体值。
+- 失败码是整数 `422`、`409`、`500`，与成功码 `Envelope::SUCCESS`（`200`）同一套整数口径，前端按 `code` 判断而不是比对 `ok` 字段。
+- `respond()` 只设置内容类型，不设置 HTTP 状态码；需要按成败返回 4xx/5xx 时由接入方在输出前后自行设置。
 - 需要非 JSON 输出时，实现 `Fxri\Http\Formatter` 接口并通过 `make()` 的第二个参数注入；`respond()` 的内容类型随之改变，`envelope()` 不受影响。
 - 内核只承载配置、日志、翻译等读取入口（见[内核与装配](./kernel)），适配器只是被绑定的对象之一，框架不会把参数、数据、SQL 等静态能力注册进容器。

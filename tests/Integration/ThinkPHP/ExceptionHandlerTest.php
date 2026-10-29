@@ -25,7 +25,7 @@ final class ExceptionHandlerTest extends TestCase
         $envelope = ExceptionHandler::make(KernelBuilder::make()->build())
             ->envelope(new ValidationException('手机号格式不正确'));
 
-        self::assertFalse($envelope->isOk());
+        self::assertFalse($envelope->isSuccess());
         self::assertSame(ExceptionHandler::INVALID, $envelope->code());
         self::assertSame('手机号格式不正确', $envelope->message());
     }
@@ -38,7 +38,7 @@ final class ExceptionHandlerTest extends TestCase
         $envelope = ExceptionHandler::make(KernelBuilder::make()->build())
             ->envelope(new SameDataException('没有需要保存的变更'));
 
-        self::assertFalse($envelope->isOk());
+        self::assertFalse($envelope->isSuccess());
         self::assertSame(ExceptionHandler::UNCHANGED, $envelope->code());
         self::assertSame('没有需要保存的变更', $envelope->message());
     }
@@ -68,7 +68,7 @@ final class ExceptionHandlerTest extends TestCase
             ->respond(new ValidationException('参数不合法'));
         ob_end_clean();
 
-        self::assertSame('{"ok":false,"code":"invalid","message":"参数不合法","data":null}', $body);
+        self::assertSame('{"code":422,"message":"参数不合法","data":null,"extend":[],"debug":{}}', $body);
     }
 
     /**

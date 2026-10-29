@@ -51,7 +51,7 @@ outline: [2, 3]
 | `env.base.root` / `env.base.app` | 项目常量或配置项 | 路径在运行时解析，不写进配置数组 |
 | `Param::define(..., '1.2.3')` | `Shape` / `Pipeline` | 见 [API 对照](./migration-2.0) |
 | `Data::where([...])` 八元数组 | `WhereBuilder` | 条件与绑定值由对象携带 |
-| `Server::echo()` 六元数组 | `Envelope` + 项目 `LegacyResponse` | 对外协议由项目保持 |
+| `Server::echo()` 六元数组 | `Envelope` 的五键信封 | 旧 `time` 位并入 `debug`，旧 `extend` 位成为正式字段 |
 | `Server::format($echo, 2)` | `Envelope::toArray()` 或项目序列化 | 键名不再可配置 |
 | `Base::lang([$a, $b])` | `$kernel->trans()` | 旧的列表拼接语义需项目侧补 |
 | `Lang::get()` / `Lang::detect()` | `ArrayTranslator` + 项目 `Context` | 语言列表与自动侦测改为项目服务 |
@@ -134,7 +134,7 @@ $private = Path::join($kernel->config()->get('app.base.app'), 'elven/misc/pem/rs
 ### 4.3 条件与响应配置改为对象
 
 - `facade.data.where` 的数字键配置直接删除，条件改用 `Sql\WhereBuilder`。
-- `server.echo.template` 与 `server.echo.format` 删除，内部改用 `Http\Envelope`；对外字段由项目 `LegacyResponse` 保持。
+- `server.echo.template` 与 `server.echo.format` 删除，内部改用 `Http\Envelope`；对外字段由 `Envelope::toArray()` 的五个键固定。
 - `letter.email` 等邮件配置属于项目业务，2.0 不提供邮件能力，迁到项目自己的配置分组。
 
 ## 五、门面扩展的三种替代
@@ -291,39 +291,17 @@ $cookies = \Fxri\Http\Cookie\CookieJar::fromGlobals();
 
 ## 八、响应协议的保持
 
-旧代码大量使用 `$echo[2]`、`$echo[3]`，对外协议还包含 `extend` 与 `time`。迁移时不要让框架升级顺带改协议：
+旧出口是 `{code, message, data, extend}`，部分项目另加 `time`。2.x 的五键信封已与旧出口对齐，不需要再写响应工厂：
 
-```php
-final class LegacyResponse
-{
-    /** @return array{0: bool, 1: int, 2: string, 3: mixed, 4: array<array-key, mixed>, 5: string} */
-    public static function envelope(\Fxri\Http\Envelope $envelope, array $extend = []): array
-    {
-        return [
-            $envelope->isOk(),
-            $envelope->isOk() ? 200 : 500,
-            $envelope->message(),
-            $envelope->data(),
-            $extend,
-            (string) time(),
-        ];
-    }
+| 旧出口 | 2.x |
+| --- | --- |
+| `code`（整数业务码） | `code` |
+| `message`（出口前翻译） | `message`（构造时用 `$kernel->trans()`） |
+| `data` | `data`；分页接口为 `Data\Page` 的四键壳 |
+| `extend` | `extend` |
+| `time` | 移除，耗时放 `debug` |
 
-    /** @return array{code: int, message: string, data: mixed, extend: array<array-key, mixed>, time: string} */
-    public static function wire(array $echo): array
-    {
-        return [
-            'code' => (int) ($echo[1] ?? 0),
-            'message' => (string) ($echo[2] ?? ''),
-            'data' => $echo[3] ?? null,
-            'extend' => is_array($echo[4] ?? null) ? $echo[4] : [],
-            'time' => (string) ($echo[5] ?? ''),
-        ];
-    }
-}
-```
-
-内部新代码用 `Envelope`，旧代码继续取六元数组；协议变更单独排期。
+需要改键名的项目，在 `Envelope::toArray()` 之后再映射一层即可；不要复刻旧的位置数组。
 
 ## 九、框架副本的本地新增方法
 
