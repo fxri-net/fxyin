@@ -102,6 +102,23 @@ final class UpgradeInspectTest extends TestCase
     }
 
     /**
+     * 手写路由入口应判为非 ThinkPHP 的自定义入口。
+     */
+    public function testProfileOfCustomEntryProject(): void
+    {
+        $root = $this->makeProject('custom-entry');
+        $this->write($root . '/index.php', '<?php $Urls = $_SERVER["REQUEST_URI"]; $Uri = explode("?", $Urls)[0];');
+        $this->write($root . '/app/controller/Index.php', '<?php \fxapp\Base::config("app.name");');
+
+        [$code, $output] = $this->runTool(['profile', '--root=' . $root, '--json']);
+        self::assertSame(0, $code, $output);
+        $data = json_decode($output, true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($data);
+        self::assertSame('非 ThinkPHP（自定义入口）', $data['framework']);
+        self::assertSame(['index.php'], $data['entry']);
+    }
+
+    /**
      * 扫描应统计旧 API，并排除框架本体目录。
      */
     public function testScanCountsOldApiAndSkipsFrameworkBase(): void

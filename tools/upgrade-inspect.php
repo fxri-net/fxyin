@@ -637,8 +637,39 @@ function detectFramework(string $root, ?array $lock, string $composerRaw): strin
     if (is_dir($root . '/vendor/topthink/framework')) {
         return 'ThinkPHP（vendor 目录）';
     }
+    if (hasCustomEntry($root)) {
+        return '非 ThinkPHP（自定义入口）';
+    }
 
     return '未识别';
+}
+
+/**
+ * 判断入口是否为手写路由。
+ *
+ * 这类项目没有 `think`、`thinkphp/` 与 Composer 依赖，入口自己解析 `REQUEST_URI`
+ * 或直接引入站点级配置；据此与「未识别」区分，避免画像里只给一个空结论。
+ *
+ * @param string $root 项目根
+ * @return bool 是否手写路由入口
+ */
+function hasCustomEntry(string $root): bool
+{
+    foreach (['index.php', 'public/index.php'] as $candidate) {
+        $file = $root . '/' . $candidate;
+        if (!is_file($file)) {
+            continue;
+        }
+        $code = (string) file_get_contents($file);
+        if (str_contains($code, 'REQUEST_URI')) {
+            return true;
+        }
+        if (preg_match('/include\s*\(\s*\$_SERVER\[\s*[\'"]DOCUMENT_ROOT[\'"]/', $code)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**
