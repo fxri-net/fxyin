@@ -31,7 +31,7 @@ outline: [2, 3]
 | `File::getList` | `File\Filesystem::findFiles()` |
 | `File::getMediaInfo` | `File\VideoInfo::inspect()` |
 | `Service::http` / `httpDown` | `Http\HttpClient\Curl` / `Curl::download()` |
-| `Safe::token` | `Token`（新）/ `LegacyToken`（旧） |
+| `Safe::token` | `Token`（新）/ `DesToken`（旧） |
 | `Safe::rsapri` / `rsapub` | `Rsa::privateEncrypt()` / `publicDecrypt()` |
 | `Text::timeFormat` / `timeMilli` | `Time::duration()` / `milliFormat()` / `milliParse()` |
 | `Text::timeChange` / `timeRange` / `convert` | `TimeOutput` / `TimeRangeOptions` / `EncodeConvert` 枚举与值对象 |
@@ -134,7 +134,7 @@ PHP < 8.2 ─────────────── 是 → 先完成 PHP �
 ## 七、回滚
 
 - 升级前为 1.x 目录与部署包打快照；入口保留切换开关，必要时切回旧 `bootstrap.php`。
-- 数据库与旧密文不需要回滚：2.0 的 `Security\LegacyCipher` 只解密，不重写数据。
+- 数据库与旧密文不需要回滚：2.0 的 `Security\DesCipher` 只解密，不重写数据。
 - 对外响应协议单独排期；框架升级不回滚协议变更，避免把两件事绑在一起。
 - Composer 约束可从 `^2.0` 退回 `^1.6`；1.x 标签仍在，可重新检出。
 

@@ -9,18 +9,21 @@ namespace Fxri\Data;
  *
  * 分页接口的响应数据统一为 total、records、page、size 四个键，
  * 非分页接口不使用本类，直接把业务数据放进响应的 data。
+ *
+ * @template T 当页记录类型
  */
 final class Page
 {
     /**
      * 初始化。
      *
-     * @param array<array-key, mixed> $records 当页记录
+     * @param list<T> $records 当页记录
      * @param int $total 总条数
      * @param int|null $page 当前页码
      * @param int|null $size 每页条数
      */
     private function __construct(
+        /** @var list<T> 当页记录 */
         private readonly array $records,
         private readonly int $total,
         private readonly ?int $page,
@@ -31,11 +34,12 @@ final class Page
     /**
      * 创建实例。
      *
-     * @param array<array-key, mixed> $records 当页记录
+     * @template TRecord
+     * @param list<TRecord> $records 当页记录
      * @param int $total 总条数
      * @param int|null $page 当前页码
      * @param int|null $size 每页条数
-     * @return self 分页数据壳
+     * @return self<TRecord> 分页数据壳
      */
     public static function make(array $records, int $total, ?int $page = null, ?int $size = null): self
     {
@@ -55,7 +59,7 @@ final class Page
     /**
      * 取当页记录。
      *
-     * @return array<array-key, mixed> 当页记录
+     * @return list<T> 当页记录
      */
     public function records(): array
     {
@@ -75,7 +79,7 @@ final class Page
     /**
      * 转为数组。
      *
-     * @return array{total: int, records: array<array-key, mixed>, page: int|null, size: int|null} 字段固定的数组
+     * @return array{total: int, records: list<T>, page: int|null, size: int|null} 字段固定的数组
      */
     public function toArray(): array
     {

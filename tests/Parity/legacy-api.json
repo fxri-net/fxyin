@@ -49,7 +49,7 @@
                 "status": "equiv"
             },
             "crypt": {
-                "target": "Security\\Cipher / LegacyCipher",
+                "target": "Security\\Cipher / DesCipher",
                 "status": "equiv"
             },
             "throwable": {
@@ -257,7 +257,7 @@
         },
         "Safe": {
             "crypt": {
-                "target": "Security\\Cipher / LegacyCipher",
+                "target": "Security\\Cipher / DesCipher",
                 "status": "equiv"
             },
             "md5": {
@@ -265,7 +265,7 @@
                 "status": "equiv"
             },
             "token": {
-                "target": "Security\\Token / LegacyToken（旧格式）",
+                "target": "Security\\Token / DesToken（旧格式）",
                 "status": "equiv"
             },
             "rsapri": {

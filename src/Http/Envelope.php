@@ -11,6 +11,8 @@ use Fxri\Data\Page;
  *
  * 对外固定五个字段：code、message、data、extend、debug 的响应信封。
  * success 只用于内部判断成败，不参与输出；code 为整数业务码。
+ *
+ * @template T 业务数据类型
  */
 final class Envelope
 {
@@ -31,6 +33,7 @@ final class Envelope
         private readonly bool $success,
         private readonly int $code,
         private readonly string $message,
+        /** @var T 业务数据 */
         private readonly mixed $data,
         private readonly array $extend,
         private readonly array $debug,
@@ -50,7 +53,7 @@ final class Envelope
     /**
      * 取业务数据。
      *
-     * @return mixed 业务数据
+     * @return T 业务数据
      */
     public function data(): mixed
     {
@@ -80,12 +83,13 @@ final class Envelope
     /**
      * 构造失败响应。
      *
+     * @template TData
      * @param int $code 业务码
      * @param string $message 提示语
-     * @param mixed $data 业务数据
+     * @param TData $data 业务数据
      * @param array<array-key, mixed> $extend 扩展参数
      * @param array<array-key, mixed> $debug 调试信息
-     * @return self 响应信封
+     * @return self<TData> 响应信封
      */
     public static function failure(int $code, string $message = '', mixed $data = null, array $extend = [], array $debug = []): self
     {
@@ -115,12 +119,13 @@ final class Envelope
     /**
      * 构造成功响应。
      *
-     * @param mixed $data 业务数据
+     * @template TData
+     * @param TData $data 业务数据
      * @param string $message 提示语
      * @param int $code 业务码
      * @param array<array-key, mixed> $extend 扩展参数
      * @param array<array-key, mixed> $debug 调试信息
-     * @return self 响应信封
+     * @return self<TData> 响应信封
      */
     public static function success(mixed $data = null, string $message = '', int $code = self::SUCCESS, array $extend = [], array $debug = []): self
     {

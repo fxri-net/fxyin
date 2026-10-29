@@ -33,7 +33,8 @@ final class Responder
     /**
      * 格式化响应信封。
      *
-     * @param Envelope $envelope 响应信封
+     * @template T
+     * @param Envelope<T> $envelope 响应信封
      * @return string 响应体
      */
     public function format(Envelope $envelope): string
@@ -57,7 +58,8 @@ final class Responder
      *
      * 只设置内容类型，HTTP 状态码由接入方决定；已发出响应头时只写正文。
      *
-     * @param Envelope $envelope 响应信封
+     * @template T
+     * @param Envelope<T> $envelope 响应信封
      * @return string 已输出的响应体
      */
     public function send(Envelope $envelope): string

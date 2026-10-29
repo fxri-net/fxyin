@@ -16,7 +16,7 @@ use RuntimeException;
  * 只用于读写旧版本签发的令牌：数据以逗号包裹、补随机字符到 2 的幂后走 DES-ECB，
  * 最终转为十六进制串。新数据请使用 `Token`。
  */
-final class LegacyToken
+final class DesToken
 {
     /** 最小填充长度 */
     private const MIN_LENGTH = 32;
@@ -42,7 +42,7 @@ final class LegacyToken
         }
 
         try {
-            $plain = LegacyCipher::decrypt($raw, $password);
+            $plain = DesCipher::decrypt($raw, $password);
         } catch (InvalidArgumentException|RuntimeException) {
             return null;
         }
@@ -82,6 +82,6 @@ final class LegacyToken
         $pad = Random::string(max(1, $padding), RandomCharset::Alnum);
         $payload = str_pad($payload, $target, $pad, STR_PAD_BOTH);
 
-        return bin2hex(LegacyCipher::encrypt($payload, $password));
+        return bin2hex(DesCipher::encrypt($payload, $password));
     }
 }

@@ -35,7 +35,8 @@ final class JsonFormatter implements Formatter
     /**
      * 格式化响应信封。
      *
-     * @param Envelope $envelope 响应信封
+     * @template T
+     * @param Envelope<T> $envelope 响应信封
      * @return string JSON 串
      */
     public function format(Envelope $envelope): string

@@ -68,7 +68,7 @@ outline: [2, 3]
 | Text | 18 | 18 | 0 | 0 |
 | View | 1 | 1 | 0 | 0 |
 
-需新增项为零：全部门面能力已落到 v2 入口。`App::run` 由可选 `Application\Router` 承接；`Client::param` 由 `Http\RequestInput` 承接；`File::getList` 由 `Filesystem::findFiles`、`File::getMediaInfo` 由 `File\VideoInfo::inspect` 承接；`Param::init` 由 `Application\Cli` 承接，`Param::object` / `append` / `pick` 分别由 `Cast::emptyToObject`、`Merger::append`、`Picker::pick` 承接；`Safe::rsapri/rsapub` 由 `Rsa::privateEncrypt/publicDecrypt` 承接，`Safe::token` 由 `Token` 与 `LegacyToken` 承接；`Service::http/httpDown` 由 `HttpClient\Curl` 承接；`Text` 的嵌套编解码、长度校验、时长分解、毫秒转换与标识串格式化分别落到 `Encode::encodeAll/decodeAll`、`Str::isLength`、`Time::duration`、`Time::milliFormat/milliParse`、`Uuid::format`；语言直通/忽略标记与首字母大写由 `Language::phrase` 承接。
+需新增项为零：全部门面能力已落到 v2 入口。`App::run` 由可选 `Application\Router` 承接；`Client::param` 由 `Http\RequestInput` 承接；`File::getList` 由 `Filesystem::findFiles`、`File::getMediaInfo` 由 `File\VideoInfo::inspect` 承接；`Param::init` 由 `Application\Cli` 承接，`Param::object` / `append` / `pick` 分别由 `Cast::emptyToObject`、`Merger::append`、`Picker::pick` 承接；`Safe::rsapri/rsapub` 由 `Rsa::privateEncrypt/publicDecrypt` 承接，`Safe::token` 由 `Token` 与 `DesToken` 承接；`Service::http/httpDown` 由 `HttpClient\Curl` 承接；`Text` 的嵌套编解码、长度校验、时长分解、毫秒转换与标识串格式化分别落到 `Encode::encodeAll/decodeAll`、`Str::isLength`、`Time::duration`、`Time::milliFormat/milliParse`、`Uuid::format`；语言直通/忽略标记与首字母大写由 `Language::phrase` 承接。
 
 完整映射见 `tests/Parity/legacy-api.json`。
 
@@ -109,7 +109,7 @@ outline: [2, 3]
 - `whereSafe`、`whereFilter`：由 `WhereBuilder` 绑定参数覆盖。
 - `storeUpperLevel`、`storeLowerLevel`：由 `Data\Hierarchy::ancestors()` / `descendants()` 在应用层递归，替代 MySQL 专有递归 SQL。
 - `File::moveDirectory`：v2 用 `rename()` 整目录移动，不再把源目录内容扁平合并进目标目录。
-- `Safe::crypt`、`Base::crypt`：任意 openssl 算法与参数由 `Cipher`（固定 AES-256-GCM）与 `LegacyCipher`（仅 DES 读写）承接，不再暴露算法选择。
+- `Safe::crypt`、`Base::crypt`：任意 openssl 算法与参数由 `Cipher`（固定 AES-256-GCM）与 `DesCipher`（仅 DES 读写）承接，不再暴露算法选择。
 - `Server::ip`：由 `HttpClient\Curl` + `Param\Json` 组合取公网地址。
 - `Server::system`：由 PHP 原生 `PHP_OS_FAMILY` 承接，不再做版本级名称映射。
 - 门面与全局函数：由 `Fxri\*`、`Application\Services` 覆盖。
@@ -123,7 +123,7 @@ outline: [2, 3]
 | --- | --- | --- |
 | 响应结构 | 配置驱动 6 元数组 | `Envelope` 固定五字段 |
 | 错误模型 | `throwable()` 直接终止进程 | 抛异常，由接入层映射 |
-| 对称加密 | 任意 openssl 算法/口令/IV | `Cipher` 固定 AES-256-GCM；旧数据 `LegacyCipher` |
+| 对称加密 | 任意 openssl 算法/口令/IV | `Cipher` 固定 AES-256-GCM；旧数据 `DesCipher` |
 | `Client::ip` | 无条件信任转发头 | 默认只信直连，转发需可信代理 |
 | 浏览器/系统名称 | IE8、Firefox3 等旧标签 | 现代标签集合（Edge 等） |
 | `File::formatSize` | 最大 TB | 增加 PB |

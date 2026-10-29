@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Fxri\Tests\Security;
 
-use Fxri\Security\LegacyCipher;
+use Fxri\Security\DesCipher;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -12,7 +12,7 @@ use RuntimeException;
 /**
  * 旧数据解密测试：覆盖固定向量与口令校验。
  */
-final class LegacyCipherTest extends TestCase
+final class DesCipherTest extends TestCase
 {
     /** 旧实现以口令 00000000 加密「风音-fxri」的结果 */
     private const PAYLOAD = 'zGWi1LQTXdVpPac4UC2BIw==';
@@ -22,9 +22,9 @@ final class LegacyCipherTest extends TestCase
      */
     public function testEncryptRoundTrip(): void
     {
-        $payload = LegacyCipher::encrypt('风音-fxri', '00000000');
+        $payload = DesCipher::encrypt('风音-fxri', '00000000');
 
-        self::assertSame('风音-fxri', LegacyCipher::decrypt($payload, '00000000'));
+        self::assertSame('风音-fxri', DesCipher::decrypt($payload, '00000000'));
     }
 
     /**
@@ -33,7 +33,7 @@ final class LegacyCipherTest extends TestCase
     public function testEncryptMissingPassword(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        LegacyCipher::encrypt('风音');
+        DesCipher::encrypt('风音');
     }
 
     /**
@@ -41,7 +41,7 @@ final class LegacyCipherTest extends TestCase
      */
     public function testFixedVector(): void
     {
-        self::assertSame('风音-fxri', LegacyCipher::decrypt(self::PAYLOAD, '00000000'));
+        self::assertSame('风音-fxri', DesCipher::decrypt(self::PAYLOAD, '00000000'));
     }
 
     /**
@@ -50,7 +50,7 @@ final class LegacyCipherTest extends TestCase
     public function testMissingPassword(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        LegacyCipher::decrypt(self::PAYLOAD);
+        DesCipher::decrypt(self::PAYLOAD);
     }
 
     /**
@@ -59,7 +59,7 @@ final class LegacyCipherTest extends TestCase
     public function testEmptyPassword(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        LegacyCipher::decrypt(self::PAYLOAD, '');
+        DesCipher::decrypt(self::PAYLOAD, '');
     }
 
     /**
@@ -68,7 +68,7 @@ final class LegacyCipherTest extends TestCase
     public function testWrongPassword(): void
     {
         $this->expectException(RuntimeException::class);
-        LegacyCipher::decrypt(self::PAYLOAD, '12345678');
+        DesCipher::decrypt(self::PAYLOAD, '12345678');
     }
 
     /**
@@ -77,6 +77,6 @@ final class LegacyCipherTest extends TestCase
     public function testInvalidPayload(): void
     {
         $this->expectException(RuntimeException::class);
-        LegacyCipher::decrypt('!!!!', '00000000');
+        DesCipher::decrypt('!!!!', '00000000');
     }
 }

@@ -45,7 +45,7 @@ final class ExceptionHandler
      * 把异常转为响应信封。
      *
      * @param Throwable $error 异常
-     * @return Envelope 响应信封
+     * @return Envelope<null> 响应信封
      */
     public function envelope(Throwable $error): Envelope
     {

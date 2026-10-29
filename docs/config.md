@@ -10,7 +10,7 @@
 
 `KernelBuilder` 默认先加载随包提供的 `resources/config`（`app`、`branch`、`env`），再按 `withConfigDir()` 的登记顺序叠加项目配置；`withoutDefaultConfig()` 或 `bare()` 可关闭内置配置。内核以 `config()` 暴露只读视图，以 `configStore()` 暴露可写覆盖层，运行期 `set()` 不会修改只读基底。
 
-`ConfigLoader` 只认「目录 + `*.php` 文件」这一种组织方式，不递归子目录，不支持其他格式。文件名即顶层键，文件返回的数组整体挂在该键下，所以 `config/app.php` 的内容用 `app.name` 读取。
+`ConfigLoader` 只认「目录 + `*.php` 文件」这一种组织方式，支持递归子目录，不支持其他格式。文件相对路径去掉扩展名后按分隔符转嵌套键：`config/app.php` 的内容用 `app.name` 读取，`config/facade/model.php` 用 `facade.model` 读取。文件名里的点号同样视为层级分隔，所以 `third.oss.php` 与 `third/oss.php` 都对应 `third.oss`。
 
 `Environment` 与 `Config` 没有耦合：它不读配置文件，也不把结果写进 `$_ENV`、`$_SERVER` 或 `putenv()`。需要把 `.env` 的值并入配置时，由调用方自行取值再拼装数组。
 
@@ -99,9 +99,9 @@ echo $translator->get('欢迎');                // 欢迎
 
 `load()` 的规则：
 
-- 每个目录取 `*.php` 文件（不递归），用文件名（去掉扩展名）作为顶层键。
-- 同一目录内文件按完整路径字节序 `sort()` 排列；不同文件名互不冲突，排序只影响读取顺序。
-- 文件 `require` 后返回值不是数组时按空配置处理，不中断整体加载。
+- 每个目录递归取 `*.php` 文件；文件相对路径去掉扩展名后，目录分隔符与文件名里的点号都作为层级分隔，`facade/model.php` 与 `facade.model.php` 等价。
+- 同一层先加载文件（按文件名排序），再递归子目录（按目录名排序）；后加载覆盖先加载。
+- 文件 `require` 后返回值必须是数组，否则抛 `RuntimeException` 并指明文件路径。
 - 多目录按登记顺序叠加，后者覆盖前者；同名分组的内层数组递归合并，标量值以覆盖层为准。
 
 ### Environment

@@ -315,7 +315,7 @@ return Envelope::success($data, '请求成功');
 | `dump(...$vars)` | `Dump::write(...)` |
 | `json($data, $type, $param)` | `Json::encode()`、`Json::decode()`；非 JSON 串按查询串解码用 `Encode::decodeAll()`；v1 对已编码串不再编码，v2 需先 `Type::isJson()` 判断 |
 | `ipv4($data, $type)` | `Ip::toLong()`、`Ip::fromLong()` |
-| `crypt($data, $type, $param)` | `Cipher::encrypt()`、`Cipher::decrypt()`；旧数据用 `LegacyCipher::decrypt()` |
+| `crypt($data, $type, $param)` | `Cipher::encrypt()`、`Cipher::decrypt()`；旧数据用 `DesCipher::decrypt()` |
 | `throwable($message)` | 抛异常，由接入层处理 |
 | `echo($message, $code, $data, $extend)` | `Envelope::success()`、`Envelope::failure()` |
 
@@ -394,9 +394,9 @@ return Envelope::success($data, '请求成功');
 
 | 旧方法 | 新写法 |
 | --- | --- |
-| `crypt($data, $type, $param)` | 新数据用 `Cipher::encrypt()` / `decrypt()`；旧数据用 `LegacyCipher::encrypt()` / `decrypt()` |
+| `crypt($data, $type, $param)` | 新数据用 `Cipher::encrypt()` / `decrypt()`；旧数据用 `DesCipher::encrypt()` / `decrypt()` |
 | `md5($data, $type)` | `Hash::md5($data, HashLength::Full32)` |
-| `token($data, $type)` | 新令牌用 `Token::make()` / `verify()`；旧令牌用 `LegacyToken::encode()` / `decode()` |
+| `token($data, $type)` | 新令牌用 `Token::make()` / `verify()`；旧令牌用 `DesToken::encode()` / `decode()` |
 | `rsapri($data, $type, $param)` | 私钥加密用 `Rsa::privateEncrypt()`；签名与解密用 `Rsa::sign()` / `decrypt()` |
 | `rsapub($data, $type, $param)` | 公钥解密用 `Rsa::publicDecrypt()`；验签与加密用 `Rsa::verify()` / `encrypt()` |
 | `rsapem($data)` | `Rsa::normalizePem()` |
@@ -467,7 +467,7 @@ return Envelope::success($data, '请求成功');
 - 全仓检索点分模式号（形如 `'1.1.2'`）与 `facade.data.where`、`facade.server.echo`，应归零。
 - 旧响应数组的下标访问（`$echo[0]` ~ `$echo[5]`）改为 `Envelope::isSuccess()`、`code()`、`message()`、`data()`、`extend()`、`debug()`。
 - 旧 `\fxapp\Data::field*()` 生成的字符串 SQL 改为 `Data\Sql` 对象，绑定值随对象传递。
-- 加密：旧 `Safe::crypt()` 产出的密文只能用 `Security\LegacyCipher::decrypt()` 读取，新数据统一用 `Cipher`。
+- 加密：旧 `Safe::crypt()` 产出的密文只能用 `Security\DesCipher::decrypt()` 读取，新数据统一用 `Cipher`。
 - 依赖注入：把 `LoggerInterface`、`TranslatorInterface`、HTTP 客户端从门面静态调用改为 `KernelBuilder` 注入。
 - 入口：删除 `\fxyin\App::init()` 与 `autoload.php` 引导，改为 Composer 自动加载 + `KernelBuilder`。
 

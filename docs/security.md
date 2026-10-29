@@ -12,10 +12,10 @@
 | `Hash` | MD5 兼容摘要、口令散列、常量时间比较 |
 | `Rsa` | 跨系统交换密钥时的非对称加密与签名 |
 | `Token` | 自带过期时间的无状态令牌，可配一次性消费 |
-| `LegacyCipher` | 读写 1.x 由单 DES 写下的历史密文 |
-| `LegacyToken` | 读写 1.x 签发的旧格式令牌 |
+| `DesCipher` | 读写 1.x 由单 DES 写下的历史密文 |
+| `DesToken` | 读写 1.x 签发的旧格式令牌 |
 
-选型按「数据要交给谁」分：只由本应用解开的数据用 `Cipher`；要把数据交给对方、或要验证请求确实来自持私钥的一方，用 `Rsa`；只在短消息里携带过期时间与随机标识、又要免存储校验，用 `Token`。`Hash` 与 `LegacyCipher` 属于兼容入口，新数据不应再产生它们对应的格式。
+选型按「数据要交给谁」分：只由本应用解开的数据用 `Cipher`；要把数据交给对方、或要验证请求确实来自持私钥的一方，用 `Rsa`；只在短消息里携带过期时间与随机标识、又要免存储校验，用 `Token`。`Hash` 与 `DesCipher` 属于兼容入口，新数据不应再产生它们对应的格式。
 
 它不替代密钥管理。密钥从环境变量、配置中心或密钥管理服务读取，源码与仓库里只出现占位值；旧口令与签名密钥同理。
 
@@ -131,7 +131,7 @@ var_dump(Hash::equals('abc', 'abc'));   // bool(true)
 
 `make()` 的三条前置校验：`$key` 不能为空串、`$ttl` 必须大于 0、`$bytes` 不得小于 8，违反时抛 `InvalidArgumentException`。`$consume` 是 `callable(string $id): bool`，返回 `true` 表示首次使用，返回其他值视为已使用。
 
-### LegacyCipher
+### DesCipher
 
 只用于读写 1.x 旧数据。旧实现用单 DES，现代 OpenSSL 已移除该算法，这里把口令截断或补零到 8 字节，再重复三份走 `des-ede3-ecb` 等价还原。
 
@@ -140,9 +140,9 @@ var_dump(Hash::equals('abc', 'abc'));   // bool(true)
 | `encrypt(string $plain, ?string $password = null): string` | 按旧格式加密并输出 base64；口令为空或 `null` 抛 `InvalidArgumentException` | `string` |
 | `decrypt(string $payload, ?string $password = null): string` | `$payload` 为旧实现的 base64 密文；口令为空或 `null` 抛 `InvalidArgumentException`，解密失败抛 `RuntimeException` | `string` |
 
-### LegacyToken
+### DesToken
 
-读写 1.x 令牌：数据用逗号包裹、补随机字符到 2 的幂后走 `LegacyCipher`，最终输出十六进制串。新数据请用 `Token`。
+读写 1.x 令牌：数据用逗号包裹、补随机字符到 2 的幂后走 `DesCipher`，最终输出十六进制串。新数据请用 `Token`。
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
@@ -178,7 +178,7 @@ var_dump(Hash::equals('abc', 'abc'));   // bool(true)
 - 一次性语义由 `$consume` 的存储侧实现（例如把 `id` 写入已用集合），`verify()` 本身不记录也不删除任何状态；回调必须严格返回 `true`，返回 `1`、`'ok'` 之类的值会被判为已使用。
 - 过期判断是 `expires < time()`，`expires` 恰好等于当前秒仍算有效，存在不到 1 秒的边界窗口。
 - `Token::verify()` 任何失败都返回 `null`，不区分原因；需要区分「过期」「签名错」「已用」时，请在回调内部记录，不要绕过 `verify()` 自行解析载荷。
-- `LegacyCipher` 没有内置口令，加密与解密都必须显式传入；新数据不要用它写回，它的口令只取前 8 字节并补零，口令变长不会提升强度，只是让同一份旧数据仍能解开。
-- `LegacyToken::decode()` 对格式非法与解密失败一律返回 `null`，不区分原因；需要区分时先自行检查长度与十六进制字符集。
+- `DesCipher` 没有内置口令，加密与解密都必须显式传入；新数据不要用它写回，它的口令只取前 8 字节并补零，口令变长不会提升强度，只是让同一份旧数据仍能解开。
+- `DesToken::decode()` 对格式非法与解密失败一律返回 `null`，不区分原因；需要区分时先自行检查长度与十六进制字符集。
 - 旧令牌的补齐字符是随机串，`decode()` 只按逗号首尾剥离，不校验补齐内容；同一份明文每次 `encode()` 结果都不同。
 - 明文、口令、密钥参数都标了 `#[\SensitiveParameter]`，能避免异常栈泄漏，但不等于可以关闭日志脱敏；记录异常时仍要过滤上下文。

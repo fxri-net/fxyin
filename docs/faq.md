@@ -40,7 +40,7 @@
 
 ### 旧密文还能解密吗
 
-能，仅解密：`LegacyCipher::decrypt($payload, $password)`。新数据一律用 `Cipher::make($key)` 加密，不要再用旧格式写新数据，见[安全](./security)。
+能，仅解密：`DesCipher::decrypt($payload, $password)`。新数据一律用 `Cipher::make($key)` 加密，不要再用旧格式写新数据，见[安全](./security)。
 
 ### 之前返回的六元响应数组呢
 

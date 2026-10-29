@@ -13,7 +13,7 @@ use RuntimeException;
  * 只用于读写 1.x 以单 DES 加密的数据，新数据一律走 Cipher。
  * 现代 OpenSSL 已移除单 DES，这里用三枚子密钥相同的 3DES-EDE 等价还原。
  */
-final class LegacyCipher
+final class DesCipher
 {
     /** 加密算法 */
     private const ALGORITHM = 'des-ede3-ecb';

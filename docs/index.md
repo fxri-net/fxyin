@@ -33,7 +33,7 @@ features:
     details: 条件构造与 MySQL 方言，SQL 片段与绑定参数一并产出，避免手工拼串带来的注入与转义问题。
   - icon: 🔐
     title: 安全能力
-    details: 摘要、对称与非对称加解密、令牌一应俱全；1.x 密文可经 LegacyCipher 平滑迁移，不必一次性重刷数据。
+    details: 摘要、对称与非对称加解密、令牌一应俱全；1.x 密文可经 DesCipher 平滑迁移，不必一次性重刷数据。
   - icon: ✍️
     title: 文本与时间
     details: 字符串切割与拼装、编码转换、IP 换算、时间戳与粒度、UUID 生成，日常处理不必再各写一份。

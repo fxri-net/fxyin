@@ -77,7 +77,7 @@ php tools/upgrade-inspect.php baseline --root=/path/to/project --write --baselin
 - [ ] 数据：`fieldJson`、`fieldText`、`fieldDate`、`fieldDistance`、`fieldInitial`、`fieldDivision`、`fieldAlias`、`fieldEscape`、`paramEmpty` 已替换
 - [ ] 文本：`Text::*`、`Math::rand`、`Time::duration` / `milliFormat` / `milliParse`、`Uuid::format` 已替换
 - [ ] 文件：`File::getList` → `findFiles`，`getMediaInfo` → `VideoInfo`，`moveDirectory`、`deleteDirectory` 已替换
-- [ ] 安全：`Safe::*` 已替换，旧密文用 `LegacyCipher`、旧令牌用 `LegacyToken`
+- [ ] 安全：`Safe::*` 已替换，旧密文用 `DesCipher`、旧令牌用 `DesToken`
 - [ ] HTTP：`Server::*`、`Client::*`（含 `RequestInput`）、`View::*` 已替换
 - [ ] 客户端：`Service::http` / `httpDown` 用 `HttpClient\Curl`
 - [ ] 命令行：`Param::init` 用 `Application\Cli` + `Bootstrap::withCliArguments()`
@@ -141,7 +141,7 @@ php tools/upgrade-inspect.php baseline --root=/path/to/project --check --baselin
 - [ ] 入口可切回旧 `bootstrap.php`
 - [ ] Composer 约束可退回 `^1.6`
 - [ ] 数据库未做不可逆变更
-- [ ] 旧密文仍可通过 `LegacyCipher` 解密
+- [ ] 旧密文仍可通过 `DesCipher` 解密
 - [ ] 对外响应协议未与框架升级捆绑
 
 ## 十三、常见卡点
