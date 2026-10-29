@@ -119,6 +119,23 @@ final class UpgradeInspectTest extends TestCase
     }
 
     /**
+     * 由 1.x 引导文件启动的项目应识别为风音原生入口。
+     */
+    public function testProfileOfFxriNativeEntry(): void
+    {
+        $root = $this->makeProject('fxri-native');
+        $this->write($root . '/index.php', '<?php require $root . "extend/fxri/bootstrap.php";');
+        $this->write($root . '/extend/fxri/bootstrap.php', '<?php');
+        $this->write($root . '/app/controller/Index.php', '<?php \fxapp\Base::config("app.name");');
+
+        [$code, $output] = $this->runTool(['profile', '--root=' . $root, '--json']);
+        self::assertSame(0, $code, $output);
+        $data = json_decode($output, true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($data);
+        self::assertSame('风音 1.x 原生入口', $data['framework']);
+    }
+
+    /**
      * 扫描应统计旧 API，并排除框架本体目录。
      */
     public function testScanCountsOldApiAndSkipsFrameworkBase(): void
@@ -133,6 +150,7 @@ final class UpgradeInspectTest extends TestCase
         $data = json_decode($output, true, 512, JSON_THROW_ON_ERROR);
         self::assertIsArray($data);
         self::assertSame(3, $data['counts']['fxapp']);
+        self::assertSame([], $data['localOnlyMethods']);
         self::assertSame(1, $data['counts']['echo_indexes']);
         self::assertSame(1, $data['counts']['dot_codes']);
         self::assertSame(1, $data['counts']['is_functions']);

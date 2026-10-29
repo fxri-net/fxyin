@@ -425,7 +425,7 @@ function scanProject(string $root): array
         'counts' => $counts,
         'byDirectory' => $byDirectory,
         'topMethods' => $topMethods,
-        'localOnlyMethods' => $localOnly,
+        'localOnlyMethods' => [] === $localOnly ? new stdClass() : $localOnly,
     ];
 }
 
@@ -637,11 +637,38 @@ function detectFramework(string $root, ?array $lock, string $composerRaw): strin
     if (is_dir($root . '/vendor/topthink/framework')) {
         return 'ThinkPHP（vendor 目录）';
     }
+    if (hasFxriBootstrap($root)) {
+        return '风音 1.x 原生入口';
+    }
     if (hasCustomEntry($root)) {
         return '非 ThinkPHP（自定义入口）';
     }
 
     return '未识别';
+}
+
+/**
+ * 判断入口是否由 1.x 引导文件启动。
+ *
+ * 要求 `extend/fxri/bootstrap.php` 存在且入口确实引用 `bootstrap.php`，
+ * 避免 2.x 项目入口里出现包名时被误判。
+ *
+ * @param string $root 项目根
+ * @return bool 是否 1.x 原生引导
+ */
+function hasFxriBootstrap(string $root): bool
+{
+    if (!is_file($root . '/extend/fxri/bootstrap.php')) {
+        return false;
+    }
+    foreach (['index.php', 'public/index.php'] as $candidate) {
+        $file = $root . '/' . $candidate;
+        if (is_file($file) && str_contains((string) file_get_contents($file), 'bootstrap.php')) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**
