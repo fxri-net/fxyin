@@ -347,7 +347,29 @@ final class LegacyResponse
 - 这类方法不属于「项目扩展方法」：后者定义在 `facade_ext` 里，随扩展目录迁移；前者寄生在框架副本内，只在副本存在时可用。
 - 删除副本前先跑一次基线，确认引用点全部有替代，再执行删除。
 
-## 十、删除顺序
+## 十、框架副本的通用改动落点
+
+组织内多套 1.x 项目共用同一份就地改造过的框架副本。逐文件比对后，副本改动可归并为 13 类，其中多数在各项目上完全一致，按本表统一处置即可，不必逐仓重做分析。
+
+| 副本改动 | 实际行为 | 2.0 落点 |
+| --- | --- | --- |
+| `facade/Server.php`：`store` 倒序 + `echo` 兜底 `?? []` | 响应栈按后进先出取值，缺失时返回空数组 | `Http\Envelope`；旧协议由 `Envelope::toArray()` 承接 |
+| `facade/Text.php`：`implode()` 支持数组、去重与方括号形式 | 把数组拼成可复用的查询串片段 | `Text\Str::implode()`，已带 `$unique` 参数 |
+| `facade/Param.php`：命令行入参前缀由 `-` 改为 `@`，并清理 `argv` | 用 `@` 标记入参且不污染原始参数 | `Application\Cli` 与 `Bootstrap::withCliArguments()` |
+| `frame/App.php`：启动去重（`load` 与 `start` 两段各自缓存） | 避免重复加载文件与重复启动应用 | `Application\Bootstrap` 与 `Services` |
+| `facade/Data.php`：模糊匹配支持逗号多值与转义 | 多值模糊查询，反斜杠与引号转义 | `Sql\WhereBuilder::like()`，转义由构建器负责 |
+| `config/env.php`：语言只取 `HTTP_LANG` 与自动侦测 | 去掉对 `view` 参数解码的依赖 | `Translation\LocaleResolver::resolve()` |
+| `function/common.php`：函数返回补 `true` | 修正返回值 | 项目函数迁入 `autoload.files` 或改为项目类方法 |
+| `facade/Service.php`：`http()` 增加 `$option` 形参 | 透传 cURL 选项 | `HttpClient\Client` 搭配 `CurlOptions` |
+| `facade/Client.php`：UA 缺失时回退空串而非 null | 避免 null 参与字符串比较 | `Http\ClientInfo::userAgent()` |
+| `frame/Env.php`、`frame/Config.php`：`explode` 前补 `strval` | 兼容非字符串入参 | 2.0 方法已强制 `string` 参数，无需迁移 |
+| `facade/File.php`：新增 `createDirectory()` | 创建目录 | `File\Filesystem::createDirectory()` |
+| `facade/Base.php`：新增 `langRange` / `langDetect` / `langSet` / `langCookieExpire`，`?` 前缀的 `has`/`get` | 语言作用域、探测、设置与 Cookie 过期 | `Translation\Language` 与 `LocaleResolver` |
+| `app/controller/*.php` 转发类：仅 PHPDoc 可空标注与新增方法声明 | 无行为变化 | 转发类整体删除，调用改为 `Fxri\…` 或项目门面 |
+
+另有约两成差异等于 1.5 / 1.6 官方版本内容，直接采用官方实现即可，不进入上表。
+
+## 十一、删除顺序
 
 1. 备份 `extend/fxri` 与部署包，记录当前 PHP 与宿主版本。
 2. 补 `composer.json` 与自动加载，装入 `fxri/fxyin:^2.0`。
@@ -359,7 +381,7 @@ final class LegacyResponse
 8. 清理 Composer 里为旧目录保留的映射。
 9. 运行基线，确认 `\fxapp\` 与点分模式号归零。
 
-## 十一、验收
+## 十二、验收
 
 1. 全仓检索 `extend/fxri/base`、`\fxapp\`、`\fxyin\`、`fxy_`、点分模式号，除过渡层外归零。
 2. `config/` 下每个文件只返回数组，不调用函数、不读超全局变量。
@@ -367,7 +389,7 @@ final class LegacyResponse
 4. `upgrade-inspect.php baseline --check` 零新增。
 5. 过渡层调用量持续下降；归零后删除 `\fxapp\` 命名空间与映射。
 
-## 十二、红线
+## 十三、红线
 
 1. 不把 `safe` / `safe_local` 混进 fxyin 的删除与迁移。
 2. 不在同一提交里既删旧目录又改对外响应协议。
