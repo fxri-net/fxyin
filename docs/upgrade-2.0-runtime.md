@@ -120,6 +120,10 @@ final class Exception extends \think\exception\Handle
 
 宿主若没有全局 `json()` 助手，用 `\think\Response::create($envelope->toArray(), 'json')` 等价构造。
 
+### ThinkPHP 8
+
+ThinkPHP 8 的接入与 6 完全一致：同样先 `require vendor/autoload.php`，再 `new \think\App()`、`ThinkPHPAdapter::bind()`、`$app->http->run()`。差异只有 PHP 最低版本（8.0 起）：fxyin 2.x 本身要求 8.2，因此以 8.2 为准，无需额外的宿主适配。
+
 ## 四、宿主为 ThinkPHP 5
 
 ThinkPHP 5 的容器同样提供 `instance()` 与 `make()`，`ThinkPHPAdapter::bind()` 与 `kernel()` 可以直接使用。差别主要在启动代码与异常处理的签名，保留宿主原有启动方式即可：
@@ -200,6 +204,7 @@ echo $request->path();
 | 1.x 形态 | 2.0 处理 |
 | --- | --- |
 | 入口引用 `extend/fxri/bootstrap.php` | 删除该文件，把三行引导并入入口 |
+| 入口自行解析 `REQUEST_URI`（手写路由） | 按「宿主为非 ThinkPHP」处理：`KernelHolder` 持有内核，原路由与分发代码保持不变 |
 | 入口直接 `require extend/fxri/base/autoload.php` | 改为 `require vendor/autoload.php` + `KernelBuilder` |
 | 根 `index.php` 与 `public/index.php` 同时存在 | 以实际 Web 根为准，另一个入口同步改造或删除 |
 | `extend/fxri/base` 随仓库入库 | 整目录删除；不要保留空目录或旧 `autoload.php` |
