@@ -27,6 +27,14 @@
 /.trae export-ignore
 /.agents export-ignore
 
+# 本地安装产物与工具缓存不随包分发
+/node_modules export-ignore
+/vendor export-ignore
+/composer.lock export-ignore
+/.phpunit.cache export-ignore
+/.screenshots export-ignore
+/.php-cs-fixer.cache export-ignore
+
 # 内置资源按 1.6.1 原始字节分发，固定 LF，避免平台自动转换造成哈希不一致
 /resources/language/** text eol=lf
 /resources/config/** text eol=lf
