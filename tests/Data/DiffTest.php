@@ -34,6 +34,37 @@ final class DiffTest extends TestCase
     }
 
     /**
+     * 整数与浮点严格比较，1 与 1.0 算变化。
+     */
+    public function testIntegerVsFloat(): void
+    {
+        self::assertSame(['age'], Diff::make(['age' => 1.0], ['age' => 1])->keys());
+    }
+
+    /**
+     * 嵌套数组键序不同也算变化：=== 对数组键序敏感。
+     */
+    public function testNestedKeyOrder(): void
+    {
+        $diff = Diff::make(
+            ['tags' => ['a' => 1, 'b' => 2]],
+            ['tags' => ['b' => 2, 'a' => 1]],
+        );
+
+        self::assertSame(['tags'], $diff->keys());
+    }
+
+    /**
+     * 嵌套数组键序与值都一致时没有变化。
+     */
+    public function testNestedSame(): void
+    {
+        $this->expectException(SameDataException::class);
+
+        Diff::make(['tags' => ['a' => 1, 'b' => 2]], ['tags' => ['a' => 1, 'b' => 2]]);
+    }
+
+    /**
      * 旧数据多出的键算变化，但不出现在新值集合里。
      */
     public function testRemovedKey(): void

@@ -209,7 +209,7 @@ var_export($diff->keys());      // array ( 0 => 'name', 1 => 'remark' )
 - `Tree::fromList()` 主键重复时后出现的行覆盖先出现的行；列表项不是数组、缺少主键、父级不是整数或字符串都会抛 `InvalidArgumentException`。
 - 父级不存在、父级等于自身、父级等于 `$rootId` 的行都保留为根节点；环状父子关系没有入口，会被兜底提到顶层，保证往返不丢数据。
 - `Tree::toList()` 按前序展开，节点或子级不是数组时抛 `InvalidArgumentException`；`fromList()` 的结果转回列表后不再含 `_child` 键。
-- `Diff::make()` 用 `===` 比较，`'1'` 与 `1`、`1` 与 `1.0` 都算变化；`changes()` 不含被删除的键，`keys()` 含，删除场景只看 `keys()` 会拿到旧键名。
+- `Diff::make()` 用 `===` 逐键比较，`'1'` 与 `1`、`1` 与 `1.0` 都算变化；嵌套数组按键序参与比较，`['a' => 1, 'b' => 2]` 与 `['b' => 2, 'a' => 1]` 算变化；`changes()` 不含被删除的键，`keys()` 含，且先列变化键、再列被删除键。
 - 无变化时 `Diff::make()` 直接抛 `SameDataException`（继承 `RuntimeException`），不要写成「返回空数组」的用法。
 - `Html::escape()` 使用 `ENT_NOQUOTES`，单双引号保持原样；不重复编码已有实体，同一值多次转义不会叠加成 `&amp;amp;`。
 - `Html::strip()` 的 `$allowed` 传 `null` 表示去掉全部标签，数组元素递归时沿用同一份白名单。
