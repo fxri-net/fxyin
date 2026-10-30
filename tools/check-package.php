@@ -18,6 +18,7 @@ const EXPORT_IGNORED_PATHS = [
     '/.tasks',
     '/.trae',
     '/.agents',
+    '/AGENTS.md',
     '/.changeset',
     '/docs',
     '/scripts',

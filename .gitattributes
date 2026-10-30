@@ -26,6 +26,7 @@
 /.tasks export-ignore
 /.trae export-ignore
 /.agents export-ignore
+/AGENTS.md export-ignore
 
 # 本地安装产物与工具缓存不随包分发
 /node_modules export-ignore
