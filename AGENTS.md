@@ -12,7 +12,7 @@
 3. **skills**：`skills/` 下 `SKILL.md` 与 `references/` 同步新能力/新流程；每个 `SKILL.md` 的版本写两处且须一致——frontmatter 的 `metadata.version`（机器读取位）与正文首部 `> 本技能版本 x.y.z（随 fxri/fxyin 同批分发）`（进上下文的自证位）；内容变更时同步递增（小修 +patch，能力级 +minor）。
 4. **变更集**：凡影响对外行为的变更，任务归档前必须在 `.changeset/` 建变更集（标注 patch/minor/major 并写用户可感知的描述，条目须逐条以 `- 类型：描述` 书写，`- ` 列表标记让每条独立成项，`类型：` 前缀作归类信号，前缀表见 `skills/fxri-release-changelog/SKILL.md`）；归档时出现「无变更集」提示即视为本质量门未过。
 5. **全局规则薄引用**：可变流程细节只进 skills，不在用户手动复制的规则快照里复述；技能随包同源分发，升级即生效。
-6. **规则层更新锚点**：本仓仅 `AGENTS.md` 承载本规则，不复制 `SPEC.md`、`docs/ai-rules.md`、`docs/commit-rules.md` 等外部载体；内容变更须同步刷新本文件首行更新时间。
+6. **规则层更新锚点**：本仓仅 `AGENTS.md` 承载本规则，不复制 `SPEC.md`、`docs/ai-rules.md`、`docs/commit-rules.md` 等外部载体；内容变更须与触发它的能力变更同批落盘。
 
 ### conventions 同步
 
@@ -25,7 +25,7 @@
 - 跑 `pnpm verify`——**单一步骤清单真源**，步骤定义在 `scripts/verify.mjs`，本地与 CI 调用同一份；**禁止在本文或 CI 配置里另写步骤枚举**，那是清单漂移的根因。任一步失败即不得交付。
 - `toolkit tasks check` 的 error 与 warn 均应为 0（除非任务规格另有豁免）。
 - grep 确认文档与 skills 措辞落地。
-- 涉及配置递归、IDE 元数据等工具能力时，另跑 `php tools/build-meta.php --check` 与对应单测。
+- 涉及配置递归、IDE 元数据等工具能力时，另跑对应单测。
 
 ## 协作流程约束
 
@@ -53,4 +53,4 @@
 ## 本仓库能力自举
 
 - skills：需要查阅技能指引时，直接读仓库内 `skills/` 下的 `SKILL.md` 与 `references/`，全局副本仅在发版后同步，仓库内与全局不一致时以仓库内为准。
-- 工具：`php tools/upgrade-inspect.php`（profile/scan/baseline）、`php tools/build-meta.php`、`composer meta:check` 与 `composer meta`；CLI 帮助以脚本内 `usage()` 为准。
+- 工具：`php tools/upgrade-inspect.php`（profile/scan/baseline）、`php tools/install-skills.php`（`--target`、`--check`、`--root`）、`php tools/no-numeric-code.php`、`php tools/check-package.php`、`php tools/parity-audit.php`；CLI 帮助以脚本内 `usage()` 或其文件头注释为准。
