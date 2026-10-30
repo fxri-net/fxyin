@@ -1,15 +1,17 @@
 ---
 name: fxri-fxyin
 description: 风音框架（fxri/fxyin）的接入与日常使用：安装、KernelBuilder 内核装配、配置目录递归与覆盖规则、Envelope 五键响应信封与分页壳、Param/Data/Text/File/Http 常用 API，以及 `.phpstorm.meta.php` 元数据生成。用户提到 fxyin、风音框架、fxri/fxyin、KernelBuilder、内核装配、只读内核、配置叠加、点号路径取值、五键信封、Envelope、分页壳、Page、参数定形、Shape、字段表达式、文本与时间、文件路径、Cookie 签名、IDE 补全、phpstorm.meta.php、MetaGenerator、Intelephense 时使用；英文说法如 fxyin setup、kernel builder、config loader、response envelope、API cheat sheet 同样适用。不用于 1.x 升级 2.x（走 fxri-fxyin-upgrade），不用于业务项目的具体取舍、框架源码改造或发版流程。
-license: MIT
+license: Apache-2.0
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   author: fxri
   source: https://github.com/fxri-net/fxyin
 ---
 
 # 风音框架接入与使用
 
+> 本技能版本 1.0.1（随 fxri/fxyin 同批分发）。
+>
 > 本技能随 `fxri/fxyin` 仓库分发，只承载框架通用能力。业务项目的取舍（目录规划、门面去留、响应协议变更）属于项目自身决策，以项目任务记录为准，不写进本技能。
 
 ## 何时使用
