@@ -1,0 +1,119 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * 风音框架命令行入口。
+ *
+ * 仓库内执行 `php fxyin <命令>`；接入项目经 Composer bin 调用 `vendor/bin/fxyin`。
+ * 帮助、解析与退出码语义集中在 Fxri\Tooling\Cli，本文件只做加载、打印与分发。
+ */
+
+/**
+ * 以子进程执行命令域的实现脚本，透传退出码。
+ *
+ * @param string $root 包根目录
+ * @param string $script 相对包根的脚本路径
+ * @param list<string> $args 透传给脚本的参数
+ * @return int 脚本退出码
+ */
+function runScript(string $root, string $script, array $args): int
+{
+    $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($root . '/' . $script);
+    foreach ($args as $argument) {
+        $command .= ' ' . escapeshellarg($argument);
+    }
+    passthru($command, $code);
+
+    return is_int($code) ? $code : 1;
+}
+
+$root = __DIR__;
+
+$autoload = null;
+$injected = $GLOBALS['_composer_autoload_path'] ?? null;
+if (is_string($injected) && '' !== $injected) {
+    $autoload = $injected;
+}
+// 仓库内直接执行时没有 Composer bin 代理，回落到本仓 vendor；已安装时回落到项目 vendor
+foreach ([$root . '/vendor/autoload.php', dirname($root, 2) . '/autoload.php'] as $candidate) {
+    if (null !== $autoload) {
+        break;
+    }
+    if (is_file($candidate)) {
+        $autoload = $candidate;
+    }
+}
+if (null === $autoload) {
+    fwrite(STDERR, '未找到自动加载文件，请先执行 composer install' . PHP_EOL);
+
+    exit(2);
+}
+require_once $autoload;
+
+$argv = $_SERVER['argv'] ?? [];
+$binary = $argv[0] ?? 'fxyin';
+$plan = Fxri\Tooling\Cli::parse($argv);
+
+$missing = Fxri\Tooling\Cli::missingShipped($root);
+if ([] !== $missing) {
+    fwrite(STDERR, '安装包缺少随包命令的实现文件：' . implode('、', $missing) . PHP_EOL);
+
+    exit(2);
+}
+
+if ('' !== $plan['error']) {
+    fwrite(STDERR, $plan['error'] . PHP_EOL . '运行 php ' . $binary . ' help 查看用法' . PHP_EOL);
+
+    exit(2);
+}
+
+if ('help' === $plan['action']) {
+    $topic = $plan['topic'];
+    if ('' === $topic || 'help' === $topic) {
+        echo Fxri\Tooling\Cli::usage($binary, $root);
+
+        exit(0);
+    }
+    if (!isset(Fxri\Tooling\Cli::COMMANDS[$topic])) {
+        fwrite(STDERR, '未知命令：' . $topic . PHP_EOL . '运行 php ' . $binary . ' help 查看用法' . PHP_EOL);
+
+        exit(2);
+    }
+    if ('skills' === $topic) {
+        echo Fxri\Tooling\SkillsCommand::usage($binary);
+
+        exit(0);
+    }
+    // 其余命令的帮助交给实现层输出，避免两处文案漂移
+    $script = Fxri\Tooling\Cli::COMMANDS[$topic]['script'];
+    if (!is_string($script)) {
+        fwrite(STDERR, '命令缺少实现：' . $topic . PHP_EOL);
+
+        exit(2);
+    }
+
+    exit(runScript($root, $script, ['--help']));
+}
+
+if ('skills' === $plan['command']) {
+    $result = Fxri\Tooling\SkillsCommand::run($plan['args'], (string) getcwd());
+    foreach ($result['out'] as $line) {
+        echo $line, PHP_EOL;
+    }
+    foreach ($result['err'] as $line) {
+        fwrite(STDERR, $line . PHP_EOL);
+    }
+
+    exit($result['code']);
+}
+
+$script = Fxri\Tooling\Cli::COMMANDS[$plan['command']]['script'];
+if (!is_string($script)) {
+    fwrite(STDERR, '命令缺少实现：' . $plan['command'] . PHP_EOL);
+
+    exit(2);
+}
+
+exit(runScript($root, $script, $plan['args']));

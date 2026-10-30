@@ -12,7 +12,9 @@ declare(strict_types=1);
  *
  * Integration 目录列入白名单：转译外部协议时可能必须读取对方规定的数字码。
  *
- * 用法：php tools/no-numeric-code.php [扫描目录]
+ * 用法：php fxyin scan [扫描目录]
+ *
+ * 实现层：由根入口 fxyin 的 scan 域调用，也可直接执行本文件。
  */
 
 /** 白名单目录名，命中即整目录跳过 */
@@ -92,6 +94,20 @@ function scanCode(string $path, string $code): array
     }
 
     return $violations;
+}
+
+if (in_array('--help', $argv, true) || in_array('-h', $argv, true)) {
+    echo <<<'TEXT'
+        php fxyin scan [扫描目录]
+
+        扫描 PHP 文件中的数字分支、点分数字串，以及以 int $mode/$type/$style/$case 选择行为的公共方法。
+        缺省扫描 src；Integration 目录列入白名单。
+
+        退出码：0 通过 / 1 命中违规 / 2 目录不存在
+
+        TEXT;
+
+    exit(0);
 }
 
 $root = $argv[1] ?? 'src';

@@ -7,7 +7,9 @@ declare(strict_types=1);
  *
  * 校验 v1.6.1 能力快照结构完整、计数正确、每一项都有 v2 目标与状态。
  *
- * 用法：php tools/parity-audit.php
+ * 用法：php fxyin parity
+ *
+ * 实现层：由根入口 fxyin 的 parity 域调用，也可直接执行本文件；本仓专用，不随包分发。
  */
 
 /** 允许的状态 */
@@ -22,8 +24,21 @@ const EXPECTED = [
     'config_resources' => 4,
 ];
 
+if (in_array('--help', $argv, true) || in_array('-h', $argv, true)) {
+    echo <<<'TEXT'
+        php fxyin parity
+
+        校验 1.6.1 能力快照结构完整、计数正确、每一项都有 v2 目标与状态。
+
+        退出码：0 通过 / 1 审计失败
+
+        TEXT;
+
+    exit(0);
+}
+
 $root = dirname(__DIR__);
-$file = $root . '/tests/Parity/legacy-api.json';
+$file = $root . '/resources/parity/legacy-api.json';
 $raw = is_file($file) ? file_get_contents($file) : false;
 if (false === $raw) {
     fwrite(STDERR, '无法读取对等快照：' . $file . PHP_EOL);

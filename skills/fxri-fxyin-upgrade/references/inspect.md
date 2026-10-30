@@ -1,6 +1,6 @@
 # 体检验收工具
 
-`tools/upgrade-inspect.php` 是随仓库分发的 1.x 升级体检工具，不进入 Composer 安装包。它只读：不 `include` 项目文件、不执行 Composer、不修改被测项目。
+`php vendor/bin/fxyin upgrade` 是随包分发的 1.x 升级体检工具（仓库内为 `php fxyin upgrade`）。它只读：不 `include` 项目文件、不执行 Composer、不修改被测项目。
 
 ## 三个子命令
 
@@ -14,12 +14,12 @@
 
 ```bash
 # 画像与统计，缺省输出 Markdown；--json 与 --markdown 只能选一个
-php tools/upgrade-inspect.php profile --root=<项目> --markdown
-php tools/upgrade-inspect.php scan    --root=<项目> --markdown
+php vendor/bin/fxyin upgrade profile --root=<项目> --markdown
+php vendor/bin/fxyin upgrade scan    --root=<项目> --markdown
 
 # 基线：--write 生成，--check 校验，两者必选其一且必须显式给 --baseline
-php tools/upgrade-inspect.php baseline --root=<项目> --write --baseline=<文件>
-php tools/upgrade-inspect.php baseline --root=<项目> --check --baseline=<文件>
+php vendor/bin/fxyin upgrade baseline --root=<项目> --write --baseline=<文件>
+php vendor/bin/fxyin upgrade baseline --root=<项目> --check --baseline=<文件>
 ```
 
 | 参数 | 说明 |

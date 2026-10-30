@@ -27,9 +27,9 @@ outline: [2, 3]
 - [ ] 选一个非生产环境或可快速回滚的实例做试点
 
 ```bash
-php tools/upgrade-inspect.php profile --root=/path/to/project --markdown
-php tools/upgrade-inspect.php scan --root=/path/to/project --markdown
-php tools/upgrade-inspect.php baseline --root=/path/to/project --write --baseline=/path/to/project/upgrade-baseline.json
+php fxyin upgrade profile --root=/path/to/project --markdown
+php fxyin upgrade scan --root=/path/to/project --markdown
+php fxyin upgrade baseline --root=/path/to/project --write --baseline=/path/to/project/upgrade-baseline.json
 ```
 
 ## 三、阶段 1：环境与依赖
@@ -130,7 +130,7 @@ php tools/upgrade-inspect.php baseline --root=/path/to/project --write --baselin
 校验：
 
 ```bash
-php tools/upgrade-inspect.php baseline --root=/path/to/project --check --baseline=/path/to/project/upgrade-baseline.json
+php fxyin upgrade baseline --root=/path/to/project --check --baseline=/path/to/project/upgrade-baseline.json
 ```
 
 规则：任一目录的计数高于基线即失败；低于基线时提示下调基线。迁移完成后基线归零，可删除文件。

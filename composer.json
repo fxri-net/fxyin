@@ -54,6 +54,9 @@
             "Fxri\\Tests\\": "tests/"
         }
     },
+    "bin": [
+        "fxyin"
+    ],
     "extra": {
         "branch-alias": {
             "dev-main": "2.x-dev"
@@ -77,9 +80,9 @@
         "stan": "phpstan analyse --no-progress",
         "stan:deprecation": "phpstan analyse --no-progress -c phpstan-deprecation.neon",
         "test": "phpunit",
-        "scan": "@php tools/no-numeric-code.php",
-        "package": "@php tools/check-package.php",
-        "parity": "@php tools/parity-audit.php",
-        "upgrade:inspect": "@php tools/upgrade-inspect.php"
+        "scan": "@php fxyin scan",
+        "package": "@php fxyin package",
+        "parity": "@php fxyin parity",
+        "upgrade:inspect": "@php fxyin upgrade"
     }
 }

@@ -70,20 +70,28 @@ diff -r backup/extend/fxri/base project/extend/fxri/base
 
 ### 体检命令
 
-体检工具随仓库分发，不进入 Composer 安装包。先检出框架仓库，再对目标项目只读运行：
+体检工具随包分发，接入项目装好 `fxri/fxyin` 后直接用 Composer bin 调用：
+
+```bash
+# 项目画像：PHP、宿主框架、入口、扩展模块、调用量档位与阻塞项
+php vendor/bin/fxyin upgrade profile --root=. --markdown
+
+# 旧 API 统计：按目录与能力域给出替换建议
+php vendor/bin/fxyin upgrade scan --root=. --markdown
+
+# 生成只减不增的基线文件
+php vendor/bin/fxyin upgrade baseline --root=. --write --baseline=upgrade-baseline.json
+```
+
+尚未接入 2.x 的项目，也可以检出框架仓库后把 `vendor/bin/fxyin` 换成 `php fxyin`，对目标项目只读运行：
 
 ```bash
 git clone https://github.com/fxri-net/fxyin.git
 cd fxyin
 
-# 项目画像：PHP、宿主框架、入口、扩展模块、调用量档位与阻塞项
-php tools/upgrade-inspect.php profile --root=/path/to/project --markdown
-
-# 旧 API 统计：按目录与能力域给出替换建议
-php tools/upgrade-inspect.php scan --root=/path/to/project --markdown
-
-# 生成只减不增的基线文件
-php tools/upgrade-inspect.php baseline --root=/path/to/project --write --baseline=/path/to/project/upgrade-baseline.json
+php fxyin upgrade profile --root=/path/to/project --markdown
+php fxyin upgrade scan --root=/path/to/project --markdown
+php fxyin upgrade baseline --root=/path/to/project --write --baseline=/path/to/project/upgrade-baseline.json
 ```
 
 工具只读，不会 `include` 项目文件，也不会执行 Composer。

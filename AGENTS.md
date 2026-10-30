@@ -6,7 +6,7 @@
 
 任何影响对外行为的变更——新增/修改/删除类、方法、配置键、`tools/` 命令与参数、响应与错误口径、skills 内容、文档中对其的结构性描述——在任务归档前必须完成三方复核，与 `toolkit tasks check` 同为不可绕过的质量门：
 
-1. **能力自身**：源码实际行为、单元测试、`tools/` 命令帮助与 PHPDoc 三者一致。测试不得复刻被测实现的逻辑，派生与镜像类断言须直接调用真实实现。
+1. **能力自身**：源码实际行为、单元测试、命令域（`tools/` 或 `src/Tooling`）的帮助与 PHPDoc 三者一致。测试不得复刻被测实现的逻辑，派生与镜像类断言须直接调用真实实现。
 2. **文档**：`docs/` 下全部 `.md` 与根 `README.md` 逐篇过触达面（不在此枚举清单，避免新增页面后漂移；`docs/changelog.md` 为生成物，只核对镜像结果与源一致）。凡触达处措辞必须与实际行为严格一致，包括「不自动修复」「需人工确认」等限制细节；确认无触达的内容须在对话中明确说明，不得静默跳过。
    ⚠️ **时点约束**：触达面核对在**变更方案确认时**即逐篇走查，结论列入任务文件「影响范围」节（每篇标注 已同步 / 无触达及理由），不延迟到归档时才复核。涉及术语或措辞变更时，先 grep 全仓库定位旧措辞触达点再列清单。
 3. **skills**：`skills/` 下 `SKILL.md` 与 `references/` 同步新能力/新流程；每个 `SKILL.md` 的版本写两处且须一致——frontmatter 的 `metadata.version`（机器读取位）与正文首部 `> 本技能版本 x.y.z（随 fxri/fxyin 同批分发）`（进上下文的自证位）；内容变更时同步递增（小修 +patch，能力级 +minor）。
@@ -53,4 +53,4 @@
 ## 本仓库能力自举
 
 - skills：需要查阅技能指引时，直接读仓库内 `skills/` 下的 `SKILL.md` 与 `references/`，全局副本仅在发版后同步，仓库内与全局不一致时以仓库内为准。
-- 工具：`php tools/upgrade-inspect.php`（profile/scan/baseline）、`php tools/install-skills.php`（`--target`、`--check`、`--root`）、`php tools/no-numeric-code.php`、`php tools/check-package.php`、`php tools/parity-audit.php`；CLI 帮助以脚本内 `usage()` 或其文件头注释为准。
+- 工具：`php fxyin help` 列出全部命令域，`php fxyin <域>` 执行（`upgrade`、`scan`、`package`、`parity`、`skills`）。命令入口只有根 `fxyin` 一个，接入项目经 Composer bin 得到 `vendor/bin/fxyin`；新增工具必须注册为 `src/Tooling/Cli::COMMANDS` 的域，禁止再引入第二套命令行。

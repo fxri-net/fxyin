@@ -9,7 +9,24 @@
 - **不写全局**：只在项目内的目标目录生成文件；全局技能目录由各 agent 自行管理，本工具不触碰。
 - **不覆盖项目自有技能**：同名文件若不带本包标记，视为项目自己写的技能，安装时跳过并报告。
 
-## 最小示例
+## 命令行
+
+接入项目直接用统一入口，不需要自己写脚本：
+
+```bash
+# 安装到默认目录 .agents/skills
+php vendor/bin/fxyin skills
+
+# 同时安装到 Trae 读取的目录
+php vendor/bin/fxyin skills --target .trae/skills
+
+# CI 里只校验不写盘，不一致以 1 退出
+php vendor/bin/fxyin skills --check
+```
+
+仓库内把 `vendor/bin/fxyin` 换成 `php fxyin`。命令总览见[命令行](./cli)。
+
+## 自建入口（可选）
 
 在接入项目里放一个入口脚本，目标目录相对项目根、可传多个：
 
@@ -65,4 +82,4 @@ description: 风音框架（fxri/fxyin）的接入与日常使用：……
 
 - `check()` 只认文本一致：行尾差异已抹平，但多余空行、缩进变化仍判定漂移，改完真源重新安装即可。
 - 薄壳里的 `description` 是触发匹配的原文拷贝；本包升级改了描述而项目没重跑安装时，`check()` 会报不一致，属于预期提醒。
-- 本仓库自带 `tools/install-skills.php`（`--target`、`--check`、`--root`），属开发期入口、不随包分发；接入项目按上面的最小示例自建脚本。本仓库自身的验收命令见[贡献指南](./contributing)。
+- 本仓库自带 `php fxyin skills`（`--target`、`--check`、`--root`），通过 Composer bin 在接入项目里对应 `php vendor/bin/fxyin skills`；上方自建脚本只用于需要定制目标目录以外的场景。本仓库自身的验收命令见[贡献指南](./contributing)。

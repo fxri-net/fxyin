@@ -7,14 +7,17 @@ declare(strict_types=1);
  *
  * 确认开发期目录不会进入 Composer 分发包，并确认 2.x 根目录不再残留 1.x 的 app/。
  *
- * 用法：php tools/check-package.php
+ * 用法：php fxyin package
+ *
+ * 实现层：由根入口 fxyin 的 package 域调用，也可直接执行本文件；本仓专用，不随包分发。
  */
 
 /** 必须从分发包排除的仓库路径 */
 const EXPORT_IGNORED_PATHS = [
     '/.github',
     '/tests',
-    '/tools',
+    '/tools/check-package.php',
+    '/tools/parity-audit.php',
     '/.tasks',
     '/.trae',
     '/.agents',
@@ -40,6 +43,14 @@ const RESOURCE_PATHS = [
     '/resources/config',
 ];
 
+/** 必须随包提供的入口、工具与资源：缺失或误排除即说明打包配置回退 */
+const REQUIRED_SHIPPED = [
+    '/fxyin',
+    '/tools/no-numeric-code.php',
+    '/tools/upgrade-inspect.php',
+    '/resources/parity/legacy-api.json',
+];
+
 /** 内置语言包 */
 const LANGUAGE_FILES = [
     '/resources/language/zh-cn/base.php',
@@ -56,6 +67,20 @@ const CONFIG_FILES = [
     '/resources/config/branch.php',
     '/resources/config/env.php',
 ];
+
+if (in_array('--help', $argv, true) || in_array('-h', $argv, true)) {
+    echo <<<'TEXT'
+        php fxyin package
+
+        校验发布包卫生：开发期文件不进 Composer 分发包、随包入口与工具不得被导出排除、
+        行尾规则固定、1.x 残留目录已清理。
+
+        退出码：0 通过 / 1 检查失败
+
+        TEXT;
+
+    exit(0);
+}
 
 $root = dirname(__DIR__);
 $attributesFile = $root . '/.gitattributes';
@@ -105,7 +130,18 @@ foreach (CONFIG_FILES as $file) {
     }
 }
 
-if ([] !== $missing || [] !== $stale || [] !== $missingResources || [] !== $missingEol) {
+// 随包入口与工具是接入项目使用命令行的前提，被误删或误排除时直接报错
+$missingShipped = [];
+foreach (REQUIRED_SHIPPED as $path) {
+    if (!is_file($root . $path)) {
+        $missingShipped[] = '随包文件缺失：' . $path;
+    }
+    if (1 === preg_match('/^' . preg_quote($path, '/') . '\s+export-ignore$/m', $attributes)) {
+        $missingShipped[] = '随包文件被导出排除：' . $path;
+    }
+}
+
+if ([] !== $missing || [] !== $stale || [] !== $missingResources || [] !== $missingEol || [] !== $missingShipped) {
     fwrite(STDERR, '发布包卫生检查失败：' . PHP_EOL);
     foreach ($missing as $path) {
         fwrite(STDERR, '  - 缺少导出排除：' . $path . PHP_EOL);
@@ -117,6 +153,9 @@ if ([] !== $missing || [] !== $stale || [] !== $missingResources || [] !== $miss
         fwrite(STDERR, '  - 残留 1.x 文件：app/language/' . basename(dirname($file)) . '/' . basename($file) . PHP_EOL);
     }
     foreach ($missingResources as $issue) {
+        fwrite(STDERR, '  - ' . $issue . PHP_EOL);
+    }
+    foreach ($missingShipped as $issue) {
         fwrite(STDERR, '  - ' . $issue . PHP_EOL);
     }
 

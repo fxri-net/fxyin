@@ -5,7 +5,9 @@
 # 发布归档时排除开发期文件，接入方 composer 下载的包只保留运行所需内容
 /.github export-ignore
 /tests export-ignore
-/tools export-ignore
+# tools 只排除本仓自检脚本；升级体检与数字码扫描随包，接入项目可用
+/tools/check-package.php export-ignore
+/tools/parity-audit.php export-ignore
 /.gitattributes export-ignore
 /.gitignore export-ignore
 /.php-cs-fixer.dist.php export-ignore
@@ -39,3 +41,5 @@
 # 内置资源按 1.6.1 原始字节分发，固定 LF，避免平台自动转换造成哈希不一致
 /resources/language/** text eol=lf
 /resources/config/** text eol=lf
+# 对等矩阵随包分发，接入项目的 upgrade 需要读取，按 LF 固定保证逐字节可比
+/resources/parity/** text eol=lf

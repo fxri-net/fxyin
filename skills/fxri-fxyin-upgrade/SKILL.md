@@ -3,14 +3,14 @@ name: fxri-fxyin-upgrade
 description: 风音框架 1.x 升级 2.x 的迁移指引：体检画像、旧 API 统计、只减不增基线、S/M/L 路线选择、八个阶段与验收回滚，以及门面与 Param/Data/Text/Client/Server 的旧新写法映射。用户提到 1.x 升级 2.0、升级风音框架、迁移到 fxri/fxyin、门面移除、\fxapp\、\fxyin\、fxy_echo、fxy_config、fxy_env、点分模式号、六元响应数组、extend/fxri/base、extend/fxri/data、对等矩阵、基线、baseline、旧 API 扫描时使用；英文说法如 upgrade fxyin、migrate 1.x to 2.x、legacy facade、baseline check 同样适用。不用于升级后的日常接入与响应配置细节（走 fxri-fxyin），不用于业务项目的迁移取舍或发版流程。
 license: Apache-2.0
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   author: fxri
   source: https://github.com/fxri-net/fxyin
 ---
 
 # 1.x 升级 2.x
 
-> 本技能版本 1.0.1（随 fxri/fxyin 同批分发）。
+> 本技能版本 1.0.2（随 fxri/fxyin 同批分发）。
 >
 > 本技能只承载框架通用的迁移步骤与对照关系。升级后的响应结构、配置加载写法统一指回 `fxri-fxyin` 技能与仓库 `docs/`，此处不重复。业务项目的迁移优先级、过渡层去留、对外协议变更排期属于项目自身决策，以项目任务记录为准。
 
@@ -36,23 +36,20 @@ metadata:
 
 ## 常用命令
 
-体检工具随框架仓库分发，不进入 Composer 安装包；先检出仓库，再对目标项目只读运行。
+体检工具随包分发：接入项目装好 `fxri/fxyin` 后用 `php vendor/bin/fxyin upgrade`；尚未接入的项目检出框架仓库，用 `php fxyin upgrade`，对目标项目只读运行。
 
 ```bash
-git clone https://github.com/fxri-net/fxyin.git
-cd fxyin
-
 # 项目画像：PHP、宿主框架、入口、扩展模块、调用量档位与阻塞项
-php tools/upgrade-inspect.php profile --root=<项目> --markdown
+php vendor/bin/fxyin upgrade profile --root=<项目> --markdown
 
 # 旧 API 统计：按目录与能力域给出替换建议
-php tools/upgrade-inspect.php scan --root=<项目> --markdown
+php vendor/bin/fxyin upgrade scan --root=<项目> --markdown
 
 # 生成只减不增的基线
-php tools/upgrade-inspect.php baseline --root=<项目> --write --baseline=<文件>
+php vendor/bin/fxyin upgrade baseline --root=<项目> --write --baseline=<文件>
 
 # 校验基线：任一目录高于基线即失败，可直接用于流水线门禁
-php tools/upgrade-inspect.php baseline --root=<项目> --check --baseline=<文件>
+php vendor/bin/fxyin upgrade baseline --root=<项目> --check --baseline=<文件>
 ```
 
 ## 边界声明

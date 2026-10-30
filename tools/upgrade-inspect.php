@@ -11,9 +11,11 @@ declare(strict_types=1);
  *   scan     旧 API 统计：\fxapp\*、$echo[n]、点分模式号、is_*、fxy_*、\fxyin\
  *   baseline 生成或校验只减不增的基线
  *
- * 用法：php tools/upgrade-inspect.php <profile|scan|baseline> --root=<项目> [--json|--markdown]
- *      php tools/upgrade-inspect.php baseline --root=<项目> --write --baseline=<文件>
- *      php tools/upgrade-inspect.php baseline --root=<项目> --check --baseline=<文件>
+ * 用法：php fxyin upgrade <profile|scan|baseline> --root=<项目> [--json|--markdown]
+ *      php fxyin upgrade baseline --root=<项目> --write --baseline=<文件>
+ *      php fxyin upgrade baseline --root=<项目> --check --baseline=<文件>
+ *
+ * 实现层：由根入口 fxyin 的 upgrade 域调用；接入项目通过 vendor/bin/fxyin upgrade 使用。
  */
 
 /** 1.x 扩展配置：应用目录写在 env.base.app */
@@ -32,7 +34,7 @@ const DATA_DIRECTORY = 'extend/fxri/data';
 const FALLBACK_APP_DIRECTORIES = ['app', 'application'];
 
 /** 对等矩阵：升级建议的第二来源，避免人工表与矩阵漂移 */
-const PARITY_MATRIX = 'tests/Parity/legacy-api.json';
+const PARITY_MATRIX = 'resources/parity/legacy-api.json';
 
 /** 配置解析失败时的兜底门面类，取自 1.6.1 的 facade 目录 */
 const FALLBACK_FACADE_CLASSES = ['Base', 'Client', 'Data', 'File', 'Math', 'Param', 'Safe', 'Server', 'Service', 'Text', 'View'];
@@ -113,10 +115,10 @@ function usage(): string
 {
     return implode(PHP_EOL, [
         '用法：',
-        '  php tools/upgrade-inspect.php profile  --root=<项目> [--json|--markdown]',
-        '  php tools/upgrade-inspect.php scan     --root=<项目> [--json|--markdown]',
-        '  php tools/upgrade-inspect.php baseline --root=<项目> --write --baseline=<文件>',
-        '  php tools/upgrade-inspect.php baseline --root=<项目> --check --baseline=<文件>',
+        '  php fxyin upgrade profile  --root=<项目> [--json|--markdown]',
+        '  php fxyin upgrade scan     --root=<项目> [--json|--markdown]',
+        '  php fxyin upgrade baseline --root=<项目> --write --baseline=<文件>',
+        '  php fxyin upgrade baseline --root=<项目> --check --baseline=<文件>',
         '',
         '说明：',
         '  工具只读，不 include 项目文件，不执行 Composer。',

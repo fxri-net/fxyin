@@ -7,7 +7,7 @@ outline: [2, 3]
 
 本页是 v2 对 v1.6.1 的**能力**对等清单，不是 API 兼容清单。v2 保留现代化表现形式，方法名、参数与调用方式可以不同，但 `extend/fxri/base` 与 `extend/fxri/data` 承载的能力必须有对应入口。
 
-机器可读快照见 `tests/Parity/legacy-api.json`；设计决策见 [ADR-0001](./adr/0001-v2-parity)。
+机器可读快照见 `resources/parity/legacy-api.json`；设计决策见 [ADR-0001](./adr/0001-v2-parity)。
 
 ## 一、总量
 
@@ -70,7 +70,7 @@ outline: [2, 3]
 
 需新增项为零：全部门面能力已落到 v2 入口。`App::run` 由可选 `Application\Router` 承接；`Client::param` 由 `Http\RequestInput` 承接；`File::getList` 由 `Filesystem::findFiles`、`File::getMediaInfo` 由 `File\VideoInfo::inspect` 承接；`Param::init` 由 `Application\Cli` 承接，`Param::object` / `append` / `pick` 分别由 `Cast::emptyToObject`、`Merger::append`、`Picker::pick` 承接；`Safe::rsapri/rsapub` 由 `Rsa::privateEncrypt/publicDecrypt` 承接，`Safe::token` 由 `Token` 与 `DesToken` 承接；`Service::http/httpDown` 由 `HttpClient\Curl` 承接；`Text` 的嵌套编解码、长度校验、时长分解、毫秒转换与标识串格式化分别落到 `Encode::encodeAll/decodeAll`、`Str::isLength`、`Time::duration`、`Time::milliFormat/milliParse`、`Uuid::format`；语言直通/忽略标记与首字母大写由 `Language::phrase` 承接。
 
-完整映射见 `tests/Parity/legacy-api.json`。
+完整映射见 `resources/parity/legacy-api.json`。
 
 ## 四、全局函数
 

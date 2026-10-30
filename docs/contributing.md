@@ -44,7 +44,7 @@ pnpm install
 | `composer cs` | `php-cs-fixer` 以 `--dry-run --diff` 检查代码风格 |
 | `composer stan` | PHPStan 静态分析 |
 | `composer test` | PHPUnit 全量测试 |
-| `composer scan` | 扫描数字枚举等禁用写法 |
+| `php fxyin scan` | 扫描数字枚举等禁用写法，等价于 `composer scan` |
 | `vendor/bin/php-cs-fixer fix` | 自动修复代码风格，仅在需要本地修正时执行 |
 | `pnpm docs:dev` | 本地起文档站开发服务 |
 | `pnpm docs:build` | 构建文档站，同时校验站内链接 |
@@ -53,6 +53,8 @@ pnpm install
 | `pnpm verify` | 聚合门禁：`composer check` 加 `pnpm docs:build`；`--skip-code` / `--skip-docs` 可跳过其中一段 |
 
 日常提交前至少跑一次 `composer check`；改动文档或 `CHANGELOG.md` 时再加跑 `pnpm docs:build`。`pnpm verify` 是本地与流水线的统一入口，步骤清单只此一份，不要只挑其中几步执行。
+
+命令行只有 `fxyin` 一个入口：仓库内 `php fxyin <命令>`，接入项目 `php vendor/bin/fxyin <命令>`；命令总览与退出码见[命令行](./cli)。
 
 ## 代码约定
 
