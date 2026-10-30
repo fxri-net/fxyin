@@ -41,7 +41,7 @@ final class CliEntryTest extends TestCase
      */
     public function testHelpExitsZero(): void
     {
-        $result = $this->run('');
+        $result = $this->executeEntry('');
 
         self::assertSame(0, $result['code']);
         self::assertStringContainsString('fxyin', $result['output']);
@@ -53,7 +53,7 @@ final class CliEntryTest extends TestCase
      */
     public function testHelpTopic(): void
     {
-        $result = $this->run('help upgrade');
+        $result = $this->executeEntry('help upgrade');
 
         self::assertSame(0, $result['code']);
         self::assertStringContainsString('php fxyin upgrade profile', $result['output']);
@@ -64,7 +64,7 @@ final class CliEntryTest extends TestCase
      */
     public function testUnknownCommandExitsTwo(): void
     {
-        $result = $this->run('unknown');
+        $result = $this->executeEntry('unknown');
 
         self::assertSame(2, $result['code']);
         self::assertStringContainsString('未知命令', $result['output']);
@@ -75,7 +75,7 @@ final class CliEntryTest extends TestCase
      */
     public function testScanDelegates(): void
     {
-        $result = $this->run('scan');
+        $result = $this->executeEntry('scan');
 
         self::assertSame(0, $result['code']);
         self::assertStringContainsString('数字码扫描通过', $result['output']);
@@ -87,12 +87,12 @@ final class CliEntryTest extends TestCase
     public function testSkillsInstallThenCheck(): void
     {
         $root = escapeshellarg($this->directory);
-        $install = $this->run('skills --root ' . $root);
+        $install = $this->executeEntry('skills --root ' . $root);
 
         self::assertSame(0, $install['code'], $install['output']);
         self::assertFileExists($this->directory . '/.agents/skills/fxri-fxyin/SKILL.md');
 
-        $check = $this->run('skills --root ' . $root . ' --check');
+        $check = $this->executeEntry('skills --root ' . $root . ' --check');
 
         self::assertSame(0, $check['code'], $check['output']);
     }
@@ -102,7 +102,7 @@ final class CliEntryTest extends TestCase
      */
     public function testSkillsCheckFailsWhenMissing(): void
     {
-        $result = $this->run('skills --root ' . escapeshellarg($this->directory) . ' --check');
+        $result = $this->executeEntry('skills --root ' . escapeshellarg($this->directory) . ' --check');
 
         self::assertSame(1, $result['code']);
         self::assertStringContainsString('不一致', $result['output']);
@@ -114,7 +114,7 @@ final class CliEntryTest extends TestCase
      * @param string $arguments 命令行参数
      * @return array{code: int, output: string} 退出码与合并后的输出
      */
-    private function run(string $arguments): array
+    private function executeEntry(string $arguments): array
     {
         $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($this->entry);
         if ('' !== $arguments) {
