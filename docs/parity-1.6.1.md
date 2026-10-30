@@ -5,7 +5,7 @@ outline: [2, 3]
 
 # v1.6.1 能力对等矩阵
 
-本页是 v2 对 v1.6.1 的**能力**对等清单，不是 API 兼容清单。v2 保留现代化表现形式，方法名、参数与调用方式可以不同，但 `extend/fxri/base` 与 `extend/fxri/data` 承载的能力必须有对应入口。
+本页是 v2 对 1.x 最后一个版本（v1.6.1）的**能力**对等清单，不是 API 兼容清单。v2 保留现代化表现形式，方法名、参数与调用方式可以不同，但 `extend/fxri/base` 与 `extend/fxri/data` 承载的能力必须有对应入口。
 
 机器可读快照见 `resources/parity/legacy-api.json`；设计决策见 [ADR-0001](./adr/0001-v2-parity)。
 
