@@ -20,26 +20,24 @@ final class Time
      * 转换时间。
      *
      * 字符串先解析为时间戳；`Timestamp` 按格式截断后返回时间戳，`Text` 返回格式化字符串，
-     * `null` 返回原始时间戳；无法解析时返回 null。
+     * `null` 返回原始时间戳。无法解析时抛 `InvalidArgumentException`。
      *
      * @param int|string $value 时间戳或时间串
      * @param TimeOutput|null $output 输出形态
      * @param string $format 格式
-     * @return int|string|null 转换结果
+     * @return int|string 转换结果
      */
-    public static function change(int|string $value, ?TimeOutput $output = null, string $format = 'Y-m-d H:i:s'): int|string|null
+    public static function change(int|string $value, ?TimeOutput $output = null, string $format = 'Y-m-d H:i:s'): int|string
     {
-        if (is_string($value) && !is_numeric($value)) {
-            $parsed = strtotime($value);
-            if (false === $parsed) {
-                return null;
-            }
-            $value = $parsed;
-        }
+        $timestamp = self::parse($value);
 
-        $timestamp = (int) $value;
         if (TimeOutput::Timestamp === $output) {
-            return strtotime(date($format, $timestamp)) ?: null;
+            $truncated = strtotime(date($format, $timestamp));
+            if (false === $truncated) {
+                throw new InvalidArgumentException('无法按格式截断时间：' . $format);
+            }
+
+            return $truncated;
         }
         if (TimeOutput::Text === $output) {
             return date($format, $timestamp);
@@ -245,7 +243,7 @@ final class Time
      * @param string|array<array-key, mixed> $time 时间范围
      * @param TimeRangeOptions|null $start 开始配置，null 表示默认值 0、时间戳输出
      * @param TimeRangeOptions|null $end 结束配置，null 表示当前时间、时间戳输出
-     * @return array{0: int|string|null, 1: int|string|null} 起止时间
+     * @return array{0: int|string, 1: int|string} 起止时间
      */
     public static function range(string|array $time, ?TimeRangeOptions $start = null, ?TimeRangeOptions $end = null): array
     {
@@ -253,9 +251,13 @@ final class Time
         $startOptions = $start ?? TimeRangeOptions::make(0);
         $endOptions = $end ?? TimeRangeOptions::make(time());
 
+        // 空串与缺项一样视为未提供，交给起止配置的默认值补齐
+        $begin = trim(Type::toString($values[0] ?? ''));
+        $finish = trim(Type::toString($values[1] ?? ''));
+
         return [
-            self::change(trim(Type::toString($values[0] ?? $startOptions->default)), $startOptions->output, $startOptions->format),
-            self::change(trim(Type::toString($values[1] ?? $endOptions->default)), $endOptions->output, $endOptions->format),
+            self::change('' === $begin ? $startOptions->default : $begin, $startOptions->output, $startOptions->format),
+            self::change('' === $finish ? $endOptions->default : $finish, $endOptions->output, $endOptions->format),
         ];
     }
 
@@ -269,7 +271,9 @@ final class Time
     public static function relative(int $timestamp, array $options = []): string
     {
         $now = $options['now'] ?? time();
-        $now = is_int($now) ? $now : time();
+        if (!is_int($now)) {
+            throw new InvalidArgumentException('now 必须为整数时间戳');
+        }
         $diff = $now - $timestamp;
         $future = $diff < 0;
         $diff = abs($diff);

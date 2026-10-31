@@ -47,7 +47,8 @@ final class Client
     /**
      * 下载响应体到文件。
      *
-     * 响应缺少状态码时按 200 处理；非 2xx 直接抛异常，避免把错误页写成目标文件。
+     * 响应缺少状态码或正文方法时抛异常；非 2xx 直接抛异常，避免把错误页写成目标文件；
+     * 写入前去掉响应体的 UTF-8 BOM，与 `Curl` 的响应体口径一致。
      *
      * @param object $request PSR-7 请求
      * @param string $file 本地文件路径
@@ -56,13 +57,17 @@ final class Client
     public function download(object $request, string $file): string
     {
         $response = $this->send($request);
-        $rawStatus = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 200;
-        $status = is_int($rawStatus) ? $rawStatus : (int) Type::toString($rawStatus);
+        if (!method_exists($response, 'getStatusCode') || !method_exists($response, 'getBody')) {
+            throw new RuntimeException('响应缺少 getStatusCode 或 getBody 方法');
+        }
+
+        $status = (int) Type::toString($response->getStatusCode());
         if ($status < 200 || $status >= 300) {
             throw new RuntimeException('下载失败：HTTP ' . $status);
         }
 
-        $body = method_exists($response, 'getBody') ? Type::toString($response->getBody()) : '';
+        // 去掉 UTF-8 BOM，避免落盘文件首部混入不可见字符
+        $body = ltrim(Type::toString($response->getBody()), "\xEF\xBB\xBF");
         Filesystem::write($file, $body);
 
         return $file;

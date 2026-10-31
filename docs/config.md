@@ -138,7 +138,7 @@ echo $translator->get('欢迎');                // 欢迎
 | `getLocale(): string` | 返回当前语言标识 | 语言标识 |
 | `withLocale(string $locale): self` | 切换语言，返回新实例 | 新翻译器 |
 
-占位符以 `%名称%` 表示，参数键写 `name` 或 `%name%` 等价（构造时统一补 `%` 并去掉原有 `%`）；参数值经 `Type::toString()` 转成字符串，布尔转 `1` / `0`，数组与不可转字符串的对象转空串。
+占位符规则与 `Translator::format()` 一致：关联参数同时替换 `%name%` 与 `{:name}`，参数键写 `name` 或 `%name%` 等价；参数键为 `0` 开头时按 `sprintf` 处理。参数值经 `Type::toString()` 转成字符串，布尔转 `1` / `0`，数组与不可转字符串的对象转空串。
 
 其它两点：`DOMAIN` 常量固定为 `messages`；`has()` 用 `isset` 判定，`get()` 用 `??` 兜底，语言或域不存在时两者都按「未命中」处理。
 

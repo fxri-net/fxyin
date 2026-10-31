@@ -249,7 +249,7 @@ echo $jar->signed('uid');   // 7
 | `make(object $client): self` | 校验实现了 `Psr\Http\Client\ClientInterface`，不符抛 `InvalidArgumentException` | `self` |
 | `send(object $request): object` | 校验请求实现 `Psr\Http\Message\RequestInterface`，调用 `sendRequest()` 并校验响应实现 `ResponseInterface` | `object` |
 | `client(): object` | 取底层客户端 | `object` |
-| `download(object $request, string $file): string` | 发送请求并把响应体写入文件；非 2xx 抛 `RuntimeException`，父目录自动创建 | `string` |
+| `download(object $request, string $file): string` | 发送请求并把响应体写入文件；非 2xx 抛 `RuntimeException`，父目录自动创建，响应体写入前去掉 UTF-8 BOM，响应缺少状态码或正文方法时抛异常 | `string` |
 | `withClient(object $client): self` | 换底层客户端，返回新实例 | `self` |
 
 ### ClientFactory

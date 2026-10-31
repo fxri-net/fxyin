@@ -55,6 +55,8 @@ require_once $autoload;
 $argv = $_SERVER['argv'] ?? [];
 $binary = $argv[0] ?? 'fxyin';
 $plan = Fxri\Tooling\Cli::parse($argv);
+// 只分发当前安装真正可用的域：本仓专用命令在接入项目里按「命令不可用」处理
+$available = Fxri\Tooling\Cli::available($root);
 
 $missing = Fxri\Tooling\Cli::missingShipped($root);
 if ([] !== $missing) {
@@ -76,7 +78,7 @@ if ('help' === $plan['action']) {
 
         exit(0);
     }
-    if (!isset(Fxri\Tooling\Cli::COMMANDS[$topic])) {
+    if (!isset($available[$topic])) {
         fwrite(STDERR, '未知命令：' . $topic . PHP_EOL . '运行 php ' . $binary . ' help 查看用法' . PHP_EOL);
 
         exit(2);
@@ -109,9 +111,16 @@ if ('skills' === $plan['command']) {
     exit($result['code']);
 }
 
-$script = Fxri\Tooling\Cli::COMMANDS[$plan['command']]['script'];
+$command = $plan['command'];
+if (!isset($available[$command])) {
+    fwrite(STDERR, '命令不可用：' . $command . '（当前安装不提供该命令）' . PHP_EOL);
+
+    exit(2);
+}
+
+$script = Fxri\Tooling\Cli::COMMANDS[$command]['script'];
 if (!is_string($script)) {
-    fwrite(STDERR, '命令缺少实现：' . $plan['command'] . PHP_EOL);
+    fwrite(STDERR, '命令缺少实现：' . $command . PHP_EOL);
 
     exit(2);
 }

@@ -29,7 +29,7 @@ v1.6.1 通过 `extend/fxri/base` 与 `extend/fxri/data` 提供框架运行时、
 
 ## 理由
 
-- 不把嵌套语言包与旧占位符塞进 `ArrayTranslator`，避免违反 Symfony `TranslatorInterface` 的字符串契约。
+- 不把嵌套语言包塞进 `ArrayTranslator`，避免违反 Symfony `TranslatorInterface` 的字符串契约；占位符替换复用 `Translator::format()`，两种翻译器口径一致。
 - 不把运行期 `Config::set` 塞回只读 `Config`，保持内核不可变。
 - 不用门面魔法恢复 `facade_ext`，避免重新引入 2.0 已移除的全局状态与静态转发。
 - 按矩阵补能力，而不是按类名补旧 API，避免得到混合架构。

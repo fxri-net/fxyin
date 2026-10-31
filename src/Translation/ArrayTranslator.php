@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Fxri\Translation;
 
-use Fxri\Support\Type;
 use Fxri\Translation\Loader\PhpFileLoader;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -93,7 +92,8 @@ final class ArrayTranslator implements TranslatorInterface
     /**
      * 取译文并替换占位符。
      *
-     * 参数键可省略百分号，`['name' => '风音']` 与 `['%name%' => '风音']` 等价。
+     * 占位符规则与 `Translator::format()` 一致：数字索引走 `sprintf`，
+     * 关联索引同时支持 `%name%` 与 `{:name}`，键可省略百分号。
      *
      * @param string $id 词条
      * @param array<array-key, mixed> $parameters 占位符参数
@@ -103,7 +103,7 @@ final class ArrayTranslator implements TranslatorInterface
      */
     public function trans(string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string
     {
-        return $this->replace($this->get($id, $domain, $locale), $parameters);
+        return Translator::format($this->get($id, $domain, $locale), $parameters);
     }
 
     /**
@@ -115,26 +115,5 @@ final class ArrayTranslator implements TranslatorInterface
     public function withLocale(string $locale): self
     {
         return new self($this->messages, $locale);
-    }
-
-    /**
-     * 替换占位符。
-     *
-     * @param string $message 已取的译文
-     * @param array<array-key, mixed> $parameters 占位符参数
-     * @return string 替换结果
-     */
-    private function replace(string $message, array $parameters): string
-    {
-        if ([] === $parameters) {
-            return $message;
-        }
-
-        $pairs = [];
-        foreach ($parameters as $key => $value) {
-            $pairs['%' . trim((string) $key, '%') . '%'] = Type::toString($value);
-        }
-
-        return strtr($message, $pairs);
     }
 }

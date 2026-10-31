@@ -8,6 +8,7 @@ use Fxri\Text\Time;
 use Fxri\Text\TimeOutput;
 use Fxri\Text\TimeRangeOptions;
 use Fxri\Text\TimeUnit;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -23,7 +24,17 @@ final class TimeTest extends TestCase
         self::assertSame('2026-10-28', Time::change('2026-10-28 12:00:00', TimeOutput::Text, 'Y-m-d'));
         self::assertSame(strtotime('2026-10-28'), Time::change('2026-10-28 12:00:00', TimeOutput::Timestamp, 'Y-m-d'));
         self::assertSame(1000, Time::change(1000));
-        self::assertNull(Time::change('not-a-time'));
+        self::assertSame('1970-01-01', Time::change(0, TimeOutput::Text, 'Y-m-d'));
+    }
+
+    /**
+     * 无法解析的时间串按统一口径抛异常，而不是返回 null。
+     */
+    public function testChangeRejectsInvalidValue(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        Time::change('not-a-time');
     }
 
     /**
@@ -38,6 +49,25 @@ final class TimeTest extends TestCase
         );
 
         self::assertSame(['2026-10-28', '2026-10-28'], $range);
+
+        // 逗号串的空项与缺项同义，交给起止配置补齐
+        $fallback = Time::range(
+            '2026-10-28,',
+            TimeRangeOptions::make('2026-10-28', TimeOutput::Text, 'Y-m-d'),
+            TimeRangeOptions::make('2026-10-28', TimeOutput::Text, 'Y-m-d'),
+        );
+
+        self::assertSame(['2026-10-28', '2026-10-28'], $fallback);
+    }
+
+    /**
+     * `now` 必须是整数时间戳，类型不符时不做静默兜底。
+     */
+    public function testRelativeRejectsNonIntNow(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        Time::relative(1000, ['now' => '4600']);
     }
 
     /**
