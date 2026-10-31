@@ -23,5 +23,5 @@
 ## 三、用法说明
 
 - **载体形态**：本项目采用「条文式」，条文全文落在本载体分册，本载体即项目唯一规范载体。
-- **本项目约定**：`scope` 取端清单的 `frame` / `facade`，全端通用任务写 `common`。任务区文本治理中的「跨仓库改动各自归档」与「归档块不可变」已由全局规则与 `skills/fxri-plan-to-task` 承载，本载体不重复。
-- **读写与维护**：读面与读写判定、写入归属、语义修订与退休流程一律见 `skills/fxri-plan-to-task/references/conventions-spec.md`，本载体不另述。
+- **本项目约定**：`scope` 取端清单的 `frame` / `facade`，全端通用任务写 `common`。任务区文本治理中的「跨仓库改动各自归档」与「归档块不可变」已由全局规则与全局技能 `fxri-plan-to-task` 承载，本载体不重复。
+- **读写与维护**：读面与读写判定、写入归属、语义修订与退休流程一律见全局技能 `fxri-plan-to-task` 的 conventions-spec，本载体不另述。
