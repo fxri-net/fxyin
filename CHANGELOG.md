@@ -1,5 +1,33 @@
 # 风音框架
 
+## 2.2.2
+
+> 2026-10-31 发布
+
+### 🔧 功能调整
+
+- `Text\Time::change()` 无法解析输入时改为抛 `InvalidArgumentException`，与同页 `parse()` 及文本层「不合法即失败」的口径一致，不再返回 `null`
+- `Time::relative()` 的 `now` 不是整数时抛 `InvalidArgumentException`，不再静默回落到当前时间
+- `Translation\ArrayTranslator` 的占位符规则与 `Translator::format()` 统一，支持 `{:name}` 与 `sprintf` 数字参数
+- `Http\HttpClient\Client::download()` 去掉响应体 UTF-8 BOM 与 `Curl` 对齐；响应缺少状态码或正文方法时抛 `RuntimeException`，不再按 200 放行
+- `fxyin` 入口只分发当前安装可用的命令域，接入项目执行本仓专用命令时以「命令不可用」退出 2
+
+### ⚡ 优化改进
+
+- 技能 `SKILL.md` 的 composer 脚本示例改为指向 `references/ide.md`，不再与技能参考页重复
+- 技能 `references/config.md` 删去与加载规则表重复的条目
+
+### 🐛 问题修复
+
+- `Time::change()` 在截断结果为 `0` 时被误判为失败返回 `null`
+- `Time::range()` 把逗号串里的空项当作有效值，起止配置的默认值不生效
+
+### 📝 文档更新
+
+- 技能入口薄壳的注释改为指向 `php vendor/bin/fxyin skills`，删除后按提示执行该命令即可补齐
+- `composer meta`、`composer meta:check` 的说明补上「接入项目自行声明」限定语，避免误认为本包自带脚本
+- `fxri-fxyin` 技能补充上述限定语，并修正 `openssl` 扩展口径为必需；版本升至 1.1.2
+
 ## 2.2.1
 
 > 2026-10-31 发布
