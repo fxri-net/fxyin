@@ -1,5 +1,11 @@
 # 自建托管平台一侧的流水线：与 GitHub 共用 scripts/verify.mjs 这一份验收步骤清单，
-# 本文件只负责准备运行环境、声明产物路径与部署规则
+# 本文件只负责声明镜像、产物路径与部署规则
+# 作业镜像由 ci-templates 依据 .ci/toolchain.json 动态构建（PHP 8.2 + Node 20），不再现场安装运行时
+
+include:
+  - project: fxri/develop/0001.base/ci-templates
+    ref: main
+    file: /dynamic-image.yml
 
 stages:
   - test
@@ -8,11 +14,12 @@ stages:
 test:
   stage: test
   # 自建 runner 未放行 if-not-present 拉取策略，保持默认字符串形式
-  image: node:20-bookworm
+  image: $CI_IMAGE
+  needs:
+    - toolchain:spec
+    - toolchain:ensure
   variables:
     COMPOSER_ALLOW_SUPERUSER: "1"
-    # 自建 runner 访问 deb.debian.org 实测只有 27.4 kB/s，索引下载就要数分钟，这里切国内镜像
-    APT_MIRROR: mirrors.aliyun.com
     # Composer 缓存随 job 缓存一起持久化，避免每次重复下载依赖
     COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.cache/composer"
   cache:
@@ -21,17 +28,8 @@ test:
         - composer.json
     paths:
       - .cache/composer
-  before_script:
-    # Debian 12 使用 deb822 源，旧镜像使用 sources.list，两种形态都兜住
-    - sed -i "s|deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources 2>/dev/null || sed -i "s|deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list
-    # Node 镜像不含 PHP：补装 8.2（本仓最低支持版本与硬性扩展）与 curl（Curl 用例需要，缺失会整组跳过）；
-    # PHP 8.2–8.5 的版本矩阵由 GitHub 流水线覆盖
-    - apt-get update && apt-get install -y --no-install-recommends php8.2-cli php8.2-mbstring php8.2-xml php8.2-curl git unzip
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   script:
-    # 依赖下载走国内镜像；只作用于 CI 运行环境
-    - composer config -g repos.packagist.org false
-    - composer config -g repos.tencent composer https://mirrors.cloud.tencent.com/composer/
+    # 镜像内已把 Packagist 源指向腾讯云镜像，这里只需解析依赖
     # 仓库不提交 composer.lock，由当前 PHP 版本自行解析依赖
     - composer update --no-interaction --prefer-dist --no-progress
     # 文档站构建在 pages 阶段单独执行，此处跳过
@@ -39,7 +37,10 @@ test:
 
 pages:
   stage: pages
-  image: node:20-bookworm
+  image: $CI_IMAGE
+  needs:
+    - toolchain:spec
+    - toolchain:ensure
   # 完整克隆：文档站 lastUpdated 依赖 git 提交时间，浅克隆会失真
   variables:
     GIT_DEPTH: "0"
@@ -58,8 +59,7 @@ pages:
     - export PAGES_ORIGIN="$(printf '%s' "$CI_PAGES_URL" | cut -d/ -f1-3)"
     - export SITE_URL="${SITE_URL:-$PAGES_ORIGIN/$CI_PROJECT_NAME/}"
     - export REPO_URL="${REPO_URL:-$CI_PROJECT_URL}"
-    - npm config set registry https://registry.npmmirror.com
-    - npm install -g pnpm@10.34.4
+    # pnpm 版本由镜像固定，无需现场安装
     - pnpm install --frozen-lockfile --store-dir .pnpm-store
     - pnpm docs:build
     # GitLab Pages 只发布 public/ 目录，构建产物在此归位

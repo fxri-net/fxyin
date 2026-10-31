@@ -1,0 +1,6 @@
+{
+  "php": "8.2",
+  "phpExtensions": ["mbstring"],
+  "node": "20.20.2",
+  "pnpm": "10.34.4"
+}
