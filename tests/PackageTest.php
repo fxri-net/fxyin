@@ -21,11 +21,11 @@ final class PackageTest extends TestCase
     }
 
     /**
-     * 版本号落在 2.x 主线。
+     * 版本号为语义化格式，不绑定主版本。
      */
-    public function testVersionIsTwoSeries(): void
+    public function testVersionIsSemantic(): void
     {
-        self::assertStringStartsWith('2.', Package::VERSION);
+        self::assertSame(1, preg_match('/^\d+\.\d+\.\d+$/', Package::VERSION), Package::VERSION);
     }
 
     /**

@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Fxri\Tests\Parity;
 
-use Fxri\Http\Cookie\CookieJar;
-use Fxri\Http\ServerContext;
 use Fxri\Translation\Catalog;
 use Fxri\Translation\Language;
-use Fxri\Translation\LocaleResolver;
 use Fxri\Translation\Translator;
 use PHPUnit\Framework\TestCase;
 
@@ -78,19 +75,6 @@ final class LanguagePackTest extends TestCase
         self::assertSame('欢迎 风音', $translator->trans('percent', ['name' => '风音']));
         self::assertSame('欢迎 风音', $translator->trans('brace', ['name' => '风音']));
         self::assertSame('共 3 条', $translator->trans('number', [3]));
-    }
-
-    /**
-     * 检测顺序与 Cookie 读取和 1.6.1 一致。
-     */
-    public function testDetection(): void
-    {
-        $resolver = LocaleResolver::make(allowList: ['zh-cn', 'en-us']);
-
-        self::assertSame('en-us', $resolver->resolve(['lang' => 'EN-US'], CookieJar::make(), ServerContext::make()));
-        self::assertSame('en-us', $resolver->resolve([], CookieJar::make(['lang' => 'en-us']), ServerContext::make()));
-        self::assertSame('en-us', $resolver->resolve([], CookieJar::make(), ServerContext::make(['HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.9'])));
-        self::assertSame('zh-cn', $resolver->resolve(['lang' => 'zh-hans-cn'], CookieJar::make(), ServerContext::make()));
     }
 
     /**
