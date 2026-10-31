@@ -20,7 +20,7 @@ final class Package
     /**
      * 返回包标识与版本号。
      *
-     * @return string 形如 fxri/fxyin 2.0.0-dev
+     * @return string 形如「包名 版本号」
      */
     public static function describe(): string
     {

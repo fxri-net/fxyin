@@ -31,6 +31,7 @@ final class Uuid
     /**
      * 生成标识串。
      *
+     * 传 seed 时由 md5 派生，不传时为随机 32 位十六进制；Md5Upper 与 Upper32 只决定大小写与是否带横线。
      * @param UuidMode $mode 形态
      * @param string|null $seed 派生种子，null 表示随机
      * @param UuidStyle|null $style 二次加工样式

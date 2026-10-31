@@ -5,7 +5,7 @@
 ## 环境要求
 
 - PHP 8.2 起
-- 扩展 `mbstring`（必需）、`openssl`（安全相关功能需要）
+- 扩展 `mbstring`、`openssl`（均为必需）
 - Composer
 
 ## 安装

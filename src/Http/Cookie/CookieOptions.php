@@ -56,7 +56,7 @@ final class CookieOptions
     /**
      * 转为 setcookie 选项数组。
      *
-     * 只输出非默认值，空域与未开启的 secure 不下发，避免污染响应头。
+     * 始终输出 expires、path、httponly、samesite；domain 非空、secure 开启时才追加，避免下发空值与无用开关。
      *
      * @return array{expires: int, path: string, httponly: bool, samesite: 'Strict'|'Lax'|'None', domain?: string, secure?: bool} 选项数组
      */

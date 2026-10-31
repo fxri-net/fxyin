@@ -47,7 +47,7 @@ final class Client
     /**
      * 下载响应体到文件。
      *
-     * 只接受 2xx 响应，非成功状态直接抛异常，避免把错误页写成目标文件。
+     * 响应缺少状态码时按 200 处理；非 2xx 直接抛异常，避免把错误页写成目标文件。
      *
      * @param object $request PSR-7 请求
      * @param string $file 本地文件路径

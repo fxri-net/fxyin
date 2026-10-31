@@ -4,7 +4,7 @@
 
 ## 定位
 
-本仓是一个 Composer 库，外加一套不发布的 Node 工具链：前者是 `src/` 下的框架代码，后者只负责文档站构建与发版辅助（`package.json` 为 `private: true`，不进 npm）。贡献场景大体分三类——改代码、改文档、发版本，三者的验收口径不同，但都要通过 `composer check`。
+本仓是一个 Composer 库，外加一套不发布的 Node 工具链：前者是 `src/` 下的框架代码，后者只负责文档站构建与发版辅助（`package.json` 为 `private: true`，不进 npm）。贡献场景大体分三类——改代码、改文档、发版本，三者的验收口径不同，但都要通过 `pnpm verify`。
 
 ## 开发环境
 
@@ -39,7 +39,7 @@ pnpm install
 
 | 命令 | 作用 |
 | --- | --- |
-| `composer check` | 聚合门禁，依次执行下列五项，CI 与本机共用同一条 |
+| `composer check` | 聚合门禁，依次执行 `composer.json` 中 `scripts.check` 定义的步骤，CI 与本机共用同一条 |
 | `composer validate --strict` | 校验 `composer.json` 结构与字段 |
 | `composer cs` | `php-cs-fixer` 以 `--dry-run --diff` 检查代码风格 |
 | `composer stan` | PHPStan 静态分析 |
@@ -52,7 +52,7 @@ pnpm install
 | `pnpm sync:changelog-doc` | 把根 `CHANGELOG.md` 同步为 `docs/changelog.md` |
 | `pnpm verify` | 聚合门禁：`composer check` 加 `pnpm docs:build`；`--skip-code` / `--skip-docs` 可跳过其中一段 |
 
-日常提交前至少跑一次 `composer check`；改动文档或 `CHANGELOG.md` 时再加跑 `pnpm docs:build`。`pnpm verify` 是本地与流水线的统一入口，步骤清单只此一份，不要只挑其中几步执行。
+提交前跑一次 `pnpm verify`；它是本地与流水线的统一入口，步骤清单只此一份，不要只挑其中几步执行。
 
 命令行只有 `fxyin` 一个入口：仓库内 `php fxyin <命令>`，接入项目 `php vendor/bin/fxyin <命令>`；命令总览与退出码见[命令行](./cli)。
 

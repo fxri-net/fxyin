@@ -35,6 +35,8 @@
 | `skills` | 安装 AI 技能入口薄壳，指向包内真源 |
 | `upgrade` | 1.x 升级体检：项目画像、旧 API 统计与基线校验 |
 | `scan` | 扫描数字码等禁用写法 |
+| `package` | 生成发布包（仅本仓开发期使用） |
+| `parity` | 对等审计（仅本仓开发期使用） |
 | `help` | 查看全部命令与单个命令用法 |
 
 命令总览、退出码与接入方调用方式见[命令行](./docs/cli.md)。
@@ -68,7 +70,7 @@
 composer require fxri/fxyin
 ```
 
-运行环境要求 PHP 8.2 起，需开启 `mbstring` 扩展，安全相关功能另需 `openssl`；其余能力依赖的 PSR 包按需安装。
+运行环境要求 PHP 8.2 起，需开启 `mbstring` 与 `openssl` 扩展；其余能力依赖的 PSR 包按需安装。
 
 ## 快速上手
 
@@ -91,7 +93,7 @@ echo $kernel->config()->get('app.name', '未命名');
 
 ## 参与贡献
 
-开发环境、验收命令（`composer check`）、提交规范与发版链路见[贡献指南](./docs/contributing.md)；问题反馈走 [GitHub Issues](https://github.com/fxri-net/fxyin/issues)。
+开发环境、验收命令（`pnpm verify`）、提交规范与发版链路见[贡献指南](./docs/contributing.md)；问题反馈走 [GitHub Issues](https://github.com/fxri-net/fxyin/issues)。
 
 ## 版权信息
 

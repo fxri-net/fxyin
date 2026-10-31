@@ -91,7 +91,7 @@ final class Rsa
     public static function generate(int $bits = self::MIN_BITS): array
     {
         if ($bits < self::MIN_BITS) {
-            throw new InvalidArgumentException('密钥长度不能小于 2048 位');
+            throw new InvalidArgumentException('密钥长度不能小于 ' . self::MIN_BITS . ' 位');
         }
 
         $key = openssl_pkey_new(['private_key_bits' => $bits, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);

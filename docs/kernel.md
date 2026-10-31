@@ -58,7 +58,7 @@ echo get_class($kernel->logger());                   // Psr\Log\NullLogger
 var_dump($kernel->httpClient(), $kernel->adapter()); // NULL NULL
 
 // 包标识与版本
-echo Package::describe();                            // fxri/fxyin 2.0.0-dev
+echo Package::describe();                            // 形如 fxri/fxyin 2.x.y
 ```
 
 ## 参数与返回值
@@ -103,9 +103,9 @@ echo Package::describe();                            // fxri/fxyin 2.0.0-dev
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `describe(): string` | 拼接包名与版本号 | 形如 `fxri/fxyin 2.0.0-dev` |
+| `describe(): string` | 拼接包名与版本号 | 形如 `fxri/fxyin x.y.z` |
 
-类上另有 `NAME`（`fxri/fxyin`）与 `VERSION`（`2.0.0-dev`）两个常量。
+类上另有 `NAME`（`fxri/fxyin`）与 `VERSION`（当前版本号，随发版变化）两个常量。
 
 ## 注意事项
 
@@ -117,6 +117,6 @@ echo Package::describe();                            // fxri/fxyin 2.0.0-dev
 - 内核不缓存 `build()` 结果，也不提供单例。同一进程内多次 `build()` 会多次读盘，且得到互不相同的实例。
 - 内核不承载参数、数据、SQL、文本、文件、安全等能力，这些是不经过内核的纯静态类（见[快速开始](./getting-started)）。
 - 适配器与 HTTP 客户端在内核里只是被承载，内核不会主动调用它们；取到之后由业务代码或集成层自行使用，ThinkPHP 的绑定方式见[接入](./integration)。
-- `Package::VERSION` 当前为 `2.0.0-dev`，随发版变化；用它做版本校验时按语义化版本比较，不要硬编码整个字符串。
+- `Package::VERSION` 是当前包版本号，随发版变化；用它做版本校验时按语义化版本比较，不要硬编码整个字符串。
 - `build()` 期间读取配置若抛出异常会直接向上冒泡，装配阶段不做兜底；启动失败策略由接入方自行决定。
 - 配置与翻译的加载细节、目录叠加顺序在[配置](./config)与[语言](./language)中说明。
