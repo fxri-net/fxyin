@@ -1,6 +1,6 @@
 {
   "name": "@fxri/fxyin",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "private": true,
   "description": "风音框架的发版与文档站工具链（不发布 npm 包）",
   "license": "Apache-2.0",
