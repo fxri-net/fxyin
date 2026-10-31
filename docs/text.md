@@ -83,21 +83,14 @@ echo strlen(Uuid::make()) . ' / '
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `base64Encode(string $value)` | 标准 Base64 编码 | `string` |
-| `base64Decode(string $value, bool $strict = false)` | Base64 解码；`$strict` 为 `true` 时拒绝非法字符，解码失败抛 `InvalidArgumentException` | `string` |
-| `hexEncode(string $value, bool $upper = false)` | 转十六进制串；`$upper` 为 `true` 时输出大写 | `string` |
-| `hexDecode(string $value)` | 十六进制串还原为原始字节，非法或奇数长度抛 `InvalidArgumentException` | `string` |
-| `htmlEncode(string $value, bool $doubleEncode = true)` | 按 `ENT_QUOTES \| ENT_SUBSTITUTE`、UTF-8 转义实体；`$doubleEncode` 为 `true` 时已有实体会被再次编码 | `string` |
-| `htmlDecode(string $value)` | 按 `ENT_QUOTES \| ENT_HTML5`、UTF-8 还原实体 | `string` |
-| `queryEncode(array $data)` | 生成查询串，固定 `PHP_QUERY_RFC3986`（空格为 `%20`） | `string` |
-| `queryDecode(string $query)` | 解析查询串，基于 `parse_str` 语义 | `array` |
-| `urlEncode(string $value)` | 按 `rawurlencode` 编码，`/` 也会被编码为 `%2F` | `string` |
-| `urlDecode(string $value)` | 按 `rawurldecode` 解码，不把 `+` 当空格 | `string` |
-| `convert(string $value, EncodeConvert $convert)` | `ToHex` 字符串转十六进制、`FromHex` 十六进制转字符串 | `string` |
-| `encodeAll(array $data)` | 嵌套数组编码为 RFC 3986 查询串 | `string` |
-| `decodeAll(string $query)` | 查询串还原为嵌套数组 | `array` |
-| `letter(string $value, string $inCharset = 'UTF-8', string $outCharset = 'GB2312')` | 单个字符取首字母：英文转大写，中文按 GBK 区间映射 A-Z | `string` |
-| `letters(string $value, string $inCharset = 'UTF-8', string $outCharset = 'GB2312')` | 逐字符取首字母并拼接 | `string` |
+| `base64Encode` / `base64Decode` | 标准 Base64 编解码；解码 `$strict` 为 `true` 时拒绝非法字符，失败抛 `InvalidArgumentException` | `string` |
+| `hexEncode` / `hexDecode` | 十六进制串互转；`$upper` 输出大写，解码遇非法或奇数长度抛 `InvalidArgumentException` | `string` |
+| `urlEncode` / `urlDecode` | `rawurlencode` / `rawurldecode` 语义，`/` 也会编码为 `%2F`，解码不把 `+` 当空格 | `string` |
+| `htmlEncode` / `htmlDecode` | 按 `ENT_QUOTES`、UTF-8 转义与还原；`$doubleEncode` 为 `true` 时已有实体会再次编码 | `string` |
+| `queryEncode` / `queryDecode` | 查询串编解码，固定 `PHP_QUERY_RFC3986`（空格为 `%20`），解码基于 `parse_str` 语义 | `string` / `array` |
+| `encodeAll` / `decodeAll` | 嵌套数组与 RFC 3986 查询串互转 | `string` / `array` |
+| `convert(string $value, EncodeConvert $convert)` | 按 `EncodeConvert` 分支做字符串与十六进制互转 | `string` |
+| `letter` / `letters` | 取首字母：英文转大写，中文按 GBK 区间映射 A-Z；`letters` 逐字符拼接 | `string` |
 
 ### EncodeConvert
 

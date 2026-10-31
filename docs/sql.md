@@ -85,20 +85,14 @@ var_export($statement->bindings());
 | `and()` | 标记下一个条件用 `AND` 连接，默认值 | `self` |
 | `or()` | 标记下一个条件用 `OR` 连接 | `self` |
 | `not()` | 标记下一个条件取反，渲染为 `NOT (...)` | `self` |
-| `eq(string\|Expression $column, mixed $value, Collation $collation = Collation::CaseInsensitive)` | 追加等于条件 | `self` |
-| `ne(string\|Expression $column, mixed $value, Collation $collation = Collation::CaseInsensitive)` | 追加不等于条件，渲染 `<>` | `self` |
-| `gt(string\|Expression $column, mixed $value)` | 追加大于条件 | `self` |
-| `gte(string\|Expression $column, mixed $value)` | 追加大于等于条件 | `self` |
-| `lt(string\|Expression $column, mixed $value)` | 追加小于条件 | `self` |
-| `lte(string\|Expression $column, mixed $value)` | 追加小于等于条件 | `self` |
+| `eq` / `ne` / `gt` / `gte` / `lt` / `lte` | 追加 `=`、`<>`、`>`、`>=`、`<`、`<=` 条件；`eq`、`ne` 接受 `Collation`，默认 `CaseInsensitive` | `self` |
 | `like(string\|Expression $column, mixed $value, Collation $collation = Collation::CaseInsensitive)` | 追加模糊匹配条件，通配符需调用方写入 `$value` | `self` |
 | `in(string\|Expression $column, array $value)` | 追加集合包含条件；空数组生成恒假条件 `0 = 1` | `self` |
 | `between(string\|Expression $column, array $value)` | 追加区间条件；数组元素必须恰好两个，否则抛 `InvalidArgumentException` | `self` |
 | `isNull(string\|Expression $column)` | 追加为空条件，不产生绑定值 | `self` |
 | `isNotNull(string\|Expression $column)` | 追加不为空条件，不产生绑定值 | `self` |
 | `compare(WhereOperator $operator, string\|Expression $column, mixed $value = null, Collation $collation = Collation::CaseInsensitive)` | 按枚举追加任意比较条件 | `self` |
-| `group(Closure $callback, ?Boolean $boolean = null)` | 追加括号分组；`$boolean` 非空时先覆盖下一个条件的连接方式；分组内无条件时整体忽略 | `self` |
-| `nested(Closure $callback)` | 等价于 `group($callback)`，沿用当前连接方式 | `self` |
+| `group(Closure $callback, ?Boolean $boolean = null)` | 追加括号分组；`$boolean` 非空时先覆盖下一个条件的连接方式；分组内无条件时整体忽略；`nested()` 等价于不传 `$boolean` 的 `group()` | `self` |
 | `build()` | 渲染全部条件 | `Sql` |
 
 渲染规则：第一个条件不带连接符；每个条件推入后连接方式复位为 `AND`、取反标记复位为 `false`；`not()` 只作用于紧随其后的一个条件（分组也算一个条件）。
@@ -145,30 +139,19 @@ var_export($statement->bindings());
 | `CaseInsensitive` | 默认；按字段自身的排序规则比较，占位符不加前缀 |
 | `CaseSensitive` | 仅对 `eq`、`ne`、`like` 生效，占位符前加 `BINARY ` 走二进制比较 |
 
-### DialectInterface
+### DialectInterface 与 MysqlDialect
 
-`DialectInterface` 与 `MysqlDialect` 位于 `Fxri\Sql\Dialect` 命名空间，`WhereBuilder::make()` 与 `StatementBuilder::make()` 的 `$dialect` 参数都接受该接口的实现。
+`DialectInterface` 与 `MysqlDialect` 位于 `Fxri\Sql\Dialect` 命名空间，`WhereBuilder::make()` 与 `StatementBuilder::make()` 的 `$dialect` 参数都接受该接口的实现。`MysqlDialect` 是随包的唯一实现，右列即接口方法在 MySQL 下的写法：
 
-| 方法 | 说明 | 返回 |
-| --- | --- | --- |
-| `field(string $name)` | 包装字段名，支持表名前缀 | `string` |
-| `findInSet(string\|Expression $column, mixed $value)` | 生成集合查找片段 | `Sql` |
-| `fromUnixtime(string\|Expression $column, string $format = '%Y-%m-%d %H:%i:%s')` | 生成时间戳格式化片段 | `Sql` |
-| `ifnull(string\|Expression $column, mixed $default)` | 生成空值兜底片段 | `Sql` |
-| `jsonContains(string\|Expression $column, mixed $value)` | 生成 JSON 包含片段 | `Sql` |
-| `placeholder()` | 取参数占位符 | `string` |
-
-### MysqlDialect
-
-| 方法 | 说明 | 返回 |
-| --- | --- | --- |
-| `make()` | 创建实例，构造器为私有 | `self` |
-| `field(string $name)` | 按 `.` 拆成至多两段，逐段校验并加反引号；`*` 原样输出；超过两段或含非法字符抛 `InvalidArgumentException` | `string` |
-| `findInSet(string\|Expression $column, mixed $value)` | `FIND_IN_SET(?, col)`，值进绑定 | `Sql` |
-| `fromUnixtime(string\|Expression $column, string $format = '%Y-%m-%d %H:%i:%s')` | `FROM_UNIXTIME(col, ?)`，格式串进绑定 | `Sql` |
-| `ifnull(string\|Expression $column, mixed $default)` | `IFNULL(col, ?)`；`$default` 为 `null` 时输出 `IFNULL(col, NULL)` 且不产生绑定 | `Sql` |
-| `jsonContains(string\|Expression $column, mixed $value)` | 先 `json_encode()` 再生成 `JSON_CONTAINS(col, ?)`；编码失败抛 `InvalidArgumentException` | `Sql` |
-| `placeholder()` | 固定返回 `?` | `string` |
+| 方法 | MySQL 实现 |
+| --- | --- |
+| `make()` | 创建实例，构造器为私有 |
+| `field(string $name)` | 按 `.` 拆成至多两段，逐段校验并加反引号；`*` 原样输出，超过两段或含非法字符抛 `InvalidArgumentException` |
+| `findInSet(string\|Expression $column, mixed $value)` | `FIND_IN_SET(?, col)`，值进绑定 |
+| `fromUnixtime(string\|Expression $column, string $format = '%Y-%m-%d %H:%i:%s')` | `FROM_UNIXTIME(col, ?)`，格式串进绑定 |
+| `ifnull(string\|Expression $column, mixed $default)` | `IFNULL(col, ?)`；`$default` 为 `null` 时输出 `IFNULL(col, NULL)` 且不产生绑定 |
+| `jsonContains(string\|Expression $column, mixed $value)` | 先 `json_encode()` 再生成 `JSON_CONTAINS(col, ?)`；编码失败抛 `InvalidArgumentException` |
+| `placeholder()` | 固定返回 `?` |
 
 字段名白名单为 `[A-Za-z_][A-Za-z0-9_]*`，因此 `MysqlDialect::make()->field('user.id')` 得到 `` `user`.`id` ``，`field('user.*')` 得到 `` `user`.* ``，而 `field('user name')` 直接抛异常。
 

@@ -91,7 +91,7 @@ var_export($diff->keys());      // array ( 0 => 'name', 1 => 'remark' )
 | `division(string\|Expression $dividend, string\|Expression $divisor)` | 除数为 0 时返回 0 的安全除法片段 | `Sql` |
 | `initial(string\|Expression $column)` | 按 GBK 区间把中文首字映射为 A-Z 的片段 | `Sql` |
 
-`$granularity` 决定 `FROM_UNIXTIME` 的格式串：
+`$granularity` 的三档语义见[文本](./text)的 `DateGranularity`；映射到 SQL 格式串如下：
 
 | 分支 | 格式串 |
 | --- | --- |
@@ -156,10 +156,7 @@ var_export($diff->keys());      // array ( 0 => 'name', 1 => 'remark' )
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
 | `make(array $records, int $total, ?int $page = null, ?int $size = null): self` | 构造分页数据壳 | `self` |
-| `total(): int` | 取总条数 | `int` |
-| `records(): array` | 取当页记录 | `array<array-key, mixed>` |
-| `page(): ?int` | 取当前页码 | `int\|null` |
-| `size(): ?int` | 取每页条数 | `int\|null` |
+| `total()` / `records()` / `page()` / `size()` | 取总条数、当页记录、当前页码、每页条数 | `int` / `array` / `int\|null` |
 | `toArray(): array` | 转为 `total`、`records`、`page`、`size` 四键数组，值为 `null` 时保留键 | `array{total: int, records: array, page: int\|null, size: int\|null}` |
 
 分页接口把 `Page` 实例直接装进 `Envelope::success($page)`，输出时 `Envelope::toArray()` 会把它展开；非分页接口不构造 `Page`，直接把业务数据放进 `data`。

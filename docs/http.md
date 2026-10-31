@@ -112,7 +112,7 @@ echo $jar->signed('uid');   // 7
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
 | `make(?Formatter $formatter = null): self` | 创建实例，缺省用 `JsonFormatter::make()` | `self` |
-| `send(Envelope $envelope): string` | 未发头时只设置 `Content-Type`，随后 `echo` 正文；HTTP 状态码由接入方决定 | `string` |
+| `send(Envelope $envelope): string` | 未发头时只设置 `Content-Type`，随后 `echo` 正文 | `string` |
 | `format(Envelope $envelope): string` | 只格式化，不输出 | `string` |
 | `contentType(): string` | 透传格式化器的内容类型 | `string` |
 | `withFormatter(Formatter $formatter): self` | 换格式化器，返回新实例 | `self` |
@@ -134,15 +134,7 @@ echo $jar->signed('uid');   // 7
 | `fromPsrRequest(object $request): self` | 依次探测 `getHeaders()`、`getUri()`、`getMethod()`、`getBody()`，缺方法按缺省值处理 | `self` |
 | `fromServer(ServerContext $server, string $body = ''): self` | 从服务端变量还原方法、路径、查询串、主机与安全标记 | `self` |
 | `make(string $method, string $path, array $headers = [], string $body = '', string $host = '', bool $secure = false, string $queryString = ''): self` | 手工构造 | `self` |
-| `method(): string` | 请求方法，构造时转大写 | `string` |
-| `path(): string` | 请求路径，空串归一为 `/` | `string` |
-| `queryString(): string` | 查询串，去掉开头的 `?` | `string` |
-| `url(): string` | 完整地址；主机名为空时只返回路径与查询串 | `string` |
-| `header(string $name, string $default = ''): string` | 取单个请求头，头名大小写不敏感 | `string` |
-| `headers(): array` | 全部请求头，键为小写 | `array<string, string>` |
-| `host(): string` | 取主机名 | `string` |
-| `isSecure(): bool` | 是否 HTTPS | `bool` |
-| `body(): string` | 取请求体 | `string` |
+| `method()` / `path()` / `queryString()` / `url()` / `host()` / `isSecure()` / `body()` / `headers()` / `header(string $name, string $default = '')` | 只读取值：方法名转大写、空路径归一为 `/`、查询串去掉开头 `?`、主机为空时 `url()` 只返回路径与查询串；`headers()` 键统一小写，`header()` 不区分大小写 | `string` / `bool` / `array<string, string>` |
 
 ### RequestInput
 

@@ -100,33 +100,7 @@ echo PHP_EOL;
 | `mime(string $extension)` | 由扩展名查媒体类型；入参小写化并去掉前导点，未收录返回 `null` | `?string` |
 | `extension(string $mime)` | 由媒体类型查扩展名；丢弃 `;` 之后的参数、小写化后查表，未收录返回 `null` | `?string` |
 
-内置映射表共 23 组，覆盖常见文档、图片、音视频与 Web 资源：
-
-| 媒体类型 | 扩展名 |
-| --- | --- |
-| `application/javascript` | `js` |
-| `application/json` | `json` |
-| `application/msword` | `doc` |
-| `application/pdf` | `pdf` |
-| `application/vnd.ms-excel` | `xls` |
-| `application/vnd.ms-powerpoint` | `ppt` |
-| `application/vnd.openxmlformats-officedocument.presentationml.presentation` | `pptx` |
-| `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | `xlsx` |
-| `application/vnd.openxmlformats-officedocument.wordprocessingml.document` | `docx` |
-| `application/xml` | `xml` |
-| `application/zip` | `zip` |
-| `audio/mpeg` | `mp3` |
-| `image/gif` | `gif` |
-| `image/jpeg` | `jpg` |
-| `image/png` | `png` |
-| `image/svg+xml` | `svg` |
-| `image/vnd.microsoft.icon` | `ico` |
-| `image/webp` | `webp` |
-| `text/css` | `css` |
-| `text/csv` | `csv` |
-| `text/html` | `html` |
-| `text/plain` | `txt` |
-| `video/mp4` | `mp4` |
+内置映射表共 23 组，覆盖常见文档、图片、音视频与 Web 资源：文档类 `doc`、`docx`、`xls`、`xlsx`、`ppt`、`pptx`、`pdf`、`txt`、`csv`、`json`、`xml`；图片类 `jpg`、`png`、`gif`、`svg`、`ico`、`webp`；音视频 `mp3`、`mp4`；Web 资源 `html`、`css`、`js`、`zip`。逐条对照以 `Fxri\File\MediaInfo` 中的常量为准。
 
 映射表是唯一的查询源：`mime()` 由 `array_search()` 反查，因此两个方向的结果天然一致。
 
@@ -136,8 +110,7 @@ echo PHP_EOL;
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `inspect(string $file, array $command)` | 按数组命令执行并解析 `Duration/start/bitrate`、`Video`、`Audio` 三段输出，补充 `seconds`、`play_time` 与 `size` | `array<string, mixed>` |
-| `inspectTemplate(string $file, string $template)` | 按 1.x 命令模板执行，`%s` 替换为 `escapeshellarg()` 处理后的文件路径；模板需可信 | `array<string, mixed>` |
+| `inspect(string $file, array $command)` / `inspectTemplate(string $file, string $template)` | 执行外部探测命令并解析 `Duration/start/bitrate`、`Video`、`Audio` 三段输出，补充 `seconds`、`play_time` 与 `size`；模板形式保留 1.x 的 `%s` 写法，仅用于迁移，模板需可信 | `array<string, mixed>` |
 
 文件不存在抛 `InvalidArgumentException`；命令失败且无输出抛 `RuntimeException`。返回字段：`duration`、`seconds`、`start`、`bitrate`、`vcodec`、`vformat`、`resolution`、`width`、`height`、`acodec`、`asamplerate`、`play_time`、`size`；未匹配到的段落不会出现对应键。
 

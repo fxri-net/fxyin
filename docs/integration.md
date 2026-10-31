@@ -81,7 +81,7 @@ try {
 - `Fxri\Exception\ValidationException` 映射为 `Envelope::failure(422, $error->getMessage())`，提示语取异常消息。
 - `Fxri\Exception\SameDataException` 映射为 `Envelope::failure(409, $error->getMessage())`，提示语取异常消息。
 - 其余 `Throwable` 先调用 `$kernel->logger()->error($error->getMessage(), ['exception' => $error])` 记日志，再返回 `Envelope::failure(500, '服务内部错误')`，不透传原始消息。
-- `Envelope::failure()` 的 `success` 为 `false`；`Responder::send()` 只置 `Content-Type` 为格式化器的内容类型（JSON 缺省为 `application/json; charset=utf-8`），HTTP 状态码由接入方决定，已发出响应头时只写正文。
+- `Envelope::failure()` 的 `success` 为 `false`；输出层口径与[HTTP](./http)页一致——只置 `Content-Type`，不设 HTTP 状态码，已发出响应头时只写正文。
 
 ## 注意事项
 
@@ -96,6 +96,5 @@ try {
 - `isAvailable()` 只判 `think\App` 是否存在，不校验版本；绑定与解析依赖容器的 `instance()`、`make()` 方法名，换大版本前先跑一次绑定与解析验证。
 - 绑定的是内核实例本身，容器不会延迟构造内核；若需要容器按需构建，需接入方自行封装工厂，本适配器不提供。
 - 失败码是整数 `422`、`409`、`500`，与成功码 `Envelope::SUCCESS`（`200`）同一套整数口径，前端按 `code` 判断而不是比对 `ok` 字段。
-- `respond()` 只设置内容类型，不设置 HTTP 状态码；需要按成败返回 4xx/5xx 时由接入方在输出前后自行设置。
 - 需要非 JSON 输出时，实现 `Fxri\Http\Formatter` 接口并通过 `make()` 的第二个参数注入；`respond()` 的内容类型随之改变，`envelope()` 不受影响。
 - 内核只承载配置、日志、翻译等读取入口（见[内核与装配](./kernel)），适配器只是被绑定的对象之一，框架不会把参数、数据、SQL 等静态能力注册进容器。

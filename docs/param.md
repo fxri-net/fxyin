@@ -183,11 +183,11 @@ echo Url::withQuery('/user/list?page=2&kw=old#top', ['kw' => 'new', 'page' => nu
 
 - 构造函数全部私有，只能通过 `make()`、`Shape::merge()`、`Shape::only()` 取得实例；`add()` 与所有链式方法都返回新实例，忘记接住返回值等于没改。
 - 「键是否存在」用 `isset()` 判断，输入中的 `null` 会被当成缺失，`fillWhenAbsent()` 同样会触发。要区分「显式传 null」与「完全没传」，需要在进入本层之前记录键名。
-- `fillWhenBlank()` 在键存在时只把空串 `''` 当空，`0`、`'0'`、`false`、`[]` 都不算空；这与 `Fxri\Support\Type::isBlank()` 的语义一致。
+- `fillWhenBlank()` 在键存在时只把空串 `''` 当空，语义同 `Fxri\Support\Type::isBlank()`；`0`、`false`、`[]` 都不算空。
 - `defaultsFirst()` 只对非 null 默认值生效；默认值为 `null` 的键仍按输入与触发条件处理。
 - `csv()` 与 `json()` 共享同一个转换位，后设置的会覆盖前一个；且转换会作用于该定义声明的所有键，需要按键分别转换时请拆成多个 `Definition` 走 `Pipeline`。
 - `Pipeline::resolve()` 的结果是链式的：前一环按 `only` 丢掉的键，后一环用 `merge` 也补不回来。
-- 本层不做标量强转与业务校验，`'2'` 仍是字符串；需要整数、枚举或区间校验时自行转换，失败时抛 `Fxri\Exception\ValidationException`（继承 `InvalidArgumentException`，消息不得包含敏感入参）。
+- 本层不做标量强转与业务校验，`'2'` 仍是字符串；需要整数、枚举或区间校验时自行转换，失败抛 `Fxri\Exception\ValidationException`，消息不得包含敏感入参。
 - `Merger` 的 `$depth = 0` 是整体覆盖而非递归合并；`mergeKeepBlank()` 只认 `null` 与 `''`，`0` 与 `false` 会照常覆盖基底。
 - `Json::decode()` 与 `Json::encode()` 抛 `InvalidArgumentException`；`Json::toArray()` 不抛，非法输入返回 `null`，适合「可缺省的配置项」场景。
 - `Url::query()` 底层使用 `parse_str()`，键名中的点号与空格会被规范化成下划线；`Url::withQuery()` 删除参数必须传 `null`，传 `''` 只会写入空值。

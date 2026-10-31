@@ -58,11 +58,8 @@ var_dump($bare->language()); // NULL
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `make(array $messages = []): self` | 用「语言 / 域 / 词条」三级数组创建 | 语言目录 |
-| `fromDirectory(string $directory, string $locale = 'zh-cn', string $domain = 'messages'): self` | 从单个语言目录创建 | 语言目录 |
-| `fromRoot(string $root): self` | 从语言包根目录创建，子目录名即语言 | 语言目录 |
-| `load(string\|array $files, string $locale = 'zh-cn', ?string $domain = null): self` | 加载一个或多个语言包文件，域缺省为文件名 | 新实例 |
-| `loadDirectory(string $directory, string $locale = 'zh-cn', string $domain = 'messages'): self` | 加载整个目录，文件按文件名排序合并 | 新实例 |
+| `make(array $messages = [])` / `fromDirectory(string $directory, string $locale = 'zh-cn', string $domain = 'messages')` / `fromRoot(string $root)` | 三种入口：三级数组、单个语言目录、语言包根目录（子目录名即语言） | 语言目录 |
+| `load(string\|array $files, string $locale = 'zh-cn', ?string $domain = null)` / `loadDirectory(string $directory, string $locale = 'zh-cn', string $domain = 'messages')` | 加载语言包文件或整个目录，目录内文件按文件名排序合并，域缺省为文件名 | 新实例 |
 | `set(string\|array $name, mixed $value = null, string $locale = 'zh-cn', string $domain = 'messages'): self` | 单个或批量写入词条，数组递归合并 | 新实例 |
 | `get(string $name, string $locale = 'zh-cn', ?string $domain = null, mixed $default = null): mixed` | 读取词条，值可为嵌套数组 | 词条或默认值 |
 | `has(string $name, string $locale = 'zh-cn', ?string $domain = null): bool` | 判断词条是否存在，`null` 视为不存在 | 是否存在 |
@@ -115,12 +112,8 @@ var_dump($bare->language()); // NULL
 | `withResolver(LocaleResolver $resolver): self` | 替换检测器 | 新实例 |
 | `load(string\|array $file, ?string $locale = null, string $domain = 'messages'): self` | 加载语言包，返回新实例 | 新语言服务 |
 | `set(string\|array $name, mixed $value = null, ?string $locale = null, string $domain = 'messages'): self` | 写入词条，返回新实例 | 新语言服务 |
-| `trans(string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string` | 翻译字符串词条 | 译文 |
-| `translator(?string $locale = null, ?string $domain = null): Translator` | 生成翻译器 | 翻译器 |
-| `catalog(): Catalog` | 取语言目录 | 语言目录 |
-| `resolver(): LocaleResolver` | 取检测器 | 检测器 |
-| `locale(): string` | 取当前语言 | 语言标识 |
-| `all(?string $locale = null): array` | 取该语言全部词条 | 词条数组 |
+| `trans(string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string` | 翻译字符串词条，内部等价于 `translator()->trans()` | 译文 |
+| `translator()` / `catalog()` / `resolver()` / `locale()` / `all(?string $locale = null)` | 取翻译器、语言目录、检测器、当前语言与该语言全部词条 | 对应类型 |
 
 ## 注意事项
 
