@@ -11,9 +11,10 @@ const flags = new Set(process.argv.slice(2))
 const skipCode = flags.has("--skip-code")
 const skipDocs = flags.has("--skip-docs")
 
-// 步骤清单即门禁定义：PHP 侧沿用 composer check 作为唯一代码门禁，文档站构建兼做内链死链检查
+// 步骤清单即门禁定义：PHP 侧沿用 composer check 作为唯一代码门禁，镜像一致性校验防止 CHANGELOG 与文档站漂移，文档站构建兼做内链死链检查
 const steps = [
   { label: "代码门禁（composer check）", command: "composer", args: ["check"], skip: skipCode },
+  { label: "更新日志镜像（CHANGELOG → docs）", command: "node", args: ["scripts/sync-changelog-doc.mjs", "--check"], skip: false },
   { label: "文档站构建（内链检查）", command: "pnpm", args: ["docs:build"], skip: skipDocs }
 ]
 

@@ -12,22 +12,40 @@ declare(strict_types=1);
  * 实现层：由根入口 fxyin 的 package 域调用，也可直接执行本文件；本仓专用，不随包分发。
  */
 
-/** 必须从分发包排除的仓库路径 */
+/** 必须从分发包排除的仓库路径：与 .gitattributes 双向比对，任一方向不一致即失败 */
 const EXPORT_IGNORED_PATHS = [
+    // 开发期目录与仓库自检脚本
     '/.github',
     '/tests',
     '/tools/check-package.php',
     '/tools/parity-audit.php',
-    '/.tasks',
-    '/.trae',
-    '/.agents',
-    '/AGENTS.md',
-    '/.changeset',
+    // 工具链与配置文件
+    '/.gitattributes',
+    '/.gitignore',
+    '/.php-cs-fixer.dist.php',
+    '/phpstan.neon',
+    '/phpstan-deprecation.neon',
+    '/phpunit.xml.dist',
+    // 发版与文档站工具链
     '/docs',
     '/scripts',
     '/package.json',
     '/pnpm-lock.yaml',
-    '/phpstan-deprecation.neon',
+    '/.changeset',
+    '/.gitlab-ci.yml',
+    '/.node-version',
+    // 协作与任务元数据
+    '/.tasks',
+    '/.trae',
+    '/.agents',
+    '/AGENTS.md',
+    // 本地安装产物与工具缓存
+    '/node_modules',
+    '/vendor',
+    '/composer.lock',
+    '/.phpunit.cache',
+    '/.screenshots',
+    '/.php-cs-fixer.cache',
 ];
 
 /** 必须固定的行尾规则：平台自动转换会破坏资源字节，导致本地与 CI 校验结果不一致 */
@@ -35,6 +53,7 @@ const LINE_ENDING_RULES = [
     '* text=auto eol=lf',
     '/resources/language/** text eol=lf',
     '/resources/config/** text eol=lf',
+    '/resources/parity/** text eol=lf',
 ];
 
 /** 必须随分发包提供的运行资源 */
@@ -49,6 +68,7 @@ const REQUIRED_SHIPPED = [
     '/tools/no-numeric-code.php',
     '/tools/upgrade-inspect.php',
     '/resources/parity/legacy-api.json',
+    '/skills',
 ];
 
 /** 内置语言包 */
@@ -72,8 +92,8 @@ if (in_array('--help', $argv, true) || in_array('-h', $argv, true)) {
     echo <<<'TEXT'
         php fxyin package
 
-        校验发布包卫生：开发期文件不进 Composer 分发包、随包入口与工具不得被导出排除、
-        行尾规则固定、1.x 残留目录已清理。
+        校验发布包卫生：开发期文件不进 Composer 分发包、导出排除清单双向一致、
+        随包入口与工具不得被导出排除、行尾规则固定、1.x 残留目录已清理。
 
         退出码：0 通过 / 1 检查失败
 
@@ -97,6 +117,10 @@ foreach (EXPORT_IGNORED_PATHS as $path) {
         $missing[] = $path;
     }
 }
+
+// 反向比对：.gitattributes 新增了排除项却没登记进常量时，门禁会漏掉它，故同样视为失败
+preg_match_all('/^(\S+)\s+export-ignore$/m', $attributes, $declared);
+$unregistered = array_values(array_diff($declared[1], EXPORT_IGNORED_PATHS));
 
 // 行尾规则是资源字节一致性的根因修复，被误删时门禁必须自己报出来
 $missingEol = [];
@@ -130,21 +154,24 @@ foreach (CONFIG_FILES as $file) {
     }
 }
 
-// 随包入口与工具是接入项目使用命令行的前提，被误删或误排除时直接报错
+// 随包入口、工具与目录是接入项目使用命令行的前提，被误删或误排除时直接报错
 $missingShipped = [];
 foreach (REQUIRED_SHIPPED as $path) {
-    if (!is_file($root . $path)) {
-        $missingShipped[] = '随包文件缺失：' . $path;
+    if (!file_exists($root . $path)) {
+        $missingShipped[] = '随包内容缺失：' . $path;
     }
     if (1 === preg_match('/^' . preg_quote($path, '/') . '\s+export-ignore$/m', $attributes)) {
-        $missingShipped[] = '随包文件被导出排除：' . $path;
+        $missingShipped[] = '随包内容被导出排除：' . $path;
     }
 }
 
-if ([] !== $missing || [] !== $stale || [] !== $missingResources || [] !== $missingEol || [] !== $missingShipped) {
+if ([] !== $missing || [] !== $unregistered || [] !== $stale || [] !== $missingResources || [] !== $missingEol || [] !== $missingShipped) {
     fwrite(STDERR, '发布包卫生检查失败：' . PHP_EOL);
     foreach ($missing as $path) {
         fwrite(STDERR, '  - 缺少导出排除：' . $path . PHP_EOL);
+    }
+    foreach ($unregistered as $path) {
+        fwrite(STDERR, '  - 未登记的导出排除：' . $path . PHP_EOL);
     }
     foreach ($missingEol as $rule) {
         fwrite(STDERR, '  - 缺少行尾规则：' . $rule . PHP_EOL);

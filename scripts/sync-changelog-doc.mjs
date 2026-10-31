@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs"
+import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -41,10 +41,25 @@ export function buildPage(changelog) {
   return PAGE_HEADER + body
 }
 
-// 仅直接执行时落盘；被测试导入时不产生副作用
+// 仅直接执行时落盘；被测试导入时不产生副作用。--check 只比对不写入，供 pnpm verify 当门禁用
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+  const checkOnly = process.argv.includes("--check")
+  const target = join(root, "docs", "changelog.md")
+
   try {
-    writeFileSync(join(root, "docs", "changelog.md"), buildPage(readFileSync(join(root, "CHANGELOG.md"), "utf8")))
+    const expected = buildPage(readFileSync(join(root, "CHANGELOG.md"), "utf8"))
+
+    if (!checkOnly) {
+      writeFileSync(target, expected)
+    } else {
+      // 行尾归一后再比对：Windows 检出可能带 CRLF，字节不一致不代表内容漂移
+      const actual = existsSync(target) ? readFileSync(target, "utf8").replace(/\r\n/g, "\n") : ""
+      if (actual !== expected) {
+        console.error("✖ docs/changelog.md 与根 CHANGELOG.md 不一致，请执行 pnpm sync:changelog-doc 后重试")
+        process.exit(1)
+      }
+      console.log("✔ 更新日志镜像与根 CHANGELOG.md 一致")
+    }
   } catch (error) {
     console.error(error.message)
     process.exit(1)
