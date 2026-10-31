@@ -52,11 +52,7 @@ php fxyin scan app
 | `1` | 门禁不通过（存在违规、薄壳不一致等） |
 | `2` | 用法错误（未知命令、缺参数、路径非法） |
 
-## 新增命令
+## 扩展约束
 
-在 `src/Tooling/Cli::COMMANDS` 注册一个域（摘要、实现脚本、是否随包），实现脚本放 `tools/`（本仓专用）或 `src/Tooling/`（随包），并按需提供 `--help`。入口只允许一个，不再新增第二套命令行。
-
-## 打包约束
-
-- 随包命令的实现文件不得被 `export-ignore` 排除，`php fxyin package` 会校验；
-- 接入项目出现「安装包缺少随包命令的实现文件」即说明打包配置回退，需要修正 `.gitattributes`。
+- 新增命令必须在 `src/Tooling/Cli::COMMANDS` 注册一个域（摘要、实现脚本、是否随包），实现脚本放 `tools/`（本仓专用）或 `src/Tooling/`（随包），并按需提供 `--help`；入口只允许一个，不再新增第二套命令行。
+- 随包命令的实现文件不得被 `export-ignore` 排除，`php fxyin package` 会校验；接入项目出现「安装包缺少随包命令的实现文件」即说明打包配置回退，需要修正 `.gitattributes`。

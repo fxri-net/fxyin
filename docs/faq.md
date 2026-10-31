@@ -90,7 +90,7 @@
 
 ### 支持哪些 PHP 版本
 
-PHP 8.2 起，CI 覆盖 8.2 至 8.5。`mbstring` 与 `openssl` 是必装扩展，其余依赖按需安装，见[快速开始](./getting-started)。
+PHP 8.2 起，CI 覆盖 8.2 至 8.5；`mbstring` 与 `openssl` 必装。完整环境要求见[快速开始](./getting-started)。
 
 ## 注意事项
 

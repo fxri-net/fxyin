@@ -50,7 +50,7 @@ pnpm install
 | `pnpm docs:build` | 构建文档站，同时校验站内链接 |
 | `pnpm docs:preview` | 预览已构建的文档站产物 |
 | `pnpm sync:changelog-doc` | 把根 `CHANGELOG.md` 同步为 `docs/changelog.md` |
-| `pnpm verify` | 聚合门禁：`composer check` 加 `pnpm docs:build`；`--skip-code` / `--skip-docs` 可跳过其中一段 |
+| `pnpm verify` | 聚合门禁，按 `scripts/verify.mjs` 的清单依次执行；`--skip-code` / `--skip-docs` 可跳过代码段或文档段 |
 
 提交前跑一次 `pnpm verify`；它是本地与流水线的统一入口，步骤清单只此一份，不要只挑其中几步执行。
 
@@ -84,7 +84,7 @@ pnpm install
 
 ## 任务记录流程
 
-仓库用 `.tasks/` 记录任务：进行中的任务放在 `.tasks/active/年月/`，完成后按月归档到 `.tasks/archive/年月/年月日.md`。任务档案与代码改动一起提交。
+仓库用 `.tasks/` 记录任务：进行中的任务放在 `.tasks/active/年月/`，完成后按月归档到 `.tasks/archive/年月/年月日.md`。任务档案与代码改动一起提交；建档、执行、归档的判定与时间口径以全局技能 `fxri-plan-to-task` 为准。
 
 ```bash
 toolkit init             # 首次初始化任务区，幂等，已有目录不覆盖
@@ -92,23 +92,19 @@ toolkit tasks archive    # 归档已完成任务，可加 --dry-run 预演
 toolkit tasks check      # 校验任务档案结构，必须零错误
 ```
 
-新建任务前先查 `.tasks/active/` 与 `.tasks/archive/` 是否有同主题档案：有则更新原档案，没有才新建，避免一件事拆成多档。
-
 ## 发版链路
 
-发版能力全部来自全局 `@fxri/toolkit`，本仓不安装 `@changesets/cli`，只在 `.changeset/` 保留数据模型配置。
+发版能力全部来自全局 `@fxri/toolkit`，完整步骤以全局技能 `fxri-release-changelog` 为准；本仓只额外约束：
 
-1. 建变更集：执行 `toolkit changelog`，为每个面向使用者的改动建一条，选择 `patch` / `minor` / `major`。文案写「对使用者意味着什么」，不写内部实现过程。
-2. 消费发版：执行 `toolkit changelog version`，读取全部变更集，升级 `package.json` 版本号，把条目并入 `CHANGELOG.md` 并清空变更集。
-3. 人工润色：确认新版本块的分组与措辞。分组按固定顺序排列：重大变更、新增功能、功能调整、优化改进、问题修复、文档更新、清理移除、依赖变更、其他变更；版本标题下保留 `> YYYY-MM-DD 发布` 一行。
-4. 归一格式：执行 `toolkit changelog --history format`，统一历史版本块的标题与日期行。⚠️ 该命令会连带扫描并改写 `vendor/**/CHANGELOG.md`，`vendor` 是 `composer install` 的再生产物且不入库，格式化后不要提交这些变更。
-5. 同步文档站：执行 `pnpm sync:changelog-doc`，把根 `CHANGELOG.md` 转成 `docs/changelog.md`。
-6. 执行验收：`pnpm verify`。
-7. 提交并打标签：按提交规范提交，再打附注标签 `vX.Y.Z`；推送标签（`git push origin vX.Y.Z`）需维护者确认后执行。
+- 变更集条目逐条写成 `- 类型：描述`，影响对外行为的改动必须建变更集。
+- 版本号与 `CHANGELOG.md` 的改动单独提交，不与任务收尾混批。
+- 发布前必须跑 `pnpm verify`，任一步失败即中止，不得进入提交、打标签与发布。
+- 根 `CHANGELOG.md` 是更新日志的源，`docs/changelog.md` 由 `pnpm sync:changelog-doc` 生成；两者不一致时 `pnpm verify` 会直接失败。
+- ⚠️ `toolkit changelog --history format` 会连带扫描并改写 `vendor/**/CHANGELOG.md`，`vendor` 是 `composer install` 的再生产物且不入库，格式化后不要把这些变更带进提交。
 
 ### 标签规则
 
-- 标签一律用附注标签（`git tag -a`），说明写中文；已推送的标签不回移、不覆盖。
+- 标签格式 `vX.Y.Z`，用附注标签；已推送的标签不回移、不覆盖。
 - 补打历史标签时，按更新日志的日期边界选提交，并在日志标注「标签补打」及补打日期。
 - 1.x 只补标不发版，`v1.6.1` 仅作终点标记；正式发版从 2.0.0 起。
 - 发版后同步 `src/Package.php` 的 `VERSION`，`tests/PackageTest.php` 会校验它与 `package.json` 一致。

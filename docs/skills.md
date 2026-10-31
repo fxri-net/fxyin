@@ -24,45 +24,7 @@ php vendor/bin/fxyin skills --target .trae/skills
 php vendor/bin/fxyin skills --check
 ```
 
-仓库内把 `vendor/bin/fxyin` 换成 `php fxyin`。命令总览见[命令行](./cli)。
-
-## 自建入口（可选）
-
-在接入项目里放一个入口脚本，目标目录相对项目根、可传多个：
-
-```php
-<?php
-
-declare(strict_types=1);
-
-require __DIR__ . '/../vendor/autoload.php';
-
-use Fxri\Tooling\SkillInstaller;
-
-// --check 只比对不写盘，CI 直接看退出码
-if (in_array('--check', $argv, true)) {
-    exit(SkillInstaller::check(__DIR__) ? 0 : 1);
-}
-
-// 默认目标为 .agents/skills；Trae 读取 .trae/skills，可同时给出
-$result = SkillInstaller::install(__DIR__, ['.agents/skills', '.trae/skills']);
-
-// skipped 是同名但不带本包标记的文件，已被原样保留
-echo sprintf("写入 %d 个，跳过 %d 个\n", count($result['installed']), count($result['skipped']));
-```
-
-生成的薄壳形如：
-
-```markdown
----
-name: fxri-fxyin
-description: 风音框架（fxri/fxyin）的接入与日常使用：……
----
-
-<!-- fxyin-skill-entry: v1 -->
-<!-- 由 Fxri\Tooling\SkillInstaller 生成，可安全删除；需要时执行 php vendor/bin/fxyin skills 重新生成 -->
-本技能只是入口，不承载条文：真源在 `vendor/fxri/fxyin/skills/fxri-fxyin/SKILL.md`，同目录的 `references/` 为补充材料；内容以真源为准。
-```
+仓库内把 `vendor/bin/fxyin` 换成 `php fxyin`。命令总览见[命令行](./cli)。需要定制目标目录以外的场景，可直接调用 `SkillInstaller::install()` / `check()`，签名见下表。
 
 ## 参数与返回值
 
@@ -70,7 +32,7 @@ description: 风音框架（fxri/fxyin）的接入与日常使用：……
 | --- | --- | --- |
 | `install(string $projectRoot, array $targets = ['.agents/skills'])` | 为包内每个技能在每个目标目录写一份薄壳；带本包标记的同名文件直接覆盖，不带标记的跳过 | `array{installed: list<string>, skipped: list<string>}` |
 | `check(string $projectRoot, array $targets = ['.agents/skills'])` | 逐个校验薄壳存在且内容与当前真源一致；两侧行尾按 LF 归一再比较 | `bool` |
-| `render(string $name, string $description, string $source)` | 渲染单个薄壳的文本，便于自建入口直接落盘 | `string` |
+| `render(string $name, string $description, string $source)` | 渲染单个薄壳的文本，便于直接落盘 | `string` |
 
 约束：
 
@@ -82,4 +44,4 @@ description: 风音框架（fxri/fxyin）的接入与日常使用：……
 
 - `check()` 只认文本一致：行尾差异已抹平，但多余空行、缩进变化仍判定漂移，改完真源重新安装即可。
 - 薄壳里的 `description` 是触发匹配的原文拷贝；本包升级改了描述而项目没重跑安装时，`check()` 会报不一致，属于预期提醒。
-- 本仓库自带 `php fxyin skills`（`--target`、`--check`、`--root`），通过 Composer bin 在接入项目里对应 `php vendor/bin/fxyin skills`；上方自建脚本只用于需要定制目标目录以外的场景。本仓库自身的验收命令见[贡献指南](./contributing)。
+- 本仓库自带 `php fxyin skills`（`--target`、`--check`、`--root`），通过 Composer bin 在接入项目里对应 `php vendor/bin/fxyin skills`。本仓库自身的验收命令见[贡献指南](./contributing)。
