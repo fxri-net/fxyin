@@ -13,7 +13,7 @@ test:
   before_script:
     # Node 镜像不含 PHP：补装 8.2（本仓最低支持版本与硬性扩展）与 curl（Curl 用例需要，缺失会整组跳过）；
     # PHP 8.2–8.5 的版本矩阵由 GitHub 流水线覆盖
-    - apt-get update && apt-get install -y --no-install-recommends php8.2-cli php8.2-mbstring php8.2-xml php8.2-openssl php8.2-curl git unzip
+    - apt-get update && apt-get install -y --no-install-recommends php8.2-cli php8.2-mbstring php8.2-xml php8.2-curl git unzip
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   script:
     # 仓库不提交 composer.lock，由当前 PHP 版本自行解析依赖
