@@ -12,7 +12,7 @@
         └── model.php    → facade.model.*
 ```
 
-`config/app.php` 直接 `return` 一个数组；文件名里的点号与目录分隔符等价，`facade/model.php` 与 `facade.model.php` 都对应 `facade.model`。
+`config/app.php` 直接 `return` 一个数组。
 
 ## 加载与叠加
 
@@ -52,7 +52,6 @@ var_dump($config->has('app.name'));
 - 路径分隔符是 `.`，键名里真实的点必须写成 `/_`，否则会被当成层级。
 - 中途遇到非数组值就返回默认值，不做更深探底。
 - `has()` 对 `null` 值返回 `true`，取值语义与 `get()` 一致。
-- 配置文件由 `require` 执行，文件内不要写副作用代码。
 
 ## 运行期覆盖
 
@@ -94,7 +93,6 @@ echo $kernel->config()->get('app.lang.default');        // 仍是基底值
 ## 注意事项
 
 - 配置文件名区分大小写（取决于文件系统），`App.php` 与 `app.php` 是两个顶级键。
-- 缺省装配自带 `app`、`branch`、`env` 三组内置配置；要空配置环境用 `withoutDefaultConfig()` 或 `bare()`。
 - 语言词条按「语言 / 域 / 词条」组织，`ArrayTranslator` 的缺省域是 `messages`，未命中原样返回词条本身。
 
 明细与全部字段见仓库 `docs/config.md`，语言相关见 `docs/language.md`。

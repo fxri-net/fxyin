@@ -5,7 +5,7 @@
 | 项目 | 要求 |
 | --- | --- |
 | PHP | 8.2 起 |
-| 扩展 | `mbstring` 必需，`openssl` 供安全相关能力 |
+| 扩展 | `mbstring` 与 `openssl` 均为必需（`composer.json` 的 `require` 已声明） |
 | 自动加载 | Composer PSR-4，`Fxri\` 对应 `src/`，无需手动引入启动文件 |
 
 ```bash
