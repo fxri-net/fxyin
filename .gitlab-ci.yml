@@ -7,10 +7,25 @@ stages:
 
 test:
   stage: test
-  image: node:20-bookworm
+  # 基础镜像固定为 node:20-bookworm；if-not-present 避免每次检查或拉取（runner 不允许时回退为字符串形式）
+  image:
+    name: node:20-bookworm
+    pull_policy: if-not-present
   variables:
     COMPOSER_ALLOW_SUPERUSER: "1"
+    # 自建 runner 访问 deb.debian.org 实测只有 27.4 kB/s，索引下载就要数分钟，这里切国内镜像
+    APT_MIRROR: mirrors.aliyun.com
+    # Composer 缓存随 job 缓存一起持久化，避免每次重复下载依赖
+    COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.cache/composer"
+  cache:
+    key:
+      files:
+        - composer.json
+    paths:
+      - .cache/composer
   before_script:
+    # Debian 12 使用 deb822 源，旧镜像使用 sources.list，两种形态都兜住
+    - sed -i "s|deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources 2>/dev/null || sed -i "s|deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list
     # Node 镜像不含 PHP：补装 8.2（本仓最低支持版本与硬性扩展）与 curl（Curl 用例需要，缺失会整组跳过）；
     # PHP 8.2–8.5 的版本矩阵由 GitHub 流水线覆盖
     - apt-get update && apt-get install -y --no-install-recommends php8.2-cli php8.2-mbstring php8.2-xml php8.2-curl git unzip
@@ -23,10 +38,18 @@ test:
 
 pages:
   stage: pages
-  image: node:20-bookworm
+  image:
+    name: node:20-bookworm
+    pull_policy: if-not-present
   # 完整克隆：文档站 lastUpdated 依赖 git 提交时间，浅克隆会失真
   variables:
     GIT_DEPTH: "0"
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store
   script:
     # 站点参数优先取 CI/CD 变量；未定义时按 GitLab Pages 的默认形态推导，避免把路径写死在仓库里
     - export VITEPRESS_BASE="${VITEPRESS_BASE:-/$CI_PROJECT_NAME/}"
@@ -37,7 +60,7 @@ pages:
     - export SITE_URL="${SITE_URL:-$PAGES_ORIGIN/$CI_PROJECT_NAME/}"
     - export REPO_URL="${REPO_URL:-$CI_PROJECT_URL}"
     - npm install -g pnpm@10.34.4
-    - pnpm install --frozen-lockfile
+    - pnpm install --frozen-lockfile --store-dir .pnpm-store
     - pnpm docs:build
     # GitLab Pages 只发布 public/ 目录，构建产物在此归位
     - rm -rf public

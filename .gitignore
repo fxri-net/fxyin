@@ -11,6 +11,9 @@
 /.php-cs-fixer.cache
 /.phpunit.cache/
 /.screenshots/
+# GitLab 流水线缓存（Composer 与 pnpm）
+/.cache/
+/.pnpm-store/
 
 # 发版与文档站工具链
 /node_modules/
