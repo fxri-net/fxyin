@@ -30,7 +30,7 @@ final class Tree
         string $parentKey = 'parent_id',
         string $childKey = '_child',
     ): array {
-        $indexed = self::index($list, $idKey);
+        $indexed = RowIndex::keyBy($list, $idKey);
 
         $children = [];
         $roots = [];
@@ -141,31 +141,5 @@ final class Tree
 
             self::flatten($children, $childKey, $list);
         }
-    }
-
-    /**
-     * 按主键建立索引。
-     *
-     * @param array<int, mixed> $list 扁平列表
-     * @param string $idKey 主键字段名
-     * @return array<array-key, array<array-key, mixed>> 主键索引
-     */
-    private static function index(array $list, string $idKey): array
-    {
-        $indexed = [];
-        foreach ($list as $row) {
-            if (!is_array($row)) {
-                throw new InvalidArgumentException('列表项必须是数组');
-            }
-
-            $id = $row[$idKey] ?? null;
-            if (!is_int($id) && !is_string($id)) {
-                throw new InvalidArgumentException('列表项缺少主键：' . $idKey);
-            }
-
-            $indexed[$id] = $row;
-        }
-
-        return $indexed;
     }
 }

@@ -41,17 +41,9 @@ final class Config
      */
     public function get(string $name, mixed $default = null): mixed
     {
-        $value = $this->data;
+        $result = Path::read($this->data, $name);
 
-        foreach (explode('.', $name) as $segment) {
-            $segment = str_replace('/_', '.', $segment);
-            if (!is_array($value) || !array_key_exists($segment, $value)) {
-                return $default;
-            }
-            $value = $value[$segment];
-        }
-
-        return $value;
+        return $result['found'] ? $result['value'] : $default;
     }
 
     /**
@@ -64,17 +56,7 @@ final class Config
      */
     public function has(string $name): bool
     {
-        $value = $this->data;
-
-        foreach (explode('.', $name) as $segment) {
-            $segment = str_replace('/_', '.', $segment);
-            if (!is_array($value) || !array_key_exists($segment, $value)) {
-                return false;
-            }
-            $value = $value[$segment];
-        }
-
-        return true;
+        return Path::read($this->data, $name)['found'];
     }
 
     /**

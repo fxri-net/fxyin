@@ -60,20 +60,9 @@ final class Store
      */
     public function get(string $name, mixed $default = null): mixed
     {
-        $segments = explode('.', $name);
-        $value = $this->overrides;
-        $covered = true;
+        $result = Path::read($this->overrides, $name);
 
-        foreach ($segments as $segment) {
-            $segment = str_replace('/_', '.', $segment);
-            if (!is_array($value) || !array_key_exists($segment, $value)) {
-                $covered = false;
-                break;
-            }
-            $value = $value[$segment];
-        }
-
-        return $covered ? $value : $this->base->get($name, $default);
+        return $result['found'] ? $result['value'] : $this->base->get($name, $default);
     }
 
     /**
@@ -86,17 +75,7 @@ final class Store
      */
     public function has(string $name): bool
     {
-        $value = $this->overrides;
-
-        foreach (explode('.', $name) as $segment) {
-            $segment = str_replace('/_', '.', $segment);
-            if (!is_array($value) || !array_key_exists($segment, $value)) {
-                return $this->base->has($name);
-            }
-            $value = $value[$segment];
-        }
-
-        return true;
+        return Path::read($this->overrides, $name)['found'] || $this->base->has($name);
     }
 
     /**
@@ -128,12 +107,6 @@ final class Store
             return;
         }
 
-        /** @var array<array-key, mixed> $data */
-        $data = $value;
-        foreach (array_reverse(explode('.', $name)) as $segment) {
-            $data = [str_replace('/_', '.', $segment) => $data];
-        }
-
-        $this->overrides = Merger::merge($this->overrides, $data);
+        $this->overrides = Merger::merge($this->overrides, Path::nest($name, $value));
     }
 }

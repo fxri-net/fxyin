@@ -26,7 +26,7 @@ final class Hierarchy
      */
     public static function ancestors(array $list, int|string $id, string $idKey = 'id', string $parentKey = 'parent_id'): array
     {
-        $indexed = self::index($list, $idKey);
+        $indexed = RowIndex::keyBy($list, $idKey);
         $result = [];
         $visited = [$id => true];
         $current = $id;
@@ -64,7 +64,7 @@ final class Hierarchy
      */
     public static function descendants(array $list, int|string $id, string $idKey = 'id', string $parentKey = 'parent_id'): array
     {
-        $indexed = self::index($list, $idKey);
+        $indexed = RowIndex::keyBy($list, $idKey);
         $children = [];
         foreach ($indexed as $key => $row) {
             $parent = $row[$parentKey] ?? null;
@@ -95,31 +95,5 @@ final class Hierarchy
         }
 
         return $result;
-    }
-
-    /**
-     * 按主键建立索引。
-     *
-     * @param array<int, mixed> $list 扁平列表
-     * @param string $idKey 主键字段名
-     * @return array<array-key, array<array-key, mixed>> 主键索引
-     */
-    private static function index(array $list, string $idKey): array
-    {
-        $indexed = [];
-        foreach ($list as $row) {
-            if (!is_array($row)) {
-                throw new InvalidArgumentException('列表项必须是数组');
-            }
-
-            $id = $row[$idKey] ?? null;
-            if (!is_int($id) && !is_string($id)) {
-                throw new InvalidArgumentException('列表项缺少主键：' . $idKey);
-            }
-
-            $indexed[$id] = $row;
-        }
-
-        return $indexed;
     }
 }

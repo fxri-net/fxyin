@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fxri\Application;
 
 use Fxri\Config\Config;
+use Fxri\Config\Path;
 use Fxri\Config\Store;
 use Fxri\Param\Merger;
 use Fxri\Support\Type;
@@ -55,12 +56,7 @@ final class Cli
             }
 
             $parts = explode('=', substr($value, strlen(self::PREFIX)), 2);
-            $data = $parts[1] ?? null;
-            foreach (array_reverse(explode('.', $parts[0])) as $segment) {
-                $data = [str_replace('/_', '.', $segment) => $data];
-            }
-
-            $values = Merger::merge($values, $data);
+            $values = Merger::merge($values, Path::nest($parts[0], $parts[1] ?? null));
         }
 
         return ['arguments' => $rest, 'values' => $values];
