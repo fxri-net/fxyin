@@ -7,6 +7,7 @@
 - PHP 8.2 起
 - 扩展 `mbstring`、`openssl`（均为必需）
 - Composer
+- 可选依赖：`psr/http-client`、`psr/http-message`、`psr/http-factory` 及其实现（如 `symfony/http-client`、`nyholm/psr7`），只在用到 PSR-18 客户端时安装
 
 ## 安装
 
@@ -32,26 +33,7 @@ $kernel = KernelBuilder::make()
     ->build();
 ```
 
-装配项全部可选，`make()` 与每个 `with*` 方法都返回新实例，可以任意顺序链式调用：
-
-| 方法 | 作用 |
-| --- | --- |
-| `withConfigDir(string $directory)` | 追加配置目录，后追加者覆盖同名文件；目录不存在时抛 `InvalidArgumentException` |
-| `withLogger(LoggerInterface $logger)` | 注入 PSR-3 日志，缺省为无操作日志 |
-| `withTranslator(TranslatorInterface $translator)` | 注入翻译器，缺省为内置数组翻译 |
-| `withHttpClient(object $client)` | 注入 PSR-18 客户端 |
-| `withAdapter(object $adapter)` | 注入接入方适配器 |
-
-内核装配完成后不可变，只提供读取入口：
-
-| 方法 | 返回 |
-| --- | --- |
-| `config()` | 配置实例 |
-| `logger()` | 日志实例，未注入时为 `NullLogger` |
-| `translator()` | 翻译器，未注入时为内置数组翻译 |
-| `httpClient()` | HTTP 客户端，未注入时为 `null` |
-| `adapter()` | 接入方适配器，未注入时为 `null` |
-| `trans(string $id, array $parameters = [])` | 翻译词条 |
+装配项全部可选，`make()` 与每个 `with*` 方法都返回新实例，可以任意顺序链式调用。完整方法、参数与缺省值见[内核与装配](./kernel)。
 
 ## 最小可运行示例
 
@@ -116,7 +98,7 @@ echo $kernel->config()->get('app.name');   // 示例应用
 echo $kernel->trans('欢迎');
 ```
 
-配置按「文件名即分组名」加载，多个配置目录按追加顺序叠加，同名文件内层字段浅合并、后者覆盖前者。日志与翻译器缺省时落为无操作实现，因此最小装配只需一个配置目录，甚至完全不传装配项也能 `build()`。
+配置按「文件名即分组名」加载，多个配置目录按追加顺序叠加；加载规则与点号路径细节见[配置](./config)。日志与翻译器缺省时落为无操作实现，因此最小装配只需一个配置目录，甚至完全不传装配项也能 `build()`。
 
 ## 按需取用能力
 

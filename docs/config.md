@@ -8,9 +8,9 @@
 
 `Config` 是内核里唯一必传的服务（见[内核与装配](./kernel)）：`KernelBuilder::build()` 会调用 `ConfigLoader` 把磁盘上的配置读成 `Config`，业务代码再用 `$kernel->config()->get()` 取值。`Config` 也可以脱离内核直接构造，测试里给一份内存数组即可。
 
-`KernelBuilder` 默认先加载随包提供的 `resources/config`（`app`、`branch`、`env`），再按 `withConfigDir()` 的登记顺序叠加项目配置；`withoutDefaultConfig()` 或 `bare()` 可关闭内置配置。内核以 `config()` 暴露只读视图，以 `configStore()` 暴露可写覆盖层，运行期 `set()` 不会修改只读基底。
+`KernelBuilder` 默认装配的配置与关闭方式见[内核与装配](./kernel)；内核以 `config()` 暴露只读视图，以 `configStore()` 暴露可写覆盖层，运行期 `set()` 不会修改只读基底。
 
-`ConfigLoader` 只认「目录 + `*.php` 文件」这一种组织方式，支持递归子目录，不支持其他格式。文件相对路径去掉扩展名后按分隔符转嵌套键：`config/app.php` 的内容用 `app.name` 读取，`config/facade/model.php` 用 `facade.model` 读取。文件名里的点号同样视为层级分隔，所以 `third.oss.php` 与 `third/oss.php` 都对应 `third.oss`。
+`ConfigLoader` 只认「目录 + `*.php` 文件」这一种组织方式，支持递归子目录，不支持其他格式；文件名与目录层级如何转成点号键见下方 `load()` 的规则。
 
 `Environment` 与 `Config` 没有耦合：它不读配置文件，也不把结果写进 `$_ENV`、`$_SERVER` 或 `putenv()`。需要把 `.env` 的值并入配置时，由调用方自行取值再拼装数组。
 
@@ -163,7 +163,6 @@ echo $translator->get('欢迎');                // 欢迎
 - `ArrayTranslator` 未命中的词条原样返回，因此不会出现空串；要区分「已翻译」与「未翻译」用 `has()`。
 - `ArrayTranslator::withLocale()` 只换当前语言，不会为新语言补词条；用 `make()` 传入的多语言数组才能跨语言取词。
 - `PhpFileLoader::loadDirectory()` 用 `array_merge()` 合并，同名词条后者覆盖前者；需要按语言目录分层时，每个语言一个目录分别加载。
-- `KernelBuilder` 默认加载 `resources/config` 是 2.1.0 的行为变化；需要 2.0 的空配置环境时用 `withoutDefaultConfig()` 或 `bare()`。
 - `Store::get()` 的覆盖层优先：即使覆盖值是 `null`，也返回 `null` 而不是回落到基底；要恢复基底值需重新创建存储。
 - `Store::set()` 返回 `void`，与 1.6.1 `Config::set()` 一致；连续写入需要分行调用。
 - 1.x `Env` 的运行期叠加请用 `Config\Store` 的 `env` 命名空间，不要指向 `Config\Environment`——后者只解析 `.env` 文本，不读写配置。

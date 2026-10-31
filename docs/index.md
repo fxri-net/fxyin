@@ -54,24 +54,12 @@ composer require fxri/fxyin
 装配一个内核，随后按需取用配置与翻译：
 
 ```php
-<?php
-
-declare(strict_types=1);
-
 use Fxri\KernelBuilder;
 
-$kernel = KernelBuilder::make()
-    ->withConfigDir(__DIR__ . '/config')
-    ->build();
-
-// 取配置，config/app.php 的内容位于 app 键下
-$name = $kernel->config()->get('app.name', '未命名');
-
-// 取翻译，未注入翻译器时由内置词条兜底
-echo $kernel->trans('欢迎');
+$kernel = KernelBuilder::make()->build();
 ```
 
-详细步骤见[快速开始](./getting-started)。
+完整装配项、缺省行为与最小可运行示例见[快速开始](./getting-started)，方法签名与不变性约束见[内核与装配](./kernel)。
 
 ## 解决什么痛点
 
@@ -95,6 +83,4 @@ echo $kernel->trans('欢迎');
 
 ## 环境要求
 
-- PHP >= 8.2
-- 扩展 `mbstring`、`openssl`（均为必需）
-- 可选依赖：`psr/http-client`、`psr/http-message`、`psr/http-factory` 及其实现（如 `symfony/http-client`、`nyholm/psr7`）
+PHP 8.2 起，需 `mbstring`、`openssl` 扩展；可选依赖与安装步骤见[快速开始](./getting-started)。
