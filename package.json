@@ -10,12 +10,15 @@
   },
   "scripts": {
     "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
+    "docs:typecheck": "tsc --noEmit -p docs/.vitepress",
+    "docs:build": "pnpm docs:typecheck && vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "sync:changelog-doc": "node scripts/sync-changelog-doc.mjs",
     "verify": "node scripts/verify.mjs"
   },
   "devDependencies": {
+    "@types/node": "^20.19.21",
+    "typescript": "^5.9.3",
     "vitepress": "^1.6.4"
   },
   "packageManager": "pnpm@10.34.4",

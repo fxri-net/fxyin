@@ -4,7 +4,7 @@
 
 ## 定位
 
-本仓是一个 Composer 库，外加一套不发布的 Node 工具链：前者是 `src/` 下的框架代码，后者只负责文档站构建与发版辅助（`package.json` 为 `private: true`，不进 npm）。贡献场景大体分三类——改代码、改文档、发版本，三者的验收口径不同，但都要通过 `pnpm verify`。
+本仓是一个 Composer 库，外加一套不发布的 Node 工具链：前者是 `src/` 下的框架代码，后者只负责文档站构建、类型检查与发版辅助（`package.json` 为 `private: true`，不进 npm）。贡献场景大体分三类——改代码、改文档、发版本，三者的验收口径不同，但都要通过 `pnpm verify`。
 
 ## 开发环境
 
@@ -47,7 +47,8 @@ pnpm install
 | `php fxyin scan` | 扫描数字枚举等禁用写法，等价于 `composer scan` |
 | `vendor/bin/php-cs-fixer fix` | 自动修复代码风格，仅在需要本地修正时执行 |
 | `pnpm docs:dev` | 本地起文档站开发服务 |
-| `pnpm docs:build` | 构建文档站，同时校验站内链接 |
+| `pnpm docs:typecheck` | 只做文档配置类型检查（`tsc --noEmit`） |
+| `pnpm docs:build` | 先做 TypeScript 类型检查，再构建文档站并校验站内链接 |
 | `pnpm docs:preview` | 预览已构建的文档站产物 |
 | `pnpm sync:changelog-doc` | 把根 `CHANGELOG.md` 同步为 `docs/changelog.md` |
 | `pnpm verify` | 聚合门禁，按 `scripts/verify.mjs` 的清单依次执行；`--skip-code` / `--skip-docs` 可跳过代码段或文档段 |

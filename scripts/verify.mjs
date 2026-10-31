@@ -16,7 +16,7 @@ const steps = [
   { label: "代码门禁（composer check）", command: "composer", args: ["check"], skip: skipCode },
   { label: "变更集规范（.changeset）", command: "node", args: ["scripts/check-changeset.mjs"], skip: false },
   { label: "更新日志镜像（CHANGELOG → docs）", command: "node", args: ["scripts/sync-changelog-doc.mjs", "--check"], skip: false },
-  { label: "文档站构建（内链检查）", command: "pnpm", args: ["docs:build"], skip: skipDocs }
+  { label: "文档站构建（类型检查 + 内链检查）", command: "pnpm", args: ["docs:build"], skip: skipDocs }
 ]
 
 const failures = []
