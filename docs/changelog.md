@@ -26,36 +26,36 @@ outline: [2, 2]
 
 ### 🚨 重大变更
 
-- 修改：对外响应统一为 `code`、`message`、`data`、`extend`、`debug` 五键，`code` 为整数、默认 200，`success` 只在内部保留
-- 修改：`Envelope`、`Responder`、JSON/XML 格式化器与 ThinkPHP 异常处理同步新口径，旧六元数组与 `isOk()` 别名不再保留
-- 修改：`Security\LegacyCipher`、`LegacyToken` 更名为 `DesCipher`、`DesToken`
+- 对外响应统一为 `code`、`message`、`data`、`extend`、`debug` 五键，`code` 为整数、默认 200，`success` 只在内部保留
+- `Envelope`、`Responder`、JSON/XML 格式化器与 ThinkPHP 异常处理同步新口径，旧六元数组与 `isOk()` 别名不再保留
+- `Security\LegacyCipher`、`LegacyToken` 更名为 `DesCipher`、`DesToken`
 
 ### ✨ 新增功能
 
-- 新增：统一命令行入口 `fxyin`，仓库内用 `php fxyin <命令>`，接入项目经 Composer bin 用 `php vendor/bin/fxyin <命令>`
-- 新增：命令域 `skills`、`upgrade`、`scan` 随包提供，`skills` 为原生实现；`package`、`parity` 保留为本仓内部命令
-- 新增：`skills/` 随包提供两个 AI 技能——日常接入 `fxri-fxyin` 与 1.x 升级 `fxri-fxyin-upgrade`，含 `references/` 目录
-- 新增：`Fxri\Tooling\SkillInstaller` 在项目面目录生成技能入口薄壳，指向包内真源，不复制正文、不写全局目录
-- 新增：`tools/install-skills.php`（`--target`、`--check`、`--root`）供本仓库开发期使用，脚本不随包分发
-- 新增：`Fxri\Tooling\MetaGenerator` 渲染并校验 `.phpstorm.meta.php`，按字符串名称取对象的工厂方法可补全出具体类
-- 新增：`ConfigLoader` 支持递归扫描子目录与点号文件名
-- 新增：分页壳 `Data\Page`（`total`、`records`、`page`、`size`），分页列表统一放在 `data.records`
-- 新增：`Envelope`、`Page`、`Formatter`、`Responder` 补充 `@template` 泛型声明，编辑器可推导具体类型
-- 新增：文档站补充「IDE 元数据」与「AI 技能」两页
+- 统一命令行入口 `fxyin`，仓库内用 `php fxyin <命令>`，接入项目经 Composer bin 用 `php vendor/bin/fxyin <命令>`
+- 命令域 `skills`、`upgrade`、`scan` 随包提供，`skills` 为原生实现；`package`、`parity` 保留为本仓内部命令
+- `skills/` 随包提供两个 AI 技能——日常接入 `fxri-fxyin` 与 1.x 升级 `fxri-fxyin-upgrade`，含 `references/` 目录
+- `Fxri\Tooling\SkillInstaller` 在项目面目录生成技能入口薄壳，指向包内真源，不复制正文、不写全局目录
+- `tools/install-skills.php`（`--target`、`--check`、`--root`）供本仓库开发期使用，脚本不随包分发
+- `Fxri\Tooling\MetaGenerator` 渲染并校验 `.phpstorm.meta.php`，按字符串名称取对象的工厂方法可补全出具体类
+- `ConfigLoader` 支持递归扫描子目录与点号文件名
+- 分页壳 `Data\Page`（`total`、`records`、`page`、`size`），分页列表统一放在 `data.records`
+- `Envelope`、`Page`、`Formatter`、`Responder` 补充 `@template` 泛型声明，编辑器可推导具体类型
+- 文档站补充「IDE 元数据」与「AI 技能」两页
 
 ### ⚡ 优化改进
 
-- 优化：`psr/log` 约束放宽为 `^1.1 || ^2.0 || ^3.0`，可与锁定 1.x 的宿主框架共存
-- 优化：发布归档排除本地安装产物、文档站工具链与协作元数据，分发包不再携带 `node_modules`、`vendor` 与协作规则文件
-- 优化：技能版本在 frontmatter 与正文首部双写，便于核对是否同步
+- `psr/log` 约束放宽为 `^1.1 || ^2.0 || ^3.0`，可与锁定 1.x 的宿主框架共存
+- 发布归档排除本地安装产物、文档站工具链与协作元数据，分发包不再携带 `node_modules`、`vendor` 与协作规则文件
+- 技能版本在 frontmatter 与正文首部双写，便于核对是否同步
 
 ### 🔧 功能调整
 
-- 修改：升级体检工具与对等矩阵快照随包分发，接入项目可直接运行 `vendor/bin/fxyin upgrade`
-- 修改：`composer.json` 声明 `bin`，`scan`、`package`、`parity`、`upgrade:inspect` 脚本改走统一入口
-- 修改：两个 AI 技能的许可证改为 `Apache-2.0`，与本包一致
-- 修改：`fxri-fxyin` 技能补充命令行用法（`references/cli.md`），版本升至 1.1.0
-- 修改：`fxri-fxyin-upgrade` 技能命令改为 `vendor/bin/fxyin upgrade`，版本升至 1.0.2
+- 升级体检工具与对等矩阵快照随包分发，接入项目可直接运行 `vendor/bin/fxyin upgrade`
+- `composer.json` 声明 `bin`，`scan`、`package`、`parity`、`upgrade:inspect` 脚本改走统一入口
+- 两个 AI 技能的许可证改为 `Apache-2.0`，与本包一致
+- `fxri-fxyin` 技能补充命令行用法（`references/cli.md`），版本升至 1.1.0
+- `fxri-fxyin-upgrade` 技能命令改为 `vendor/bin/fxyin upgrade`，版本升至 1.0.2
 
 ## 2.1.2
 
