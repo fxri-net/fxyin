@@ -9,8 +9,8 @@ use InvalidArgumentException;
 /**
  * 技能入口薄壳安装命令。
  *
- * 把原先 `tools/install-skills.php` 的参数与退出码逻辑收进 `src`，让随包的 `fxyin skills`
- * 在接入项目里也能直接使用；安装与校验本身仍由 `SkillInstaller` 承担。
+ * 随包提供，接入项目用 `php vendor/bin/fxyin skills` 直接调用；
+ * 安装与校验由 `SkillInstaller` 承担，本类只负责参数解析与输出。
  */
 final class SkillsCommand
 {

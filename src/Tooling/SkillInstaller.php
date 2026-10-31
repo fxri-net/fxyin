@@ -99,7 +99,7 @@ final class SkillInstaller
             '---',
             '',
             self::MARKER,
-            '<!-- 由 Fxri\Tooling\SkillInstaller 生成，可安全删除；需要时重跑安装脚本即可补齐 -->',
+            '<!-- 由 Fxri\Tooling\SkillInstaller 生成，可安全删除；需要时执行 php vendor/bin/fxyin skills 重新生成 -->',
             '本技能只是入口，不承载条文：真源在 `' . $source . '`，同目录的 `references/` 为补充材料；内容以真源为准。',
         ];
 

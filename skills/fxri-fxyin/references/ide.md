@@ -80,7 +80,7 @@ namespace PHPSTORM_META {
 }
 ```
 
-日常改动映射后执行 `composer meta` 并提交产物；CI 只跑 `composer meta:check`，退出码非 0 即说明文件与映射漂移，不需要在流水线里重新生成。
+在接入项目里定义上述脚本后，日常改动映射执行 `composer meta` 并提交产物；CI 只跑 `composer meta:check`，退出码非 0 即说明文件与映射漂移，不需要在流水线里重新生成。本包不自带这两个脚本。
 
 ## 已知边界
 

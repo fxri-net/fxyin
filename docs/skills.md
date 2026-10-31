@@ -5,7 +5,7 @@
 ## 定位
 
 - **真源唯一**：技能内容只存在于本包内，升级包即生效，项目侧薄壳不需要随之改写。
-- **薄壳可删**：入口带固定标记，删除后重跑安装脚本即可补齐，不影响任何运行行为。
+- **薄壳可删**：入口带固定标记，删除后执行 `php vendor/bin/fxyin skills` 即可补齐，不影响任何运行行为。
 - **不写全局**：只在项目内的目标目录生成文件；全局技能目录由各 agent 自行管理，本工具不触碰。
 - **不覆盖项目自有技能**：同名文件若不带本包标记，视为项目自己写的技能，安装时跳过并报告。
 
@@ -60,7 +60,7 @@ description: 风音框架（fxri/fxyin）的接入与日常使用：……
 ---
 
 <!-- fxyin-skill-entry: v1 -->
-<!-- 由 Fxri\Tooling\SkillInstaller 生成，可安全删除；需要时重跑安装脚本即可补齐 -->
+<!-- 由 Fxri\Tooling\SkillInstaller 生成，可安全删除；需要时执行 php vendor/bin/fxyin skills 重新生成 -->
 本技能只是入口，不承载条文：真源在 `vendor/fxri/fxyin/skills/fxri-fxyin/SKILL.md`，同目录的 `references/` 为补充材料；内容以真源为准。
 ```
 
