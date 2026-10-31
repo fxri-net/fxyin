@@ -14,7 +14,9 @@ stages:
 test:
   stage: test
   # 自建 runner 未放行 if-not-present 拉取策略，保持默认字符串形式
-  image: $CI_IMAGE
+  image:
+    name: $CI_IMAGE
+    pull_policy: if-not-present
   needs:
     - toolchain:spec
     - toolchain:ensure
@@ -37,7 +39,9 @@ test:
 
 pages:
   stage: pages
-  image: $CI_IMAGE
+  image:
+    name: $CI_IMAGE
+    pull_policy: if-not-present
   needs:
     - toolchain:spec
     - toolchain:ensure
