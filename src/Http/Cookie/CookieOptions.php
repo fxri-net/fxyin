@@ -11,6 +11,12 @@ namespace Fxri\Http\Cookie;
  */
 final class CookieOptions
 {
+    /** 默认生效路径 */
+    private const DEFAULT_PATH = '/';
+
+    /** 默认跨站策略 */
+    private const DEFAULT_SAME_SITE = SameSite::Lax;
+
     /**
      * 初始化。
      *
@@ -23,11 +29,11 @@ final class CookieOptions
      */
     private function __construct(
         public readonly int $expires = 0,
-        public readonly string $path = '/',
+        public readonly string $path = self::DEFAULT_PATH,
         public readonly string $domain = '',
         public readonly bool $secure = false,
         public readonly bool $httpOnly = true,
-        public readonly SameSite $sameSite = SameSite::Lax,
+        public readonly SameSite $sameSite = self::DEFAULT_SAME_SITE,
     ) {
     }
 
@@ -44,11 +50,11 @@ final class CookieOptions
      */
     public static function make(
         int $expires = 0,
-        string $path = '/',
+        string $path = self::DEFAULT_PATH,
         string $domain = '',
         bool $secure = false,
         bool $httpOnly = true,
-        SameSite $sameSite = SameSite::Lax,
+        SameSite $sameSite = self::DEFAULT_SAME_SITE,
     ): self {
         return new self($expires, $path, $domain, $secure, $httpOnly, $sameSite);
     }

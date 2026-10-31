@@ -11,6 +11,15 @@ namespace Fxri\Http\HttpClient;
  */
 final class CurlOptions
 {
+    /** 默认请求超时秒数 */
+    private const DEFAULT_TIMEOUT = 30;
+
+    /** 默认连接超时秒数 */
+    private const DEFAULT_CONNECT_TIMEOUT = 10;
+
+    /** 默认最大重定向次数 */
+    private const DEFAULT_MAX_REDIRECTS = 5;
+
     /** 请求超时秒数 */
     public readonly int $timeout;
 
@@ -44,10 +53,10 @@ final class CurlOptions
      * @param string|null $userAgent 自定义 UA
      */
     public function __construct(
-        int $timeout = 30,
-        int $connectTimeout = 10,
+        int $timeout = self::DEFAULT_TIMEOUT,
+        int $connectTimeout = self::DEFAULT_CONNECT_TIMEOUT,
         bool $follow = true,
-        int $maxRedirects = 5,
+        int $maxRedirects = self::DEFAULT_MAX_REDIRECTS,
         bool $verify = true,
         bool $ipv4 = true,
         ?string $userAgent = null,
@@ -74,10 +83,10 @@ final class CurlOptions
      * @return self 传输选项
      */
     public static function make(
-        int $timeout = 30,
-        int $connectTimeout = 10,
+        int $timeout = self::DEFAULT_TIMEOUT,
+        int $connectTimeout = self::DEFAULT_CONNECT_TIMEOUT,
         bool $follow = true,
-        int $maxRedirects = 5,
+        int $maxRedirects = self::DEFAULT_MAX_REDIRECTS,
         bool $verify = true,
         bool $ipv4 = true,
         ?string $userAgent = null,

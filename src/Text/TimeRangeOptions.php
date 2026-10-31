@@ -11,6 +11,12 @@ namespace Fxri\Text;
  */
 final class TimeRangeOptions
 {
+    /** 默认时间格式 */
+    private const DEFAULT_FORMAT = 'Y-m-d H:i:s';
+
+    /** 默认输出形态 */
+    private const DEFAULT_OUTPUT = TimeOutput::Timestamp;
+
     /** 缺省默认值 */
     public readonly int|string $default;
 
@@ -29,8 +35,8 @@ final class TimeRangeOptions
      */
     public function __construct(
         int|string $default = 0,
-        TimeOutput $output = TimeOutput::Timestamp,
-        string $format = 'Y-m-d H:i:s',
+        TimeOutput $output = self::DEFAULT_OUTPUT,
+        string $format = self::DEFAULT_FORMAT,
     ) {
         $this->default = $default;
         $this->output = $output;
@@ -47,8 +53,8 @@ final class TimeRangeOptions
      */
     public static function make(
         int|string $default = 0,
-        TimeOutput $output = TimeOutput::Timestamp,
-        string $format = 'Y-m-d H:i:s',
+        TimeOutput $output = self::DEFAULT_OUTPUT,
+        string $format = self::DEFAULT_FORMAT,
     ): self {
         return new self($default, $output, $format);
     }

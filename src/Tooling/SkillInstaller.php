@@ -42,7 +42,7 @@ final class SkillInstaller
                 }
 
                 $expected = self::render($skill['name'], $skill['description'], self::relativePath($root, $skill['source']));
-                if (self::normalizeEol(Filesystem::read($file)) !== self::normalizeEol($expected)) {
+                if (LineEnding::normalize(Filesystem::read($file)) !== LineEnding::normalize($expected)) {
                     return false;
                 }
             }
@@ -107,17 +107,6 @@ final class SkillInstaller
     }
 
     /**
-     * 归一行尾为 LF。
-     *
-     * @param string $contents 文件内容
-     * @return string 归一后的内容
-     */
-    private static function normalizeEol(string $contents): string
-    {
-        return str_replace(["\r\n", "\r"], "\n", $contents);
-    }
-
-    /**
      * 归一项目根目录并校验非空。
      *
      * @param string $projectRoot 项目根目录
@@ -177,7 +166,7 @@ final class SkillInstaller
     private static function parseFrontmatter(string $contents): array
     {
         $meta = ['name' => '', 'description' => ''];
-        if (1 !== preg_match('/^---\R([\s\S]*?)\R---(?:\R|$)/', self::normalizeEol($contents), $matches)) {
+        if (1 !== preg_match('/^---\R([\s\S]*?)\R---(?:\R|$)/', LineEnding::normalize($contents), $matches)) {
             return $meta;
         }
 

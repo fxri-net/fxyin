@@ -42,7 +42,7 @@ final class MetaGenerator
         }
 
         // 行尾按 LF 统一后比较，避免 Windows 检出把 CRLF 误判为内容漂移
-        return self::normalizeEol($contents) === self::normalizeEol(self::render($registries));
+        return LineEnding::normalize($contents) === LineEnding::normalize(self::render($registries));
     }
 
     /**
@@ -99,17 +99,6 @@ final class MetaGenerator
         }
 
         return $class;
-    }
-
-    /**
-     * 归一行尾为 LF。
-     *
-     * @param string $contents 文件内容
-     * @return string 归一后的内容
-     */
-    private static function normalizeEol(string $contents): string
-    {
-        return str_replace(["\r\n", "\r"], "\n", $contents);
     }
 
     /**
