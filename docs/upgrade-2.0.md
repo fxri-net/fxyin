@@ -18,7 +18,7 @@ outline: [2, 3]
 
 - `v1.6.1` 是对 1.x 终点的标签标记，包含 PHP 8.4 兼容修复，未单独发版。
 - 1.x 的兼容层不会出现在 2.x 中；需要过渡时由接入方项目自行保留一层薄适配，见[扩展目录迁移](./upgrade-2.0-extend)。
-- 响应信封固定为 `code`、`message`、`data`、`extend`、`debug` 五个字段，`code` 为整数业务码（成功缺省 200），成败由内部 `success` 判断而不对外输出；分页接口的 `data` 用 `Data\Page` 的四键壳。
+- 响应信封固定为 `code`、`message`、`data`、`extend`、`debug` 五个字段，分页接口的 `data` 用 `Data\Page` 的四键壳；完整口径与迁移对照见[HTTP](./http)与[API 对照](./migration-2.0)。
 
 ### 2.1.0 能力补齐
 

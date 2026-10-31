@@ -313,12 +313,7 @@ $cookies = \Fxri\Http\Cookie\CookieJar::fromGlobals();
 2. 在 2.0 里按语义找同类能力；找不到就落成项目服务或工具类。
 3. 把落点写进改动清单，与 `facade_ext` 的迁移项分开跟踪。
 
-常见落点：
-
-| 本地新增方法 | 建议落点 |
-| --- | --- |
-| `File::createDirectory` | `File\Filesystem`（写入前自动建目录），或项目工具类 |
-| `Base::langRange` / `langSet` / `langDetect` / `langCookieExpire` | `Translation\Language` / `LocaleResolver`；Cookie 名与有效期由项目配置承接 |
+常见落点：目录创建类方法落到 `File\Filesystem`，语言族方法（`langRange` / `langSet` / `langDetect` / `langCookieExpire`）落到 `Translation\Language` 与 `LocaleResolver`，Cookie 名与有效期由项目配置承接；与共享副本重复的改动按下一节统一处理。
 
 两条注意：
 

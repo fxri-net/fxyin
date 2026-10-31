@@ -26,11 +26,7 @@ outline: [2, 3]
 - [ ] 确定迁移路线：S 直接改造 / M 过渡门面 / L 过渡门面 + 基线
 - [ ] 选一个非生产环境或可快速回滚的实例做试点
 
-```bash
-php fxyin upgrade profile --root=/path/to/project --markdown
-php fxyin upgrade scan --root=/path/to/project --markdown
-php fxyin upgrade baseline --root=/path/to/project --write --baseline=/path/to/project/upgrade-baseline.json
-```
+三条体检命令与参数见[升级指南](./upgrade-2.0)的「体检命令」一节。
 
 ## 三、阶段 1：环境与依赖
 
@@ -103,11 +99,13 @@ php fxyin upgrade baseline --root=/path/to/project --write --baseline=/path/to/p
 
 ## 十、S / M / L 差异
 
-| 档位 | 判定 | 额外要求 |
-| --- | --- | --- |
-| S | `\fxapp\*::` 少于 100 | 可跳过过渡门面，直接替换；仍建议保留基线 |
-| M | 100–500 | 建项目内过渡门面；按能力域分批替换；每批跑一次基线 |
-| L | 大于 500 | 在 M 基础上增加按目录基线、关键接口双跑、分环境灰度 |
+档位判定阈值见[升级指南](./upgrade-2.0)的「路线选择」，清单只补各档的额外要求：
+
+| 档位 | 额外要求 |
+| --- | --- |
+| S | 可跳过过渡门面，直接替换；仍建议保留基线 |
+| M | 建项目内过渡门面；按能力域分批替换；每批跑一次基线 |
+| L | 在 M 基础上增加按目录基线、关键接口双跑、分环境灰度 |
 
 ## 十一、基线文件
 
@@ -137,12 +135,7 @@ php fxyin upgrade baseline --root=/path/to/project --check --baseline=/path/to/p
 
 ## 十二、回滚清单
 
-- [ ] 1.x 目录与部署包仍在备份位置
-- [ ] 入口可切回旧 `bootstrap.php`
-- [ ] Composer 约束可退回 `^1.6`
-- [ ] 数据库未做不可逆变更
-- [ ] 旧密文仍可通过 `DesCipher` 解密
-- [ ] 对外响应协议未与框架升级捆绑
+回滚顺序与判断标准见[升级指南](./upgrade-2.0)的「回滚」一节；推进到阶段 7 时执行一次演练并记录结果。
 
 ## 十三、常见卡点
 

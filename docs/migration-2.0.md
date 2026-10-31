@@ -450,26 +450,11 @@ return Envelope::success($data, '请求成功');
 
 ## 八、接入方 `extend/fxri/data` 处置
 
-旧分发方式下，接入方在本项目之外维护 `extend/fxri/data` 目录（框架包放在 `extend/fxri/base`）。该目录没有框架源码，全部是个性化数据与环境差异，按以下四类处置：
-
-| 类别 | 典型内容 | 处置 |
-| --- | --- | --- |
-| 上收到框架 | 语言词条、请求环境（方案、主机、路径、方法、来源参数）、响应信封结构 | 框架已内置等价实现：语言词条用 `Translation\PhpFileLoader::loadDirectory()` 读入 `ArrayTranslator`；请求环境用 `ServerContext` / `RequestContext`；响应结构用 `Envelope` |
-| 保留差异迁入项目配置 | 项目私有配置项、应用名称与目录、Cookie 与 Session 参数、媒体工具路径 | 迁入项目自己的配置目录，由 `KernelBuilder::withConfigDir()` 加载 |
-| 项目侧改写机制 | 依赖 `facade.data.where` 数字位置拼条件的代码、继承旧门面的自定义类、依赖 `server.echo.format` 改键名的序列化 | 改用 `WhereBuilder`、`Envelope`，或改为组合调用 `Fxri\*`；不再支持继承门面 |
-| 直接删除 | `extend/fxri/base`（框架本体）、旧引导文件 `autoload.php` / `config.php`、`app/store/common.php` 式启动脚本、三段数字键配置 | 删除，改由 Composer 安装与 `KernelBuilder` 装配 |
-
-`app/language/{zh-cn,en-us}` 下的词条文件属于纯数据，可作为 `PhpFileLoader::loadDirectory()` 的输入直接复用。
+旧分发方式下，接入方在框架包之外维护 `extend/fxri/data`，内容全部是个性化数据与环境差异。四类处置（上收到框架、迁入项目配置、项目侧改写、直接删除）与逐项对照见[扩展目录迁移](./upgrade-2.0-extend)。
 
 ## 九、迁移检查清单
 
-- 全仓检索 `\fxapp\`、`\fxyin\`、`fxy_echo`、`fxy_config`、`fxy_lang`、`fxy_env`、`fxy_cookie`、`fxy_dump`、`fxy_json`，除本文档外应归零。
-- 全仓检索点分模式号（形如 `'1.1.2'`）与 `facade.data.where`、`facade.server.echo`，应归零。
-- 旧响应数组的下标访问（`$echo[0]` ~ `$echo[5]`）改为 `Envelope::isSuccess()`、`code()`、`message()`、`data()`、`extend()`、`debug()`。
-- 旧 `\fxapp\Data::field*()` 生成的字符串 SQL 改为 `Data\Sql` 对象，绑定值随对象传递。
-- 加密：旧 `Safe::crypt()` 产出的密文只能用 `Security\DesCipher::decrypt()` 读取，新数据统一用 `Cipher`。
-- 依赖注入：把 `LoggerInterface`、`TranslatorInterface`、HTTP 客户端从门面静态调用改为 `KernelBuilder` 注入。
-- 入口：删除 `\fxyin\App::init()` 与 `autoload.php` 引导，改为 Composer 自动加载 + `KernelBuilder`。
+阶段 0–7 的可勾选清单、基线模板与常见卡点见[升级检查清单](./upgrade-2.0-checklist)；本页只负责旧写法到新写法的逐项对照。
 
 ## 十、不再提供的能力
 
@@ -517,17 +502,15 @@ return Envelope::success($data, '请求成功');
 
 ### 11.2 行为差异
 
+安装、加载、入口、响应结构与错误处理的总览见本页「一、改动概览」；下表只列细节口径的差异：
+
 | 维度 | 1.x | 2.0 |
 | --- | --- | --- |
-| 响应结构 | 配置驱动的六元位置数组 | `Envelope` 固定 `code`、`message`、`data`、`extend`、`debug` |
 | 业务码类型 | 整型（如 `200`） | 整型，成功缺省 `200` |
 | 扩展位与时间位 | `extend`、`time` 两个位置 | `extend` 为正式扩展字段，时间等调试信息并入 `debug` |
-| 错误处理 | 返回数组或直接 `exit` | 抛异常，由接入层映射 |
 | 条件构造 | 字符串片段与白名单过滤 | 绑定参数与 `Sql` 对象 |
 | 配置 | 允许加载期执行代码 | 只接受纯数组 |
 | 门面 | `__callStatic` 按目录优先级查找 | 无门面层，改用显式类与内核 |
-| 安装 | 解压到 `extend/fxri/base` | Composer 包 |
-| PHP | 7.1–8.4 | 8.2 起 |
 
 ## 十二、相关文档
 
