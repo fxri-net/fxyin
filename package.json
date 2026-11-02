@@ -13,7 +13,7 @@
     "docs:typecheck": "tsc --noEmit -p docs/.vitepress",
     "docs:build": "pnpm docs:typecheck && vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "sync:changelog-doc": "node scripts/sync-changelog-doc.mjs",
+    "sync:changelog-doc": "toolkit changelog doc",
     "verify": "node scripts/verify.mjs"
   },
   "devDependencies": {

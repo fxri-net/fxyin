@@ -90,7 +90,7 @@
 
 ### 文档站的「更新日志」能直接改吗
 
-不能。`docs/changelog.md` 由 `pnpm sync:changelog-doc` 从根 `CHANGELOG.md` 生成，页面内也注明了请勿手改；要改内容请改根文件后重新同步，见[贡献指南](./contributing)。
+不能。`docs/changelog.md` 由全局 `toolkit changelog doc` 从根 `CHANGELOG.md` 生成，页面内也注明了请勿手改；要改内容请改根文件后重新同步，见[贡献指南](./contributing)。
 
 ### 一定要安装 PSR 相关包吗
 
