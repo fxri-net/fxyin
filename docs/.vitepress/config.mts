@@ -75,13 +75,8 @@ export default defineConfig({
           { text: '接入', link: '/integration' },
         ],
       },
-      {
-        text: '答疑',
-        items: [
-          { text: '常见问题', link: '/faq' },
-          { text: '贡献指南', link: '/contributing' },
-        ],
-      },
+      { text: '贡献指南', link: '/contributing' },
+      { text: 'FAQ', link: '/faq' },
       { text: '更新日志', link: '/changelog' },
     ],
     // 侧栏按能力层分组：入门、内核与配置、参数与数据、文本与文件、网络与安全、支撑与协作
