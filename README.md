@@ -15,7 +15,7 @@
 
 > 定位：不引入依赖注入容器，不接管路由、中间件与 MVC 基类。装配结果是一组不可变对象，业务代码按需取用；工具类均为纯静态，可直接调用。余下的判断留给宿主框架。
 
-## 能力矩阵
+## ✨ 能力矩阵
 
 | 能力 | 适用场景 | 入口 |
 | --- | --- | --- |
@@ -28,7 +28,7 @@
 | HTTP | 统一响应信封、请求上下文、Cookie、视图 | `Fxri\Http\Envelope` |
 | 装配与配置 | 配置目录加载、日志、翻译器、框架适配 | `Fxri\KernelBuilder` |
 
-## 命令行
+## 🛠️ 命令行
 
 仓库内执行 `php fxyin <命令>`；接入项目装好本包后用 `php vendor/bin/fxyin <命令>`。
 
@@ -43,7 +43,7 @@
 
 命令总览、退出码与接入方调用方式见[命令行](./docs/cli.md)。
 
-## 文档
+## 📚 文档
 
 | 文档 | 适合谁 |
 | --- | --- |
@@ -66,7 +66,7 @@
 | [更新日志](./docs/changelog.md) | 查各版本变更内容 |
 | [完整文档站](https://fxri-net.github.io/fxyin/) | 在线阅读体验 |
 
-## 安装
+## 📦 安装
 
 ```bash
 composer require fxri/fxyin
@@ -74,7 +74,7 @@ composer require fxri/fxyin
 
 运行环境要求 PHP 8.2 起，需开启 `mbstring` 与 `openssl` 扩展；其余能力依赖的 PSR 包按需安装。
 
-## 快速上手
+## 🚀 快速上手
 
 ```php
 <?php
@@ -93,11 +93,11 @@ echo $kernel->config()->get('app.name', '未命名');
 
 装配项均可选，目录结构、注入方式与更多示例见[快速开始](./docs/getting-started.md)。
 
-## 参与贡献
+## 🤝 参与贡献
 
 开发环境、验收命令（`pnpm verify`）、提交规范与发版链路见[贡献指南](./docs/contributing.md)；问题反馈走 [GitHub Issues](https://github.com/fxri-net/fxyin/issues)。
 
-## 版权信息
+## 📄 版权信息
 
 作者：唐启云 <tqy@fxri.net>
 
