@@ -2,28 +2,45 @@
   "name": "@fxri/fxyin",
   "version": "2.2.3",
   "private": true,
-  "description": "风音框架的发版与文档站工具链（不发布 npm 包）",
+  "description": "风音框架：面向 PHP 8.2 的轻量开发辅助框架。",
   "license": "Apache-2.0",
+  "author": {
+    "name": "唐启云",
+    "email": "tqy@fxri.net",
+    "url": "https://fxri.net:444/"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/fxri-net/fxyin.git"
+    "url": "git+https://github.com/fxri-net/fxyin.git"
   },
+  "bugs": {
+    "url": "https://github.com/fxri-net/fxyin/issues"
+  },
+  "homepage": "https://fxri-net.github.io/fxyin/",
   "scripts": {
+    "verify": "node scripts/verify.mjs",
+    "changeset": "node scripts/toolkit.mjs changelog",
+    "changelog:version": "node scripts/toolkit.mjs changelog version",
+    "sync:changelog-doc": "node scripts/toolkit.mjs changelog doc",
     "docs:dev": "vitepress dev docs",
     "docs:typecheck": "tsc --noEmit -p docs/.vitepress",
     "docs:build": "pnpm docs:typecheck && vitepress build docs",
-    "docs:preview": "vitepress preview docs",
-    "sync:changelog-doc": "toolkit changelog doc",
-    "verify": "node scripts/verify.mjs"
+    "docs:preview": "vitepress preview docs"
   },
+  "keywords": [
+    "fxyin",
+    "php",
+    "framework",
+    "fxri"
+  ],
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "packageManager": "pnpm@10.34.4",
   "devDependencies": {
     "@types/node": "^20.19.21",
     "typescript": "^5.9.3",
     "vitepress": "^1.6.4"
-  },
-  "packageManager": "pnpm@10.34.4",
-  "engines": {
-    "node": ">=20.19.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
