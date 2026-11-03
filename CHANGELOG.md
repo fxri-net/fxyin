@@ -1,5 +1,14 @@
 # 风音框架
 
+## 2.2.4
+
+> 2026-11-03 发布
+
+### ⚡ 优化改进
+
+- 统一 package.json 元数据（author、repository、homepage、keywords 与字段顺序）
+- toolkit 相关脚本改为显式探测全局命令，缺失时跳过
+
 ## 2.2.3
 
 > 2026-11-03 发布
