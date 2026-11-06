@@ -137,131 +137,9 @@ $private = Path::join($kernel->config()->get('app.base.app'), 'elven/misc/pem/rs
 - `server.echo.template` 与 `server.echo.format` 删除，内部改用 `Http\Envelope`；对外字段由 `Envelope::toArray()` 的五个键固定。
 - `letter.email` 等邮件配置属于项目业务，2.0 不提供邮件能力，迁到项目自己的配置分组。
 
-## 五、门面扩展的三种替代
+门面扩展（旧 `Facade` 目录里的自定义门面）的三种替代方案见[门面扩展](./extend-facade)。
 
-1.x 的门面扩展依赖 `\fxyin\Facade` 的 `__callStatic`：按 `env.facade` 的目录优先级查找方法，项目方法放在 `facade_ext`。2.0 不再提供门面层，按项目体量选一种：
-
-### 方案一：项目内过渡门面（推荐给 M/L）
-
-在项目里保留 `\fxapp\` 命名空间，Composer 映射到 `app/legacy/fxapp/`；旧调用点不动，门面内部改调 `Fxri\*`。
-
-```json
-{
-  "autoload": {
-    "psr-4": {
-      "app\\": "app/",
-      "fxapp\\": "app/legacy/fxapp/"
-    }
-  }
-}
-```
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace fxapp;
-
-use App\Support\KernelHolder;
-
-abstract class LegacyFacade
-{
-    public static function __callStatic(string $name, array $arguments): mixed
-    {
-        $provider = static::provider();
-        if (!is_callable([$provider, $name])) {
-            throw new \BadMethodCallException(static::class . '::' . $name . '() 尚未迁移');
-        }
-
-        return $provider->{$name}(...$arguments);
-    }
-
-    abstract protected static function provider(): object;
-}
-
-final class Base extends LegacyFacade
-{
-    protected static function provider(): object
-    {
-        return new \App\Support\Legacy\BaseProvider(KernelHolder::get());
-    }
-}
-```
-
-提供者只承接旧方法，内部换成 2.0 入口：
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Support\Legacy;
-
-use Fxri\Kernel;
-
-final class BaseProvider
-{
-    public function __construct(private readonly Kernel $kernel)
-    {
-    }
-
-    public function config(string $name, mixed $default = null): mixed
-    {
-        return $this->kernel->config()->get($name, $default);
-    }
-
-    public function lang(string|array $name, array $vars = []): string
-    {
-        return $this->kernel->trans(is_array($name) ? implode('', $name) : $name, $vars);
-    }
-}
-```
-
-### 方案二：显式静态类（推荐给 S）
-
-调用量小的项目直接删除 `\fxapp\` 命名空间，把每个门面改成显式类，调用点同步替换：
-
-```php
-namespace App\Support;
-
-use Fxri\Kernel;
-
-final class Config
-{
-    public static function get(Kernel $kernel, string $name, mixed $default = null): mixed
-    {
-        return $kernel->config()->get($name, $default);
-    }
-}
-```
-
-### 方案三：宿主容器绑定
-
-宿主有容器时，把内核与项目服务绑进容器，调用点改为容器解析。ThinkPHP 用 `ThinkPHPAdapter::bind()`，其他容器用各自的 `instance` / `set` 入口。
-
-### oracle 与自定义定位器
-
-`Base::oracle($name)` 是项目自己的服务定位器，与 fxyin 无关。迁移时保留实现，改成显式工厂：
-
-```php
-final class OracleFactory
-{
-    public static function make(string $name): object
-    {
-        $class = '\\App\\Oracle\\' . ucfirst(strtolower($name));
-        if (!class_exists($class)) {
-            throw new \InvalidArgumentException('未定义的 oracle：' . $name);
-        }
-
-        return new $class();
-    }
-}
-```
-
-有容器时优先用容器管理单例，避免继续维护静态缓存。
-
-## 六、启动钩子拆分
+## 五、启动钩子拆分
 
 1.x 的 `data/app/store/common.php` 固定做两件事：
 
@@ -283,13 +161,13 @@ $request = \Fxri\Http\RequestContext::fromServer($server);
 $cookies = \Fxri\Http\Cookie\CookieJar::fromGlobals();
 ```
 
-## 七、语言与全局函数
+## 六、语言与全局函数
 
 - 语言词条是纯数据，目录整体迁到项目 `language/{locale}/`，用 `ArrayTranslator::fromDirectory()` 或 `Translation\Loader\PhpFileLoader` 加载。
 - `function/common.php` 若为空直接删除；若非空，迁到 Composer `autoload.files`，或改成项目类方法。函数体里的旧 API 仍需按 [API 对照](./api) 替换。
 - 旧的 `langList()`、`langParse()` 列表拼接语义没有等价实现，由项目 `BaseProvider::lang()` 按实际业务保留。
 
-## 八、响应协议的保持
+## 七、响应协议的保持
 
 旧出口是 `{code, message, data, extend}`，部分项目另加 `time`。2.x 的五键信封已与旧出口对齐，不需要再写响应工厂：
 
@@ -303,7 +181,7 @@ $cookies = \Fxri\Http\Cookie\CookieJar::fromGlobals();
 
 需要改键名的项目，在 `Envelope::toArray()` 之后再映射一层即可；不要复刻旧的位置数组。
 
-## 九、框架副本的本地新增方法
+## 八、框架副本的本地新增方法
 
 `extend/fxri/base` 里的类常被就地加过方法。这类方法不在任何正式标签里，2.0 也没有等价 API，升级前必须逐项定落点，不能跟着目录一起删。
 
@@ -320,7 +198,7 @@ $cookies = \Fxri\Http\Cookie\CookieJar::fromGlobals();
 - 这类方法不属于「项目扩展方法」：后者定义在 `facade_ext` 里，随扩展目录迁移；前者寄生在框架副本内，只在副本存在时可用。
 - 删除副本前先跑一次基线，确认引用点全部有替代，再执行删除。
 
-## 十、框架副本的通用改动落点
+## 九、框架副本的通用改动落点
 
 组织内多套 1.x 项目共用同一份就地改造过的框架副本。逐文件比对后，副本改动可归并为 13 类，其中多数在各项目上完全一致，按本表统一处置即可，不必逐仓重做分析。
 
@@ -342,7 +220,7 @@ $cookies = \Fxri\Http\Cookie\CookieJar::fromGlobals();
 
 另有约两成差异等于 1.5 / 1.6 官方版本内容，直接采用官方实现即可，不进入上表。
 
-## 十一、删除顺序
+## 十、删除顺序
 
 1. 备份 `extend/fxri` 与部署包，记录当前 PHP 与宿主版本。
 2. 补 `composer.json` 与自动加载，装入 `fxri/fxyin:^2.0`。
@@ -354,7 +232,7 @@ $cookies = \Fxri\Http\Cookie\CookieJar::fromGlobals();
 8. 清理 Composer 里为旧目录保留的映射。
 9. 运行基线，确认 `\fxapp\` 与点分模式号归零。
 
-## 十二、验收
+## 十一、验收
 
 1. 全仓检索 `extend/fxri/base`、`\fxapp\`、`\fxyin\`、`fxy_`、点分模式号，除过渡层外归零。
 2. `config/` 下每个文件只返回数组，不调用函数、不读超全局变量。
@@ -362,7 +240,7 @@ $cookies = \Fxri\Http\Cookie\CookieJar::fromGlobals();
 4. `upgrade-inspect.php baseline --check` 零新增。
 5. 过渡层调用量持续下降；归零后删除 `\fxapp\` 命名空间与映射。
 
-## 十三、红线
+## 十二、红线
 
 1. 不把 `safe` / `safe_local` 混进 fxyin 的删除与迁移。
 2. 不在同一提交里既删旧目录又改对外响应协议。

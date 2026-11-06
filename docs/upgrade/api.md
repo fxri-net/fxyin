@@ -8,6 +8,8 @@ title: API 对照
 
 > 升级步骤、接入形态与扩展目录迁移见[1.x 升级 2.0 指南](./)；本页只回答「旧写法对应什么新写法」。
 
+数字码与门面方法的逐项对照分别见[数字码对照](./codes)与[门面方法对照](./facades)。
+
 ## 一、改动概览
 
 | 维度 | 1.x | 2.0 |
@@ -87,178 +89,9 @@ echo $kernel->trans('欢迎');
 
 旧门面 `\fxapp\Base` ~ `\fxapp\View` 与 `app/controller/facade/` 一并移除，不再提供任何转发入口。
 
-## 四、数字码全部改为具名枚举
+## 四、全局函数迁移
 
-### 4.1 数字码总览
-
-| 旧位置 | 旧数字码 | 新写法 |
-| --- | --- | --- |
-| `Param::define()` | `1.1.1`、`1.1.2` … | `Shape` 链式组合，见 4.2 |
-| `Param::url()` | `1.1.1`、`1.1.3`、`1.1`、`1.2`、`2.1` | `Url::build()`、`Url::query()`、`Url::withQuery()` |
-| `facade.data.where` | `-1` ~ `6` | `WhereBuilder`，见 4.4 |
-| `facade.server.echo.template` | `0` ~ `5` | `Envelope` 固定五字段，见 4.5 |
-| `facade.server.echo.format` | `1` ~ `5` | `Envelope::toArray()` |
-| `Data::fieldJson()` | `1`、`2` | `FieldJsonMode::Quoted`、`FieldJsonMode::Raw` |
-| `Data::fieldText()` | `1`、`2`、`3` | `FieldTextMode::Keep`、`ReplaceEmpty`、`CastInt` |
-| `Data::fieldDate()` | `1`、`2`、`3` | `DateGranularity::DateTime`、`Date`、`Time` |
-| `Data::whereMake()` | `1`、`2` | `WhereBuilder::build()`、`Sql\Expression` |
-| `Data::paramEmpty()` | `1`、`2` | `NullPolicy::Blank`、`NullPolicy::StrictNull` |
-| `Client::ip()` | `0`、`1` | `ClientInfo::ip()`、`Text\Ip::toLong()` |
-| `Client::browser()`、`Client::system()` | `-1`、`1`、`2` | `CaseFormat::Original`、`Lower`、`Upper` |
-| `Base::ipv4()`、`Text::ipv4()` | `encode`、`decode` | `Text\Ip::toLong()`、`Text\Ip::fromLong()` |
-| `Math::rand()` | `0`、`1` | `RandomCharset::Alnum`、`RandomCharset::Numeric`；类型 0 的首字符用 `RandomCharset::Alpha` |
-| `Text::uuid()` | mode `1`/`2`/`3`；style `1`~`4` | `UuidMode` + `UuidStyle` |
-| `Safe::md5()` | `1`、`2` | `HashLength::Full32`、`HashLength::Short16` |
-| `Base::load()` | `null`、`'data'` | `File\Loader::load()`、`File\Loader::read()` |
-| `Server::format()` | `1`、`2` | `Envelope::toArray()` 或项目侧序列化，见 4.5 |
-
-### 4.2 `Param::define()` 模式号 → `Shape`
-
-旧调用形如 `\fxapp\Param::define([$input, $defaults], '1.1.2')`，其中第一项是待定形数据、第二项是键与默认值。新写法把模式号拆成链式方法：
-
-| 旧模式号 | 旧语义 | 新写法 |
-| --- | --- | --- |
-| `1.1.1` | 以输入为基底，键不存在时填默认值 | `Shape::merge()->fillWhenAbsent()` |
-| `1.1.2` | 以输入为基底，键不存在或为空串时填默认值 | `Shape::merge()->fillWhenBlank()` |
-| `1.1.3` | 同 `1.1.1`，且对声明的键做 JSON 解码 | `Shape::merge()->fillWhenAbsent()->json()` |
-| `1.2.1` | 以输入为基底，键不存在时置 `null` | `Shape::merge()->nullWhenAbsent()` |
-| `1.2.2` | 以输入为基底，键不存在或为空串时置 `null` | `Shape::merge()->nullWhenBlank()` |
-| `1.2.3` | 同 `1.2.2`，且对声明的键做 JSON 解码 | `Shape::merge()->nullWhenBlank()->json()` |
-| `1.2.4` | 以输入为基底，键值按逗号拆成数组 | `Shape::merge()->csv()` |
-| `1.3.1` | 默认值非 `null` 时优先于输入 | `Shape::merge()->defaultsFirst()` |
-| `1.3.2` | 同 `1.3.1`；默认值为 `null` 时按「不存在或空串」置 `null` | `Shape::merge()->defaultsFirst()->nullWhenBlank()` |
-| `2.1.1` | 只保留声明的键，不存在时填默认值 | `Shape::only()->fillWhenAbsent()` |
-| `2.1.2` | 只保留声明的键，不存在或为空串时填默认值 | `Shape::only()->fillWhenBlank()` |
-| `2.2.1` | 只保留声明的键，不存在时置 `null` | `Shape::only()->nullWhenAbsent()` |
-| `2.2.2` | 只保留声明的键，不存在或为空串时置 `null` | `Shape::only()->nullWhenBlank()` |
-
-改造示例：
-
-~~~php
-// 1.x
-$param = \fxapp\Param::define([$input, ['page' => 1, 'size' => 20]], '2.1.2');
-
-// 2.0
-use Fxri\Param\Shape;
-
-$param = Shape::only()->fillWhenBlank()->apply($input, ['page' => 1, 'size' => 20]);
-~~~
-
-多个定形步骤串联时用 `Pipeline`：
-
-~~~php
-use Fxri\Param\Definition;
-use Fxri\Param\Pipeline;
-use Fxri\Param\Shape;
-
-$param = Pipeline::make(
-    Definition::make(['page' => 1], Shape::only()->fillWhenAbsent()),
-    Definition::make(['filters' => []], Shape::merge()->fillWhenAbsent()->json()),
-)->resolve($input);
-~~~
-
-### 4.3 `Param::url()` 模式号 → `Url`
-
-旧 `Param::url($data)` 内部用 3 个点分模式号补默认值，再按 `$data['type']` 的 `1.1` / `1.2` / `2.1` 分发行为：
-
-| 旧行为 | 新写法 |
-| --- | --- |
-| 补 `type` / `url` / `name` 默认值 | `Shape::merge()->fillWhenAbsent()` |
-| 补 `param` 并 JSON 解码 | `Shape::merge()->fillWhenAbsent()->json()` |
-| `type = 1.1` 由路径与参数拼装地址 | `Url::build($path, $query, $fragment)` |
-| `type = 1.2` 解析当前地址并改写参数 | `Url::withQuery($url, $query)` |
-| `type = 2.1` 从地址中取参数 | `Url::query($url)` |
-
-~~~php
-// 1.x
-$url = \fxapp\Param::url(['type' => '1.1', 'url' => '/list', 'param' => ['page' => 2]]);
-
-// 2.0
-use Fxri\Param\Url;
-
-$url = Url::build('/list', ['page' => 2]);
-~~~
-
-### 4.4 `facade.data.where` 8 个数字键 → `WhereBuilder`
-
-旧配置以位置数字描述条件元组，改由具名方法与枚举承担：
-
-| 旧键 | 旧含义 | 新写法 |
-| --- | --- | --- |
-| `-1` | 原始表达式 | `WhereBuilder::compare()` 或 `Sql\Expression::make()` |
-| `0` | 键名 | 作为 `column` 参数直接传入 |
-| `1` | 键值 | 作为 `value` 参数直接传入 |
-| `2` | 方法（`=`、`in`、`like` 等） | `eq()`、`in()`、`like()` 等具名方法 |
-| `3` | 逻辑（`and` / `or`） | `and()`、`or()` |
-| `4` | 分组 | `group(Closure, ?Boolean)` |
-| `5` | 取反 | `not()` |
-| `6` | 大小写敏感 | `Collation::CaseSensitive` / `CaseInsensitive` |
-
-~~~php
-// 1.x
-$where = \fxapp\Data::where([
-    ['build', 'status', 'enabled', '=', 'and', '1', 0, 1],
-    ['build', 'name', '风音', 'like', 'and', '1', 0, 1],
-]);
-
-// 2.0
-use Fxri\Sql\Boolean;
-use Fxri\Sql\Collation;
-use Fxri\Sql\WhereBuilder;
-
-$where = WhereBuilder::make()
-    ->eq('status', 'enabled')
-    ->and()
-    ->like('name', '风音')
-    ->build();
-~~~
-
-分组与取反：
-
-~~~php
-$where = WhereBuilder::make()
-    ->eq('enabled', 1)
-    ->and()
-    ->group(static function (WhereBuilder $inner): void {
-        $inner->eq('type', 'a')->or()->eq('type', 'b');
-    }, Boolean::Or)
-    ->not()
-    ->build();
-~~~
-
-旧 `whereSafe()`、`whereFilter()`、`whereBuild()`、`whereAssemble()` 不再保留：`WhereBuilder` 全部使用绑定参数，字符串白名单过滤已无必要；`build()` 返回的 `Sql` 对象同时携带 SQL 片段与绑定值。
-
-### 4.5 `server.echo` 两段配置 → `Envelope`
-
-旧响应由 `facade.server.echo.template`（6 个位置）与 `facade.server.echo.format`（5 个位置到键名的映射）两段配置驱动，2.0 统一为固定五键外壳：
-
-| 旧位置 | 旧含义 | 新字段 |
-| --- | --- | --- |
-| `0` | 逻辑状态 | 内部的 `success`，只做判断，不输出 |
-| `1` | 状态代码 | `code`（整数业务码，成功缺省 200） |
-| `2` | 提示信息 | `message` |
-| `3` | 响应数据 | `data`；分页接口用 `Data\Page` 的四键壳 |
-| `4` | 扩展数据 | `extend` |
-| `5` | 请求时间 | `debug`（如 `debug.time`） |
-
-~~~php
-// 1.x
-return \fxapp\Base::echo('请求成功', 0, $data);
-
-// 2.0
-use Fxri\Http\Envelope;
-
-return Envelope::success($data, '请求成功');
-~~~
-
-注意两点行为变化：
-
-- `code` 统一为整数，成功缺省为 `Envelope::SUCCESS`（`200`），失败用稳定的业务整数码。
-- `extend` 与 `time` 不再是可配置位置：`extend` 是正式的扩展字段，调试信息（含耗时）放 `debug`；`debug` 恒常输出，空时为空对象。
-
-## 五、全局函数迁移
-
-### 5.1 11 个 `is_*` 校验函数
+### 4.1 11 个 `is_*` 校验函数
 
 | 旧函数 | 新写法 |
 | --- | --- |
@@ -274,7 +107,7 @@ return Envelope::success($data, '请求成功');
 | `is_url($data)` | `Fxri\Support\Type::isUrl()` |
 | `is_ip($data)` | `Fxri\Support\Type::isIp()` |
 
-### 5.2 7 个 `fxy_*` 函数
+### 4.2 7 个 `fxy_*` 函数
 
 | 旧函数 | 新写法 |
 | --- | --- |
@@ -286,7 +119,7 @@ return Envelope::success($data, '请求成功');
 | `fxy_json($var, $type, $param)` | `Fxri\Param\Json::encode()`、`Json::decode()` |
 | `fxy_echo($message, $code, $data, $extend)` | `Fxri\Http\Envelope` + `Fxri\Http\Responder` |
 
-## 六、响应与异常
+## 五、响应与异常
 
 旧 `Server::format()` 按 `type` 决定输出结构，`Base::throwable()` 在非调试环境下直接 `exit` 输出。2.0 改为「业务抛异常、接入层统一映射」：
 
@@ -299,167 +132,6 @@ return Envelope::success($data, '请求成功');
 
 `Server::format($data, 2)` 的「按 `facade.server.echo.format` 映射键名」能力没有等价实现，键名已在 `Envelope::toArray()` 中固定，不再可配置。
 
-## 七、门面方法逐项对照
-
-### 7.1 `\fxapp\Base`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `load($file, $type)` | `File\Loader::load()`（副作用脚本）、`File\Loader::read()`（数据文件） |
-| `lang($name, $vars, $lang)` | `Language::phrase($name, $locale, $vars, true)`（含首字母大写） |
-| `langList($name, $vars, $lang)` | `Language::phrase($name, $locale, $vars)` |
-| `langParse($name)` | `Language::phrase($name, $locale)` |
-| `config(...$vars)` | `$kernel->config()->get()`、`Config\Store::set()` |
-| `cookie(...$vars)` | `CookieJar::get()`、`CookieJar::set()` |
-| `env(...$vars)` | `Config\Store`（`env` 命名空间） |
-| `dump(...$vars)` | `Dump::write(...)` |
-| `json($data, $type, $param)` | `Json::encode()`、`Json::decode()`；非 JSON 串按查询串解码用 `Encode::decodeAll()`；v1 对已编码串不再编码，v2 需先 `Type::isJson()` 判断 |
-| `ipv4($data, $type)` | `Ip::toLong()`、`Ip::fromLong()` |
-| `crypt($data, $type, $param)` | `Cipher::encrypt()`、`Cipher::decrypt()`；旧数据用 `DesCipher::decrypt()` |
-| `throwable($message)` | 抛异常，由接入层处理 |
-| `echo($message, $code, $data, $extend)` | `Envelope::success()`、`Envelope::failure()` |
-
-### 7.2 `\fxapp\Client`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `ip($type = 0)` | `ClientInfo::ip()`；需要整型时用 `Ip::toLong()` |
-| `browser($type = -1)` | `ClientInfo::browser(CaseFormat::Original)` |
-| `system($type = -1)` | `ClientInfo::system(CaseFormat::Original)` |
-| `param($param, $method)` | `Http\RequestInput::all()` / `query()` / `post()` / `body()` / `cli()`；按结构提取用 `only()` |
-
-### 7.3 `\fxapp\Data`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `where($data, $param)` | `WhereBuilder`，见 4.4 |
-| `whereSafe($value, &$method, $case)` | 由 `WhereBuilder` 绑定参数覆盖，不再需要字符串白名单 |
-| `whereFilter($value, $method, $case)` | 由 `WhereBuilder` 绑定参数覆盖，同上 |
-| `whereBuild($key, $value, $method)` | `WhereBuilder::eq()`、`in()`、`like()` 等 |
-| `whereAssemble($data)` | `WhereBuilder::build()` |
-| `whereMake($data, $type)` | `WhereBuilder::build()`；需要前缀时用 `Expression` 拼接 |
-| `insert($table, $data)` | `StatementBuilder::insert()` |
-| `update($table, $data, $param)` | `StatementBuilder::update()` |
-| `updateContrast($data_new, $data_old)` | `Diff::make()`，未变化时抛 `SameDataException` |
-| `storeUpperLevel(...)` | `Data\Hierarchy::ancestors($list, $id, $idKey, $parentKey)` |
-| `storeLowerLevel(...)` | `Data\Hierarchy::descendants($list, $id, $idKey, $parentKey)` |
-| `fieldDistance(...)` | `Field::distance()` / `Sql\Expression::distance()` |
-| `fieldInitial($field)` | `Field::initial()` / `Sql\Expression::initial()` |
-| `fieldDivision(...)` | `Field::division()` / `Sql\Expression::division()` |
-| `fieldJson($field, $replace, $param)` | `Field::json($column, $path, FieldJsonMode::Quoted)` |
-| `fieldText($field, $replace, $param)` | `Field::text($column, $replace, FieldTextMode::Keep)` |
-| `fieldDate($field, $replace, $param)` | `Field::date($column, DateGranularity::DateTime, $replace)` |
-| `fieldAlias($data, $alias, $delimiter)` | `Field::alias($data, $alias, $delimiter)` |
-| `fieldEscape($data, $delimiter)` | `Field::escape($data, $delimiter)` |
-| `htmlFilter($data, $flags)` | `Html::escape($data)` |
-| `htmlRemove($data, $flags)` | `Html::strip($data, $allowed)` |
-| `listToTree($list, ...)` | `Tree::fromList($list, $rootId, $idKey, $parentKey, $childKey)` |
-| `paramRepair($param)` | `Data\Param::repair($rows)` |
-| `paramFilter($param)` | `Data\Param::filter($param)` |
-| `paramEmpty($param, $type)` | `Data\Param::missing($param, NullPolicy::Blank)` |
-| `paramExist($param)` | `[] === Data\Param::missing($param, NullPolicy::StrictNull)` |
-
-### 7.4 `\fxapp\File`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `formatSize($size)` | `Formatter::size($bytes)` |
-| `getList($path, $ext, $limit)` | `Filesystem::findFiles($directory, $extensions, $maxDepth)` |
-| `moveDirectory($oldpath, $newpath)` | `Filesystem::moveDirectory()`（整目录移动，不再扁平合并内容） |
-| `deleteDirectory($path)` | `Filesystem::deleteDirectory()` |
-| `getMediaInfo($var, $type)` | `VideoInfo::inspect()` 取视频元信息；类型互查用 `MediaInfo::mime()`、`MediaInfo::extension()` |
-
-### 7.5 `\fxapp\Math`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `rand($length, $type)` | 类型 0：`Random::string($length, RandomCharset::Alnum, RandomCharset::Alpha)`；类型 1：`Random::string($length, RandomCharset::Numeric)` |
-
-### 7.6 `\fxapp\Param`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `init()` | `Application\Cli::parse()` + `Bootstrap::withCliArguments()` |
-| `define($param, $mode)` | `Shape` 链式组合，见 4.2 |
-| `array($param, $limit, $filter)` | `Data\Cast::toArray($param, $limit)` |
-| `object($param, $limit, $filter)` | `Data\Cast::emptyToObject($param, $limit)` |
-| `pick($base, $data)` | `Picker::pick()` |
-| `append(...$args)` | `Merger::append()` |
-| `merge($limit, $cover, $type, ...$args)` | `Merger::merge()`、`Merger::mergeKeepBlank()` |
-| `cover($args, $limit, $cover, $type)` | `Merger::merge()` |
-| `url($data)` | `Url::build()`、`Url::query()`、`Url::withQuery()` |
-| `json($var, $type, $param)` | `Json::encode()`、`Json::decode($value, $associative)`；非 JSON 串按查询串解码用 `Encode::decodeAll()` |
-
-### 7.7 `\fxapp\Safe`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `crypt($data, $type, $param)` | 新数据用 `Cipher::encrypt()` / `decrypt()`；旧数据用 `DesCipher::encrypt()` / `decrypt()` |
-| `md5($data, $type)` | `Hash::md5($data, HashLength::Full32)` |
-| `token($data, $type)` | 新令牌用 `Token::make()` / `verify()`；旧令牌用 `DesToken::encode()` / `decode()` |
-| `rsapri($data, $type, $param)` | 私钥加密用 `Rsa::privateEncrypt()`；签名与解密用 `Rsa::sign()` / `decrypt()` |
-| `rsapub($data, $type, $param)` | 公钥解密用 `Rsa::publicDecrypt()`；验签与加密用 `Rsa::verify()` / `encrypt()` |
-| `rsapem($data)` | `Rsa::normalizePem()` |
-
-### 7.8 `\fxapp\Server`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `echo()` | `Envelope::success()` 的模板等价物 |
-| `ip()` | `HttpClient\Curl` + `Json` 组合获取公网地址 |
-| `system($type)` | PHP 原生 `PHP_OS_FAMILY` |
-| `format($data, $type)` | `Envelope::toArray()`、`JsonFormatter::format()` |
-| `env()` | `Application\Cli::serverDefaults()`、`RequestContext::fromGlobals()` |
-| `branch()` | `Http\BranchContext::resolve()`，分支配置由调用方写入 `Config\Store` |
-
-### 7.9 `\fxapp\Service`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `http($url, $data, $header, $method, $option)` | `HttpClient\Curl::request()`（URL 级）；需要 PSR-18 时用 `HttpClient\Client::send()` |
-| `httpDown($url, $file)` | `HttpClient\Curl::download()` |
-
-### 7.10 `\fxapp\Text`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `uuid($mode, $param)` | `Uuid::make(UuidMode, $seed, UuidStyle)`；格式化现有串用 `Uuid::format()` |
-| `implode($delimiter, $data, $explode, $unique)` | `Str::implode($glue, $values, $unique)` |
-| `explode($delimiter, $data, $unique, $limit)` | `Str::explode($separator, $value, $unique)` |
-| `splice($string, $value, $delimiter)` | `Str::splice($value, $append, $glue)`；需要无条件追加时传 `$unique = false` |
-| `strlen($string, $start, $end)` | `Str::isLength($value, $start, $end)` |
-| `letters($var, $in_charset, $out_charset)` | `Encode::letters($value, $inCharset, $outCharset)` |
-| `letter($var, $in_charset, $out_charset)` | `Encode::letter($value, $inCharset, $outCharset)` |
-| `timeRange($time, $start, $end)` | `Time::range($time, TimeRangeOptions::make(...), ...)` |
-| `timeChange($time, $type, $format)` | `Time::change($value, TimeOutput::Timestamp / Text, $format)` |
-| `timeMilli($mtime)` | `Time::milli()`、`Time::milliFormat()`、`Time::milliParse()` |
-| `timeFormat($time, $param)` | `Time::duration($seconds, $labels, $zero, TimeUnit, $before)`、`Time::decompose()` |
-| `strEncode($data)` | `Encode::encodeAll($data)` |
-| `strEncodeMerge($data)` | `Encode::encodeAll($data)`（递归辅助已合并） |
-| `strDecode($data)` | `Encode::decodeAll($data)` |
-| `strDecodeMerge($data)` | `Encode::decodeAll($data)`（递归辅助已合并） |
-| `ipv4($data, $type)` | `Ip::toLong()`、`Ip::fromLong()` |
-| `convert($data, $type)` | `Encode::convert($value, EncodeConvert::ToHex / FromHex)` |
-| `throwable($th, $type, $param)` | 改为抛异常，由接入层映射为信封 |
-
-### 7.11 `\fxapp\View`
-
-| 旧方法 | 新写法 |
-| --- | --- |
-| `echo($data, $type)` | `JsonFormatter::format()`、`XmlFormatter::format()`（按类型序列化） |
-
-## 八、接入方 `extend/fxri/data` 处置
-
-旧分发方式下，接入方在框架包之外维护 `extend/fxri/data`，内容全部是个性化数据与环境差异。四类处置（上收到框架、迁入项目配置、项目侧改写、直接删除）与逐项对照见[扩展目录迁移](./extend)。
-
-## 九、迁移检查清单
-
-阶段 0–7 的可勾选清单、基线模板与常见卡点见[升级检查清单](./checklist)；本页只负责旧写法到新写法的逐项对照。
-
-## 十、行为变更
-
-不再提供的能力、高频调用对照与细节差异单独成页，见[行为变更](./behavior)。
-
 ## 相关文档
 
 - [升级总览](./)：升级路线、阶段与回滚。
@@ -467,5 +139,7 @@ return Envelope::success($data, '请求成功');
 - [扩展目录](./extend)：`extend/fxri/data` 的逐项处理。
 - [检查清单](./checklist)：阶段清单与基线模板。
 - [行为变更](./behavior)：不再提供的能力与高频调用差异。
+- [数字码对照](./codes)：旧数字码与具名枚举的对应关系。
+- [门面方法对照](./facades)：按门面类列出旧方法与新入口。
 - [快速开始](../getting-started)：从零安装、装配与最小可运行示例。
 - [更新日志](../changelog)：各版本完整变更条目，含 2.0 的分组说明。

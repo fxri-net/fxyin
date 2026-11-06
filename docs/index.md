@@ -78,6 +78,8 @@ $kernel = KernelBuilder::make()->build();
 | [快速开始](./getting-started) | 第一次接触，想先把框架跑起来 |
 | [1.x 升级 2.0](./upgrade/) | 从 1.x 升级，需要路线与步骤 |
 | [2.0 API 对照](./upgrade/api) | 查旧 API 对应的新写法 |
+| [2.0 数字码对照](./upgrade/codes) | 查旧数字码对应的具名枚举 |
+| [2.0 门面方法对照](./upgrade/facades) | 按门面类查旧方法对应的新入口 |
 | [更新日志](./changelog) | 查各版本变更内容 |
 | [IDE 元数据](./ide) | 想让工厂方法在编辑器里补全出具体类 |
 

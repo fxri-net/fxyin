@@ -57,10 +57,14 @@
 | [文件](./docs/file.md) | 目录读写、路径与 MIME |
 | [安全](./docs/security.md) | 摘要、加密、签名与令牌 |
 | [HTTP](./docs/http.md) | 响应信封、请求上下文、Cookie、视图与客户端 |
+| [HTTP API](./docs/http-api.md) | HTTP 层各类的方法签名与返回值 |
 | [支撑](./docs/support.md) | 类型判定、随机串、格式化、调试输出 |
 | [接入已有框架](./docs/integration.md) | 把内核绑定进宿主容器 |
 | [1.x 升级 2.0](./docs/upgrade/index.md) | 从 1.x 升级的路线、阶段与回滚 |
 | [2.0 API 对照](./docs/upgrade/api.md) | 查旧 API 对应的新写法 |
+| [2.0 数字码对照](./docs/upgrade/codes.md) | 查旧数字码对应的具名枚举 |
+| [2.0 门面方法对照](./docs/upgrade/facades.md) | 按门面类查旧方法对应的新入口 |
+| [2.0 扩展迁移](./docs/upgrade/extend-facade.md) | 旧自定义门面的三种替代方案 |
 | [常见问题](./docs/faq.md) | 遇到问题先来这里找 |
 | [贡献指南](./docs/contributing.md) | 本地开发、验收命令与发版链路 |
 | [更新日志](./docs/changelog.md) | 查各版本变更内容 |

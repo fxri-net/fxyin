@@ -80,6 +80,7 @@ export default defineConfig({
             items: [
               { text: '安全', link: '/security' },
               { text: 'HTTP', link: '/http' },
+              { text: 'HTTP API', link: '/http-api' },
             ],
           },
           {
@@ -99,11 +100,11 @@ export default defineConfig({
           { text: '升级总览', link: '/upgrade/' },
           { text: '接入形态', link: '/upgrade/runtime' },
           { text: '扩展目录', link: '/upgrade/extend' },
-          { text: 'API 对照', link: '/upgrade/api' },
           { text: '行为变更', link: '/upgrade/behavior' },
-          { text: '检查清单', link: '/upgrade/checklist' },
-          { text: '对等矩阵', link: '/upgrade/parity' },
-          { text: '决策记录', link: '/adr/0001-v2-parity' },
+          { text: 'API 对照', link: '/upgrade/api' },
+          { text: '数字码对照', link: '/upgrade/codes' },
+          { text: '门面方法对照', link: '/upgrade/facades' },
+          { text: '扩展迁移', link: '/upgrade/extend-facade' },
         ],
       },
       {
@@ -159,6 +160,7 @@ export default defineConfig({
             items: [
               { text: '安全', link: '/security' },
               { text: 'HTTP', link: '/http' },
+              { text: 'HTTP API', link: '/http-api' },
             ],
           },
           {
@@ -178,8 +180,16 @@ export default defineConfig({
           { text: '升级总览', link: '/upgrade/' },
           { text: '接入形态', link: '/upgrade/runtime' },
           { text: '扩展目录', link: '/upgrade/extend' },
-          { text: 'API 对照', link: '/upgrade/api' },
           { text: '行为变更', link: '/upgrade/behavior' },
+        ],
+      },
+      {
+        text: '迁移',
+        items: [
+          { text: 'API 对照', link: '/upgrade/api' },
+          { text: '数字码对照', link: '/upgrade/codes' },
+          { text: '门面方法对照', link: '/upgrade/facades' },
+          { text: '扩展迁移', link: '/upgrade/extend-facade' },
           { text: '检查清单', link: '/upgrade/checklist' },
           { text: '对等矩阵', link: '/upgrade/parity' },
           { text: '决策记录', link: '/adr/0001-v2-parity' },

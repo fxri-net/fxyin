@@ -28,7 +28,7 @@ title: 行为变更
 | --- | --- | --- |
 | `Base::lang($name, $vars)` | `$kernel->trans($id, $parameters)` | 旧的列表拼接与按语言切换连接符需项目侧保留 |
 | `Base::oracle($name)` | 项目工厂或容器 | 项目自有定位器，fxyin 不提供 |
-| `Param::define([$data, $keys], '1.2.3')` | `Shape` / `Pipeline` | 点分码逐一对照见第四节 |
+| `Param::define([$data, $keys], '1.2.3')` | `Shape` / `Pipeline` | 点分码逐一对照见[数字码对照](./codes) |
 | `View::echo($data, 'json')` | `Responder`、`JsonFormatter` | XML 与视图类型由项目渲染器承接 |
 | `Server::format($echo, 2)` | `Envelope::toArray()` 或项目序列化 | 键名固定，不再由配置映射 |
 | `Base::config($name)` | `$kernel->config()->get($name, $default)` | 配置不再支持运行期写入 |
@@ -37,15 +37,15 @@ title: 行为变更
 | `Server::echo()` | `Envelope::success()`、`Envelope::failure()` | 六元数组改为五键信封 |
 | `Text::throwable($e)` | 抛异常，由接入层映射 | 不再直接终止进程 |
 | `Data::paramEmpty($data, $type)` | `Data\Param::missing($data, NullPolicy::Blank)` | 空值策略改为枚举 |
-| `Data::fieldJson(...)` | `Field::json(...)` | 见 7.3 |
+| `Data::fieldJson(...)` | `Field::json(...)` | 见[门面方法对照](./facades)第三节 |
 | `View::log($data, $type)` | PSR-3 `LoggerInterface` | 通过 `KernelBuilder::withLogger()` 注入 |
 | `Service::http(...)` | `HttpClient\Curl::request()` / `send()` | 需要 PSR-7 与 PSR-18 实现时改用 `HttpClient\Client::send()` |
 | `File::getList($path, $ext)` | `Filesystem::findFiles($directory, $extensions)` | 扩展名过滤与深度由参数表达 |
 | `Data::whereMake($data, $type)` | `WhereBuilder::build()`、`Expression` | 条件与绑定值对象化 |
-| `Data::fieldEscape(...)` | `Field::escape()` | 见 7.3 |
+| `Data::fieldEscape(...)` | `Field::escape()` | 见[门面方法对照](./facades)第三节 |
 | `Service::httpDown(...)` | `HttpClient\Curl::download()` | 非 2xx 不写文件 |
 | `Math::rand($length, $type)` | `Random::string($length, RandomCharset::Alnum, RandomCharset::Alpha)` | 字符集改为枚举，首字符集单独指定 |
-| `Text::timeMilli($mtime)` | `Time::milli()` | 见 7.10 |
+| `Text::timeMilli($mtime)` | `Time::milli()` | 见[门面方法对照](./facades)第十节 |
 | `Text::explode()`、`Text::implode()` | `Text\Str::explode()`、`Str::implode()` | 去重与限长参数调整 |
 | `Client::ip($type)` | `ClientInfo::ip()`、`Text\Ip::toLong()` | 整型地址由 `Ip` 转换 |
 | `Db::startTrans()` 等 | 项目数据库层 | fxyin 不接管连接与事务 |
