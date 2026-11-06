@@ -6,6 +6,14 @@ outline: [2, 2]
 
 > 完整变更历史以根 `CHANGELOG.md` 为准，本页由 `toolkit changelog doc` 自动同步，请勿手改。
 
+## 2.2.6
+
+> 2026-11-06 发布
+
+### ✨ 新增功能
+
+- `sync:version` 脚本，`changelog:version` 升版本后自动回写 `Package::VERSION`，发版不再人工补版本
+
 ## 2.2.5
 
 > 2026-11-06 发布
