@@ -68,6 +68,7 @@
     "scripts": {
         "check": [
             "@composer validate --strict",
+            "@composer audit --format=plain",
             "@cs",
             "@stan",
             "@stan:deprecation",

@@ -39,8 +39,9 @@ pnpm install
 
 | 命令 | 作用 |
 | --- | --- |
-| `composer check` | 聚合门禁，依次执行 `composer.json` 中 `scripts.check` 定义的步骤，CI 与本机共用同一条 |
+| `composer check` | 聚合门禁，执行 `composer.json` 中 `scripts.check` 定义的步骤；`pnpm verify` 下这些步骤并行执行，CI 与本机共用同一份清单 |
 | `composer validate --strict` | 校验 `composer.json` 结构与字段 |
+| `composer audit` | 检查依赖的安全公告，需要访问依赖仓库的公告库 |
 | `composer cs` | `php-cs-fixer` 以 `--dry-run --diff` 检查代码风格 |
 | `composer stan` | PHPStan 静态分析 |
 | `composer test` | PHPUnit 全量测试 |
@@ -51,7 +52,7 @@ pnpm install
 | `pnpm docs:build` | 先做 TypeScript 类型检查，再构建文档站并校验站内链接 |
 | `pnpm docs:preview` | 预览已构建的文档站产物 |
 | `pnpm sync:changelog-doc` | 用全局 `toolkit changelog doc` 把根 `CHANGELOG.md` 同步为 `docs/changelog.md` |
-| `pnpm verify` | 聚合门禁，按 `scripts/verify.mjs` 的清单依次执行；`--skip-code` / `--skip-docs` 可跳过代码段或文档段 |
+| `pnpm verify` | 聚合门禁，并发执行 `scripts/verify.mjs` 的步骤清单，输出按声明顺序回放并打印每步耗时；`--skip-code` / `--skip-docs` 可跳过代码段或文档段 |
 
 提交前跑一次 `pnpm verify`；它是本地与流水线的统一入口，步骤清单只此一份，不要只挑其中几步执行。
 
