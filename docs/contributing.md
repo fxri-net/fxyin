@@ -102,7 +102,7 @@ toolkit tasks check      # 校验任务档案结构，必须零错误
 - 版本号与 `CHANGELOG.md` 的改动单独提交，不与任务收尾混批。
 - 发布前必须跑 `pnpm verify`，任一步失败即中止，不得进入提交、打标签与发布。
 - 根 `CHANGELOG.md` 是更新日志的源，`docs/changelog.md` 由全局 `toolkit changelog doc` 生成；两者不一致时 `pnpm verify` 会直接失败（未安装全局 toolkit 时该步打印跳过）。
-- ⚠️ `toolkit changelog --history format` 会连带扫描并改写 `vendor/**/CHANGELOG.md`，`vendor` 是 `composer install` 的再生产物且不入库，格式化后不要把这些变更带进提交。
+- ⚠️ `toolkit changelog format --history` 会连带扫描并改写 `vendor/**/CHANGELOG.md`，`vendor` 是 `composer install` 的再生产物且不入库，格式化后不要把这些变更带进提交。
 
 ### 标签规则
 
