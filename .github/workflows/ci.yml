@@ -29,6 +29,25 @@ jobs:
           package-manager-cache: false
       # 仓库不提交 composer.lock，交由各 PHP 版本自行解析，才能覆盖 8.2 与 8.3+ 的依赖差异
       - run: composer update --no-interaction --prefer-dist --no-progress
-      # 文档站构建由 deploy-docs.yml 单独承担，矩阵内跳过以省时
+      # 文档站构建由 deploy-docs.yml 在发布前承担，矩阵内跳过以省时
       - name: 门禁校验（PHP 矩阵）
         run: node scripts/verify.mjs --skip-docs
+
+  # 文档站只在 PR 上构建一次：主分支推送由 deploy-docs 在发布前完成同一步，
+  # 两处共用同一份产物断言脚本，避免同一推送重复构建
+  docs:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.34.4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+      - name: 文档站构建与产物断言
+        run: pnpm docs:build && node scripts/check-docs-dist.mjs

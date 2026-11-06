@@ -43,6 +43,9 @@ jobs:
           SITE_URL: https://fxri-net.github.io/fxyin/
           REPO_URL: https://github.com/fxri-net/fxyin
         run: pnpm docs:build
+      # 发布前先断言产物：404 页不得进入站点地图与站内搜索索引（与 CI 共用同一份脚本）
+      - name: 文档站产物断言（404 排除）
+        run: node scripts/check-docs-dist.mjs
       - name: 上传 Pages 产物
         uses: actions/upload-pages-artifact@v5
         with:

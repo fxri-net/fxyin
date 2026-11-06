@@ -66,6 +66,8 @@ pages:
     # pnpm 版本由镜像固定，无需现场安装
     - pnpm install --frozen-lockfile --store-dir .pnpm-store
     - pnpm docs:build
+    # 发布前断言产物：404 页不得进入站点地图与站内搜索索引（与 CI 共用同一份脚本）
+    - node scripts/check-docs-dist.mjs
     # GitLab Pages 只发布 public/ 目录，构建产物在此归位
     - rm -rf public
     - mv docs/.vitepress/dist public
