@@ -20,7 +20,8 @@
   "scripts": {
     "verify": "node scripts/verify.mjs",
     "changeset": "node scripts/toolkit.mjs changelog",
-    "changelog:version": "node scripts/toolkit.mjs changelog version",
+    "changelog:version": "node scripts/toolkit.mjs changelog version && node scripts/sync-version.mjs",
+    "sync:version": "node scripts/sync-version.mjs",
     "sync:changelog-doc": "node scripts/toolkit.mjs changelog doc",
     "docs:dev": "vitepress dev docs",
     "docs:typecheck": "tsc --noEmit -p docs/.vitepress",
