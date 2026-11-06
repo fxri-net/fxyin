@@ -3,5 +3,7 @@
 parameters:
     level: max
     phpVersion: 80200
+    # 与废弃函数门禁各用一份缓存：两条分析会并行执行，共用系统临时目录会互相覆盖结果缓存
+    tmpDir: %currentWorkingDirectory%/.phpstan.cache/stan
     paths:
         - src

@@ -43,6 +43,7 @@ const EXPORT_IGNORED_PATHS = [
     '/node_modules',
     '/vendor',
     '/composer.lock',
+    '/.phpstan.cache',
     '/.phpunit.cache',
     '/.screenshots',
     '/.php-cs-fixer.cache',
