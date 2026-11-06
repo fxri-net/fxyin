@@ -117,6 +117,6 @@ echo $kernel->trans('欢迎');
 
 ## 下一步
 
-- 从 1.x 升级：见 [1.x 升级 2.0 指南](./upgrade-2.0)，按体检、路线与阶段推进；旧 API 对照见 [2.0 API 对照](./migration-2.0)。
+- 从 1.x 升级：见 [1.x 升级 2.0 指南](./upgrade/)，按体检、路线与阶段推进；旧 API 对照见 [2.0 API 对照](./upgrade/api)。
 - 接入已有框架：`Integration\ThinkPHP\ThinkPHPAdapter::bind()` 把内核绑定进容器，异常经 `ExceptionHandler` 映射为统一响应信封。
 - 查各版本变更：见[更新日志](./changelog)。

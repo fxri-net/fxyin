@@ -1,13 +1,13 @@
 ---
-title: 升级 2.0：接入形态
+title: 接入形态
 outline: [2, 3]
 ---
 
-# 升级 2.0：接入形态
+# 接入形态
 
 1.x 的接入方式不止一种：有的项目把框架解压到 `extend/fxri/base`，有的自带 `bootstrap.php`，有的直接 `require autoload.php`，宿主也可能是 ThinkPHP 6、ThinkPHP 5 或自研框架。本页按宿主形态给出 2.0 的引导模板。
 
-> 本页只覆盖 `extend/fxri/base` 与入口引导；扩展目录 `extend/fxri/data` 见[扩展目录迁移](./upgrade-2.0-extend)。`extend/fxri/safe` 等独立模块不在 fxyin 迁移范围内。
+> 本页只覆盖 `extend/fxri/base` 与入口引导；扩展目录 `extend/fxri/data` 见[扩展目录迁移](./extend)。`extend/fxri/safe` 等独立模块不在 fxyin 迁移范围内。
 
 ## 一、四类接入形态
 
@@ -232,6 +232,6 @@ echo $request->path();
 
 ## 十、边界
 
-- 本页不覆盖 `extend/fxri/data` 的配置、门面扩展、oracle 与启动钩子，见[扩展目录迁移](./upgrade-2.0-extend)。
+- 本页不覆盖 `extend/fxri/data` 的配置、门面扩展、oracle 与启动钩子，见[扩展目录迁移](./extend)。
 - `extend/fxri/safe`、`safe_local` 是独立模块，保留原状或单独排期，不并入 fxyin 2.0。
 - 宿主容器绑定只做「把内核放进容器」，不接管路由、中间件与 MVC 基类。

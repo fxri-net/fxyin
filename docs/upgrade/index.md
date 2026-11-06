@@ -1,9 +1,9 @@
 ---
-title: 1.x 升级 2.0 指南
+title: 升级总览
 outline: [2, 3]
 ---
 
-# 1.x 升级 2.0 指南
+# 升级总览
 
 2.0 是一次不保留 API 兼容层的大版本改版：门面层与全局函数移除，点分模式号改为具名枚举，六元响应数组改为固定五键信封，安装方式改为 Composer。本指南面向仍在使用 1.x 的项目，给出从体检、选路到验收、回滚的可执行步骤。
 
@@ -17,8 +17,8 @@ outline: [2, 3]
 | 2.0.0 起 | 正式发版 | Composer 包 `fxri/fxyin`，要求 PHP 8.2 起 |
 
 - `v1.6.1` 是对 1.x 终点的标签标记，包含 PHP 8.4 兼容修复，未单独发版。
-- 1.x 的兼容层不会出现在 2.x 中；需要过渡时由接入方项目自行保留一层薄适配，见[扩展目录迁移](./upgrade-2.0-extend)。
-- 响应信封固定为 `code`、`message`、`data`、`extend`、`debug` 五个字段，分页接口的 `data` 用 `Data\Page` 的四键壳；完整口径与迁移对照见[HTTP](./http)与[API 对照](./migration-2.0)。
+- 1.x 的兼容层不会出现在 2.x 中；需要过渡时由接入方项目自行保留一层薄适配，见[扩展目录迁移](./extend)。
+- 响应信封固定为 `code`、`message`、`data`、`extend`、`debug` 五个字段，分页接口的 `data` 用 `Data\Page` 的四键壳；完整口径与迁移对照见[HTTP](../http)与[API 对照](./api)。
 
 ### 2.1.0 能力补齐
 
@@ -40,12 +40,12 @@ outline: [2, 3]
 | `Param::object` / `append` | `Cast::emptyToObject()` / `Merger::append()` |
 | `Env::*` / `fxy_env` | `Config\Store`（`env` 命名空间） |
 
-完整映射见[对等矩阵](./parity-1.6.1)与[API 对照](./migration-2.0)。
+完整映射见[对等矩阵](./parity)与[API 对照](./api)。
 
 ## 二、升级前必须确认的四件事
 
 1. **PHP 版本**：实际部署版本必须达到 8.2。`composer.json` 里的 `php` 约束可能已经过时，以线上运行版本为准。
-2. **Composer 可用**：2.0 只通过 Composer 分发。没有 `composer.json` 的项目需要先补接入，见[接入形态手册](./upgrade-2.0-runtime)。
+2. **Composer 可用**：2.0 只通过 Composer 分发。没有 `composer.json` 的项目需要先补接入，见[接入形态手册](./runtime)。
 3. **可回退**：升级前保留 1.x 目录、部署包与数据库快照；升级过程中每一步都应能切回旧引导。
 4. **框架副本可复原**：`extend/fxri/base` 是随项目分发的副本，普遍被就地改过，未必等于任何正式标签。升级前先把它与手头的 1.x 正式副本或备份逐文件比对，导出「本地改动清单」并整目录备份；清单里凡 1.6.1 没有的方法或行为，都要先定落点再删除。
 
@@ -54,7 +54,7 @@ outline: [2, 3]
 diff -r backup/extend/fxri/base project/extend/fxri/base
 ```
 
-> 只比对 `config.php`、`app`、`frame`、`autoload.php` 即可覆盖全部框架代码；`data` 目录属项目扩展，按[扩展目录迁移](./upgrade-2.0-extend)单独处理。
+> 只比对 `config.php`、`app`、`frame`、`autoload.php` 即可覆盖全部框架代码；`data` 目录属项目扩展，按[扩展目录迁移](./extend)单独处理。
 
 ## 三、项目自评
 
@@ -133,11 +133,11 @@ PHP < 8.2 ─────────────── 是 → 先完成 PHP �
 
 | 文档 | 内容 |
 | --- | --- |
-| [接入形态手册](./upgrade-2.0-runtime) | ThinkPHP 6、ThinkPHP 5、非 ThinkPHP、无 Composer 四类引导模板 |
-| [扩展目录迁移](./upgrade-2.0-extend) | `extend/fxri/base` 与 `extend/fxri/data` 的逐项对照 |
-| [2.0 API 对照](./migration-2.0) | 类映射、点分码、门面方法与无等价能力 |
-| [升级检查清单](./upgrade-2.0-checklist) | 阶段 0–7 的可复制清单与基线模板 |
-| [快速开始](./getting-started) | 2.0 的最小安装与装配 |
+| [接入形态手册](./runtime) | ThinkPHP 6、ThinkPHP 5、非 ThinkPHP、无 Composer 四类引导模板 |
+| [扩展目录迁移](./extend) | `extend/fxri/base` 与 `extend/fxri/data` 的逐项对照 |
+| [2.0 API 对照](./api) | 类映射、点分码、门面方法与无等价能力 |
+| [升级检查清单](./checklist) | 阶段 0–7 的可复制清单与基线模板 |
+| [快速开始](../getting-started) | 2.0 的最小安装与装配 |
 
 ## 七、回滚
 

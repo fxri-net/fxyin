@@ -42,44 +42,75 @@ export default defineConfig({
     // 导航栏 logo（字符串路径由 VitePress 自动拼接 base 前缀）
     logo: '/logo.png',
     nav: [
-      { text: '指南', link: '/getting-started' },
-      {
-        text: '升级',
-        items: [
-          { text: '1.x 升级 2.0', link: '/upgrade-2.0' },
-          { text: '接入形态', link: '/upgrade-2.0-runtime' },
-          { text: '扩展目录', link: '/upgrade-2.0-extend' },
-          { text: 'API 对照', link: '/migration-2.0' },
-          { text: '检查清单', link: '/upgrade-2.0-checklist' },
-          { text: 'v1.6.1 对等矩阵', link: '/parity-1.6.1' },
-        ],
-      },
+      { text: '快速开始', link: '/getting-started' },
+      { text: '接入', link: '/integration' },
       {
         text: '参考',
         items: [
-          { text: '内核与装配', link: '/kernel' },
-          { text: '参数', link: '/param' },
-          { text: '数据', link: '/data' },
-          { text: 'SQL', link: '/sql' },
-          { text: '文本', link: '/text' },
-          { text: '文件', link: '/file' },
-          { text: '安全', link: '/security' },
-          { text: 'HTTP', link: '/http' },
-          { text: '配置', link: '/config' },
-          { text: '语言', link: '/language' },
-          { text: '应用启动', link: '/application' },
-          { text: '支撑', link: '/support' },
-          { text: 'IDE 元数据', link: '/ide' },
-          { text: 'AI 技能', link: '/skills' },
-          { text: '命令行', link: '/cli' },
-          { text: '接入', link: '/integration' },
+          {
+            text: '内核',
+            items: [
+              { text: '内核与装配', link: '/kernel' },
+              { text: '配置', link: '/config' },
+              { text: '语言', link: '/language' },
+              { text: '应用启动', link: '/application' },
+            ],
+          },
+          {
+            text: '数据',
+            items: [
+              { text: '参数', link: '/param' },
+              { text: '数据', link: '/data' },
+              { text: 'SQL', link: '/sql' },
+            ],
+          },
+          {
+            text: '文本',
+            items: [
+              { text: '文本', link: '/text' },
+              { text: '文件', link: '/file' },
+            ],
+          },
+          {
+            text: '网络',
+            items: [
+              { text: '安全', link: '/security' },
+              { text: 'HTTP', link: '/http' },
+            ],
+          },
+          {
+            text: '支撑',
+            items: [
+              { text: '支撑', link: '/support' },
+              { text: 'IDE 元数据', link: '/ide' },
+              { text: 'AI 技能', link: '/skills' },
+              { text: '命令行', link: '/cli' },
+            ],
+          },
         ],
       },
-      { text: '贡献指南', link: '/contributing' },
-      { text: 'FAQ', link: '/faq' },
-      { text: '更新日志', link: '/changelog' },
+      {
+        text: '升级',
+        items: [
+          { text: '升级总览', link: '/upgrade/' },
+          { text: '接入形态', link: '/upgrade/runtime' },
+          { text: '扩展目录', link: '/upgrade/extend' },
+          { text: 'API 对照', link: '/upgrade/api' },
+          { text: '行为变更', link: '/upgrade/behavior' },
+          { text: '检查清单', link: '/upgrade/checklist' },
+          { text: '对等矩阵', link: '/upgrade/parity' },
+          { text: '决策记录', link: '/adr/0001-v2-parity' },
+        ],
+      },
+      {
+        text: '帮助',
+        items: [
+          { text: '常见问题', link: '/faq' },
+          { text: '更新日志', link: '/changelog' },
+        ],
+      },
     ],
-    // 侧栏按能力层分组：入门、内核与配置、参数与数据、文本与文件、网络与安全、支撑与协作
+    // 侧栏分类：开始 / 指南 / 参考（按域嵌套）/ 升级 / 帮助
     sidebar: [
       {
         text: '开始',
@@ -89,62 +120,74 @@ export default defineConfig({
         ],
       },
       {
-        text: '升级 2.0',
+        text: '指南',
+        items: [{ text: '接入', link: '/integration' }],
+      },
+      {
+        text: '参考',
         items: [
-          { text: '升级总览', link: '/upgrade-2.0' },
-          { text: '接入形态', link: '/upgrade-2.0-runtime' },
-          { text: '扩展目录', link: '/upgrade-2.0-extend' },
-          { text: 'API 对照', link: '/migration-2.0' },
-          { text: '检查清单', link: '/upgrade-2.0-checklist' },
-          { text: 'v1.6.1 对等矩阵', link: '/parity-1.6.1' },
+          {
+            text: '内核',
+            items: [
+              { text: '内核与装配', link: '/kernel' },
+              { text: '配置', link: '/config' },
+              { text: '语言', link: '/language' },
+              { text: '应用启动', link: '/application' },
+            ],
+          },
+          {
+            text: '数据',
+            items: [
+              { text: '参数', link: '/param' },
+              { text: '数据', link: '/data' },
+              { text: 'SQL', link: '/sql' },
+            ],
+          },
+          {
+            text: '文本',
+            items: [
+              { text: '文本', link: '/text' },
+              { text: '文件', link: '/file' },
+            ],
+          },
+          {
+            text: '网络',
+            items: [
+              { text: '安全', link: '/security' },
+              { text: 'HTTP', link: '/http' },
+            ],
+          },
+          {
+            text: '支撑',
+            items: [
+              { text: '支撑', link: '/support' },
+              { text: 'IDE 元数据', link: '/ide' },
+              { text: 'AI 技能', link: '/skills' },
+              { text: '命令行', link: '/cli' },
+            ],
+          },
         ],
       },
       {
-        text: '内核与配置',
+        text: '升级',
         items: [
-          { text: '内核与装配', link: '/kernel' },
-          { text: '配置', link: '/config' },
-          { text: '语言', link: '/language' },
-          { text: '应用启动', link: '/application' },
-          { text: '接入', link: '/integration' },
+          { text: '升级总览', link: '/upgrade/' },
+          { text: '接入形态', link: '/upgrade/runtime' },
+          { text: '扩展目录', link: '/upgrade/extend' },
+          { text: 'API 对照', link: '/upgrade/api' },
+          { text: '行为变更', link: '/upgrade/behavior' },
+          { text: '检查清单', link: '/upgrade/checklist' },
+          { text: '对等矩阵', link: '/upgrade/parity' },
+          { text: '决策记录', link: '/adr/0001-v2-parity' },
         ],
       },
       {
-        text: '参数与数据',
+        text: '帮助',
         items: [
-          { text: '参数', link: '/param' },
-          { text: '数据', link: '/data' },
-          { text: 'SQL', link: '/sql' },
-        ],
-      },
-      {
-        text: '文本与文件',
-        items: [
-          { text: '文本', link: '/text' },
-          { text: '文件', link: '/file' },
-        ],
-      },
-      {
-        text: '网络与安全',
-        items: [
-          { text: '安全', link: '/security' },
-          { text: 'HTTP', link: '/http' },
-        ],
-      },
-      {
-        text: '支撑与协作',
-        items: [
-          { text: '支撑', link: '/support' },
-          { text: 'IDE 元数据', link: '/ide' },
-          { text: 'AI 技能', link: '/skills' },
-          { text: '命令行', link: '/cli' },
-          { text: '贡献指南', link: '/contributing' },
           { text: '常见问题', link: '/faq' },
+          { text: '更新日志', link: '/changelog' },
+          { text: '贡献指南', link: '/contributing' },
         ],
-      },
-      {
-        text: '变更',
-        items: [{ text: '更新日志', link: '/changelog' }],
       },
     ],
     // 本地搜索 + 中文界面文案

@@ -133,9 +133,9 @@ foreach (EXPECTED as $key => $expected) {
     }
 }
 
-$docs = $root . '/docs/parity-1.6.1.md';
+$docs = $root . '/docs/upgrade/parity.md';
 if (!is_file($docs)) {
-    $issues[] = '缺少对等矩阵文档 docs/parity-1.6.1.md';
+    $issues[] = '缺少对等矩阵文档 docs/upgrade/parity.md';
 }
 
 if ([] !== $issues) {

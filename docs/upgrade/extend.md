@@ -1,9 +1,9 @@
 ---
-title: 升级 2.0：扩展目录迁移
+title: 扩展目录
 outline: [2, 3]
 ---
 
-# 升级 2.0：扩展目录迁移
+# 扩展目录
 
 1.x 的扩展目录通常位于 `extend/fxri/data`，负责注册扩展应用、追加门面方法、覆盖配置、加载语言包与执行启动钩子。2.0 没有对应的扩展机制，这些职责需要拆成「项目配置」「项目服务」「项目引导」三类落点。
 
@@ -14,7 +14,7 @@ outline: [2, 3]
 | 1.x 位置 | 职责 | 2.0 落点 |
 | --- | --- | --- |
 | `extend/fxri/base` | 解压的框架本体 | Composer 包 `fxri/fxyin`，整目录删除 |
-| `extend/fxri/bootstrap.php` | 引导入口 | 并入项目入口，见[接入形态](./upgrade-2.0-runtime) |
+| `extend/fxri/bootstrap.php` | 引导入口 | 并入项目入口，见[接入形态](./runtime) |
 | `extend/fxri/data/config.php` | 注册扩展应用、门面目录、加载器目录 | 项目 PSR-4、项目服务、Composer 自动加载 |
 | `data/app/config/*` | 扩展配置 | 项目 `config/`，必须是纯数组 |
 | `data/app/controller/*` | 扩展控制器与门面 | 项目服务类，或项目内过渡门面 |
@@ -49,7 +49,7 @@ outline: [2, 3]
 | `env.facade[-1]` 注册门面扩展目录 | 项目服务类或过渡门面 | 2.0 没有门面层 |
 | `loader.fxapp[1]` 注册控制器目录 | Composer `autoload` | 删除旧加载器配置 |
 | `env.base.root` / `env.base.app` | 项目常量或配置项 | 路径在运行时解析，不写进配置数组 |
-| `Param::define(..., '1.2.3')` | `Shape` / `Pipeline` | 见 [API 对照](./migration-2.0) |
+| `Param::define(..., '1.2.3')` | `Shape` / `Pipeline` | 见 [API 对照](./api) |
 | `Data::where([...])` 八元数组 | `WhereBuilder` | 条件与绑定值由对象携带 |
 | `Server::echo()` 六元数组 | `Envelope` 的五键信封 | 旧 `time` 位并入 `debug`，旧 `extend` 位成为正式字段 |
 | `Server::format($echo, 2)` | `Envelope::toArray()` 或项目序列化 | 键名不再可配置 |
@@ -58,7 +58,7 @@ outline: [2, 3]
 | `Base::oracle($name)` | 项目工厂或容器 | 定位器不再由框架提供 |
 | `View::log()` | PSR-3 日志 | 通过 `KernelBuilder::withLogger()` 注入 |
 | `Env::init()` / `Server::branch()` | `ServerContext` / `RequestContext` + 中间件 | 分支选择回到项目 |
-| `Text::throwable($e, '1.2')` | 抛异常 + 统一异常映射 | 见[接入形态](./upgrade-2.0-runtime) |
+| `Text::throwable($e, '1.2')` | 抛异常 + 统一异常映射 | 见[接入形态](./runtime) |
 
 ## 四、配置纯度三条硬规则
 
@@ -286,7 +286,7 @@ $cookies = \Fxri\Http\Cookie\CookieJar::fromGlobals();
 ## 七、语言与全局函数
 
 - 语言词条是纯数据，目录整体迁到项目 `language/{locale}/`，用 `ArrayTranslator::fromDirectory()` 或 `Translation\Loader\PhpFileLoader` 加载。
-- `function/common.php` 若为空直接删除；若非空，迁到 Composer `autoload.files`，或改成项目类方法。函数体里的旧 API 仍需按 [API 对照](./migration-2.0) 替换。
+- `function/common.php` 若为空直接删除；若非空，迁到 Composer `autoload.files`，或改成项目类方法。函数体里的旧 API 仍需按 [API 对照](./api) 替换。
 - 旧的 `langList()`、`langParse()` 列表拼接语义没有等价实现，由项目 `BaseProvider::lang()` 按实际业务保留。
 
 ## 八、响应协议的保持

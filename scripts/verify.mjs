@@ -48,6 +48,7 @@ const steps = [
   { label: "变更集规范（.changeset）", command: "node", args: ["scripts/check-changeset.mjs"], skip: false },
   { label: "更新日志镜像（CHANGELOG → docs）", command: "node", args: ["scripts/check-changelog-doc.mjs"], skip: false },
   { label: "文档站主题一致（toolkit docs theme --check）", command: "node", args: ["scripts/check-docs-theme.mjs"], skip: false },
+  { label: "文档站导航规范（分类 / 命名 / 顶栏）", command: "node", args: ["scripts/check-docs-nav.mjs"], skip: false },
   // 该步含 docs:typecheck，本地跳过时文档类型检查一并跳过，由 CI 部署工作流每次推送全量构建兜底
   { label: "文档站构建（类型检查 + 内链检查）", command: "pnpm", args: ["docs:build"], skip: skipDocs ? "--skip-docs" : docsNeeded ? "" : "未触及 docs/、CHANGELOG.md、README.md、依赖清单" }
 ]
