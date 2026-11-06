@@ -1,6 +1,6 @@
 {
   "name": "@fxri/fxyin",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "private": true,
   "description": "风音框架：面向 PHP 8.2 的轻量开发辅助框架。",
   "license": "Apache-2.0",
