@@ -1,0 +1,345 @@
+{
+  "nav": [
+    {
+      "text": "快速开始",
+      "link": "/getting-started"
+    },
+    {
+      "text": "接入",
+      "link": "/integration"
+    },
+    {
+      "text": "参考",
+      "items": [
+        {
+          "text": "内核",
+          "items": [
+            {
+              "text": "内核与装配",
+              "link": "/kernel"
+            },
+            {
+              "text": "配置",
+              "link": "/config"
+            },
+            {
+              "text": "语言",
+              "link": "/language"
+            },
+            {
+              "text": "应用启动",
+              "link": "/application"
+            }
+          ]
+        },
+        {
+          "text": "数据",
+          "items": [
+            {
+              "text": "参数",
+              "link": "/param"
+            },
+            {
+              "text": "数据",
+              "link": "/data"
+            },
+            {
+              "text": "SQL",
+              "link": "/sql"
+            }
+          ]
+        },
+        {
+          "text": "文本",
+          "items": [
+            {
+              "text": "文本",
+              "link": "/text"
+            },
+            {
+              "text": "文件",
+              "link": "/file"
+            }
+          ]
+        },
+        {
+          "text": "网络",
+          "items": [
+            {
+              "text": "安全",
+              "link": "/security"
+            },
+            {
+              "text": "HTTP",
+              "link": "/http"
+            },
+            {
+              "text": "HTTP API",
+              "link": "/http-api"
+            }
+          ]
+        },
+        {
+          "text": "支撑",
+          "items": [
+            {
+              "text": "支撑",
+              "link": "/support"
+            },
+            {
+              "text": "IDE 元数据",
+              "link": "/ide"
+            },
+            {
+              "text": "AI 技能",
+              "link": "/skills"
+            },
+            {
+              "text": "命令行",
+              "link": "/cli"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "升级",
+      "items": [
+        {
+          "text": "升级总览",
+          "link": "/upgrade/"
+        },
+        {
+          "text": "接入形态",
+          "link": "/upgrade/runtime"
+        },
+        {
+          "text": "扩展目录",
+          "link": "/upgrade/extend"
+        },
+        {
+          "text": "行为变更",
+          "link": "/upgrade/behavior"
+        },
+        {
+          "text": "API 对照",
+          "link": "/upgrade/api"
+        },
+        {
+          "text": "数字码对照",
+          "link": "/upgrade/codes"
+        },
+        {
+          "text": "门面方法对照",
+          "link": "/upgrade/facades"
+        },
+        {
+          "text": "扩展迁移",
+          "link": "/upgrade/extend-facade"
+        }
+      ]
+    },
+    {
+      "text": "帮助",
+      "items": [
+        {
+          "text": "常见问题",
+          "link": "/faq"
+        },
+        {
+          "text": "更新日志",
+          "link": "/changelog"
+        }
+      ]
+    }
+  ],
+  "sidebar": [
+    {
+      "text": "开始",
+      "items": [
+        {
+          "text": "首页",
+          "link": "/"
+        },
+        {
+          "text": "快速开始",
+          "link": "/getting-started"
+        }
+      ]
+    },
+    {
+      "text": "指南",
+      "items": [
+        {
+          "text": "接入",
+          "link": "/integration"
+        }
+      ]
+    },
+    {
+      "text": "参考",
+      "items": [
+        {
+          "text": "内核",
+          "items": [
+            {
+              "text": "内核与装配",
+              "link": "/kernel"
+            },
+            {
+              "text": "配置",
+              "link": "/config"
+            },
+            {
+              "text": "语言",
+              "link": "/language"
+            },
+            {
+              "text": "应用启动",
+              "link": "/application"
+            }
+          ]
+        },
+        {
+          "text": "数据",
+          "items": [
+            {
+              "text": "参数",
+              "link": "/param"
+            },
+            {
+              "text": "数据",
+              "link": "/data"
+            },
+            {
+              "text": "SQL",
+              "link": "/sql"
+            }
+          ]
+        },
+        {
+          "text": "文本",
+          "items": [
+            {
+              "text": "文本",
+              "link": "/text"
+            },
+            {
+              "text": "文件",
+              "link": "/file"
+            }
+          ]
+        },
+        {
+          "text": "网络",
+          "items": [
+            {
+              "text": "安全",
+              "link": "/security"
+            },
+            {
+              "text": "HTTP",
+              "link": "/http"
+            },
+            {
+              "text": "HTTP API",
+              "link": "/http-api"
+            }
+          ]
+        },
+        {
+          "text": "支撑",
+          "items": [
+            {
+              "text": "支撑",
+              "link": "/support"
+            },
+            {
+              "text": "IDE 元数据",
+              "link": "/ide"
+            },
+            {
+              "text": "AI 技能",
+              "link": "/skills"
+            },
+            {
+              "text": "命令行",
+              "link": "/cli"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "升级",
+      "items": [
+        {
+          "text": "升级总览",
+          "link": "/upgrade/"
+        },
+        {
+          "text": "接入形态",
+          "link": "/upgrade/runtime"
+        },
+        {
+          "text": "扩展目录",
+          "link": "/upgrade/extend"
+        },
+        {
+          "text": "行为变更",
+          "link": "/upgrade/behavior"
+        }
+      ]
+    },
+    {
+      "text": "迁移",
+      "items": [
+        {
+          "text": "API 对照",
+          "link": "/upgrade/api"
+        },
+        {
+          "text": "数字码对照",
+          "link": "/upgrade/codes"
+        },
+        {
+          "text": "门面方法对照",
+          "link": "/upgrade/facades"
+        },
+        {
+          "text": "扩展迁移",
+          "link": "/upgrade/extend-facade"
+        },
+        {
+          "text": "检查清单",
+          "link": "/upgrade/checklist"
+        },
+        {
+          "text": "对等矩阵",
+          "link": "/upgrade/parity"
+        },
+        {
+          "text": "决策记录",
+          "link": "/adr/0001-v2-parity"
+        }
+      ]
+    },
+    {
+      "text": "帮助",
+      "items": [
+        {
+          "text": "常见问题",
+          "link": "/faq"
+        },
+        {
+          "text": "更新日志",
+          "link": "/changelog"
+        },
+        {
+          "text": "贡献指南",
+          "link": "/contributing"
+        }
+      ]
+    }
+  ]
+}

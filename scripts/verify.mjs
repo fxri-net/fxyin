@@ -74,12 +74,69 @@ const steps = [
     : codeSteps()),
   { label: "变更集规范（.changeset）", command: "node scripts/check-changeset.mjs" },
   { label: "更新日志镜像（CHANGELOG → docs）", command: "node scripts/check-changelog-doc.mjs" },
-  { label: "文档站主题一致（toolkit docs theme check）", command: "node scripts/check-docs-theme.mjs" },
-  { label: "文档站导航规范（分类 / 命名 / 顶栏）", command: "node scripts/check-docs-nav.mjs" },
+  { label: "文档站主题一致（toolkit docs theme check）", run: checkDocsTheme },
+  { label: "文档站导航规范（分类 / 命名 / 顶栏）", run: checkDocsNav },
   // 该步含 docs:typecheck，本地跳过时文档类型检查一并跳过，由 CI 部署工作流每次推送全量构建兜底；
   // 产物断言必须晚于构建，故与构建串在同一步内执行
-  { label: "文档站构建（类型检查 + 内链检查 + 404 排除）", command: "pnpm docs:build && node scripts/check-docs-dist.mjs", skip: skipDocs ? "--skip-docs" : docsNeeded ? "" : "未触及 docs/、CHANGELOG.md、README.md、依赖清单" }
+  { label: "文档站构建（类型检查 + 内链检查 + 404 排除）", run: buildAndCheckDocsDist, skip: skipDocs ? "--skip-docs" : docsNeeded ? "" : "未触及 docs/、CHANGELOG.md、README.md、依赖清单" }
 ]
+
+/**
+ * 执行一段逻辑并返回退出码与输出；内联步骤共用，输出仍走缓冲回放，避免并发穿插。
+ *
+ * @param {string} command 命令
+ * @param {string[]} args 参数
+ * @return {{code: number, output: string}} 退出码与合并输出
+ */
+function runCommand(command, args) {
+  const result = spawnSync(command, args, { cwd: root, encoding: "utf8", shell: true })
+  return { code: result.status ?? 1, output: `${result.stdout ?? ""}${result.stderr ?? ""}` }
+}
+
+/**
+ * 文档站主题一致性：全局 toolkit 可用时执行 docs theme check，未安装时打印跳过。
+ *
+ * @return {{code: number, output: string}} 退出码与输出
+ */
+function checkDocsTheme() {
+  const probe = spawnSync("toolkit", ["docs", "theme", "--help"], { encoding: "utf8", shell: isWindows })
+  if (probe.status !== 0) return { code: 0, output: "跳过文档站主题检查（未检测到 toolkit docs theme）" }
+  return runCommand("toolkit", ["docs", "theme", "check"])
+}
+
+/**
+ * 文档站导航规范：全局 toolkit 可用时执行 docs nav check，未安装时打印跳过。
+ *
+ * @return {{code: number, output: string}} 退出码与输出
+ */
+function checkDocsNav() {
+  const probe = spawnSync("toolkit", ["docs", "nav", "--help"], { encoding: "utf8", shell: isWindows })
+  if (probe.status !== 0) return { code: 0, output: "跳过文档站导航检查（未检测到 toolkit docs nav）" }
+  return runCommand("toolkit", ["docs", "nav", "check"])
+}
+
+/**
+ * 文档站产物：全局 toolkit 可用时执行 docs dist check，未安装时打印跳过。
+ *
+ * @return {{code: number, output: string}} 退出码与输出
+ */
+function checkDocsDist() {
+  const probe = spawnSync("toolkit", ["docs", "dist", "--help"], { encoding: "utf8", shell: isWindows })
+  if (probe.status !== 0) return { code: 0, output: "跳过文档站产物检查（未检测到 toolkit docs dist）" }
+  return runCommand("toolkit", ["docs", "dist", "check"])
+}
+
+/**
+ * 构建文档站后立即跑产物断言：两者必须串行，而其余步骤并发执行。
+ *
+ * @return {{code: number, output: string}} 退出码与输出
+ */
+function buildAndCheckDocsDist() {
+  const build = runCommand("pnpm", ["docs:build"])
+  if (build.code !== 0) return build
+  const dist = checkDocsDist()
+  return { code: dist.code, output: `${build.output}${dist.output}` }
+}
 
 /**
  * 并发启动一个步骤并缓冲输出。
@@ -93,6 +150,12 @@ const steps = [
 function runStep(step) {
   return new Promise((resolve) => {
     const startedAt = Date.now()
+    // 内联步骤直接执行并原样收录输出，与命令步骤共用同一套缓冲回放
+    if (step.run) {
+      const result = step.run()
+      resolve({ step, code: result.code, stdout: result.output, stderr: "", seconds: (Date.now() - startedAt) / 1000 })
+      return
+    }
     const child = spawn(step.command, { cwd: root, shell: true, env: process.env })
     let stdout = ""
     let stderr = ""
