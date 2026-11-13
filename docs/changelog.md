@@ -6,6 +6,16 @@ outline: [2, 2]
 
 > 完整变更历史以根 `CHANGELOG.md` 为准，本页由 `toolkit changelog doc` 自动同步，请勿手改。
 
+## 2.2.7
+
+> 2026-11-13 发布
+
+### ⚡ 优化改进
+
+- 文档站导航与侧栏抽为 `docs/site-nav.json` 单一数据源，站点配置只做引用展开
+- 导航、主题与产物校验改由工具命令执行，删除三份本地校验脚本
+- `docs/.vitepress/tsconfig.json` 开启 `resolveJsonModule`，支持配置导入 JSON
+
 ## 2.2.6
 
 > 2026-11-06 发布

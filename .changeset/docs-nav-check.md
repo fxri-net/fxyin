@@ -1,7 +1,0 @@
----
-"@fxri/fxyin": patch
----
-
-- 优化：文档站导航与侧栏抽为 `docs/site-nav.json` 单一数据源，站点配置只做引用展开
-- 优化：导航、主题与产物校验改由工具命令执行，删除三份本地校验脚本
-- 优化：`docs/.vitepress/tsconfig.json` 开启 `resolveJsonModule`，支持配置导入 JSON
