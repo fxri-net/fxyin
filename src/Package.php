@@ -15,7 +15,7 @@ final class Package
     public const NAME = 'fxri/fxyin';
 
     /** 当前版本号 */
-    public const VERSION = '2.2.7';
+    public const VERSION = '2.2.8';
 
     /**
      * 返回包标识与版本号。
