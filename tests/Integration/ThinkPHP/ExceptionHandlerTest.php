@@ -68,7 +68,7 @@ final class ExceptionHandlerTest extends TestCase
             ->respond(new ValidationException('参数不合法'));
         ob_end_clean();
 
-        self::assertSame('{"code":422,"message":"参数不合法","data":null,"extend":[],"debug":{}}', $body);
+        self::assertSame('{"code":422,"message":"参数不合法","data":null,"extend":{},"debug":{}}', $body);
     }
 
     /**

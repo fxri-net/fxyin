@@ -135,7 +135,7 @@ final class Envelope
     /**
      * 转为数组。
      *
-     * @return array{code: int, message: string, data: mixed, extend: array<array-key, mixed>, debug: array<array-key, mixed>|object} 字段固定的数组
+     * @return array{code: int, message: string, data: mixed, extend: object, debug: array<array-key, mixed>|object} 字段固定的数组
      */
     public function toArray(): array
     {
@@ -143,7 +143,8 @@ final class Envelope
             'code' => $this->code,
             'message' => $this->message,
             'data' => $this->data instanceof Page ? $this->data->toArray() : $this->data,
-            'extend' => $this->extend,
+            // 扩展参数恒常输出对象，空数组经 JSON 编码为 {} 而非 []
+            'extend' => (object) $this->extend,
             // 空调试信息输出空对象，保证外壳形态稳定
             'debug' => [] === $this->debug ? new \stdClass() : $this->debug,
         ];

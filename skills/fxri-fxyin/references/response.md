@@ -16,7 +16,7 @@ use Fxri\Http\Responder;
 
 // success 的参数顺序是 数据、提示、码；failure 是 码、提示、数据
 Responder::make()->send(Envelope::success(['id' => 7], '获取成功'));
-// {"code":200,"message":"获取成功","data":{"id":7},"extend":[],"debug":{}}
+// {"code":200,"message":"获取成功","data":{"id":7},"extend":{},"debug":{}}
 ```
 
 | 方法 | 说明 |
@@ -24,7 +24,7 @@ Responder::make()->send(Envelope::success(['id' => 7], '获取成功'));
 | `success(mixed $data = null, string $message = '', int $code = 200, array $extend = [], array $debug = [])` | 构造成功响应 |
 | `failure(int $code, string $message = '', mixed $data = null, array $extend = [], array $debug = [])` | 构造失败响应 |
 | `isSuccess()` / `code()` / `message()` / `data()` / `extend()` / `debug()` | 逐项读值 |
-| `toArray()` | 转五键数组；`debug` 为空时输出 `{}` 而非 `[]` |
+| `toArray()` | 转五键数组；`extend` 恒输出对象、`debug` 为空时输出 `{}` 而非 `[]` |
 
 ## 分页四键
 

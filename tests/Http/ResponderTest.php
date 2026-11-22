@@ -24,7 +24,7 @@ final class ResponderTest extends TestCase
 
         self::assertSame('application/json; charset=utf-8', $responder->contentType());
         self::assertSame(
-            '{"code":200,"message":"完成","data":{"id":1},"extend":[],"debug":{}}',
+            '{"code":200,"message":"完成","data":{"id":1},"extend":{},"debug":{}}',
             $responder->format(Envelope::success(['id' => 1], '完成')),
         );
     }
@@ -49,7 +49,7 @@ final class ResponderTest extends TestCase
         $page = Page::make([['id' => 1]], 5, 1, 10);
 
         self::assertSame(
-            '{"code":200,"message":"","data":{"total":5,"records":[{"id":1}],"page":1,"size":10},"extend":[],"debug":{}}',
+            '{"code":200,"message":"","data":{"total":5,"records":[{"id":1}],"page":1,"size":10},"extend":{},"debug":{}}',
             Responder::make()->format(Envelope::success($page)),
         );
     }
@@ -63,7 +63,7 @@ final class ResponderTest extends TestCase
         $body = Responder::make()->send(Envelope::failure(1001, '参数错误'));
         ob_end_clean();
 
-        self::assertSame('{"code":1001,"message":"参数错误","data":null,"extend":[],"debug":{}}', $body);
+        self::assertSame('{"code":1001,"message":"参数错误","data":null,"extend":{},"debug":{}}', $body);
     }
 
     /**

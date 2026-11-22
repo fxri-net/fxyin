@@ -33,7 +33,9 @@ final class EnvelopeTest extends TestCase
         self::assertSame(200, $array['code']);
         self::assertSame('完成', $array['message']);
         self::assertSame(['id' => 1], $array['data']);
-        self::assertSame(['trace' => 'abc'], $array['extend']);
+        // 扩展参数在输出侧恒为对象，PHP 内部取值接口仍返回数组
+        self::assertInstanceOf(stdClass::class, $array['extend']);
+        self::assertSame(['trace' => 'abc'], (array) $array['extend']);
         self::assertInstanceOf(stdClass::class, $array['debug']);
     }
 

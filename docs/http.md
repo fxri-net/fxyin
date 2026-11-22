@@ -39,7 +39,7 @@ use Fxri\Http\Responder;
 
 // 1. 控制器返回统一 JSON 响应，键固定为 code、message、data、extend、debug
 Responder::make()->send(Envelope::success(['id' => 7], '获取成功'));
-// {"code":200,"message":"获取成功","data":{"id":7},"extend":[],"debug":{}}
+// {"code":200,"message":"获取成功","data":{"id":7},"extend":{},"debug":{}}
 
 // 2. 从全局变量取请求上下文与客户端地址
 // 以下按一次 Web 请求给出预期输出：REMOTE_ADDR 为 10.0.0.2，X-Forwarded-For 为 203.0.113.9
@@ -65,6 +65,7 @@ echo $jar->signed('uid');   // 7
 - `code` 是整数业务码，成功缺省用 `Envelope::SUCCESS`；失败场景请给稳定的整数码，不要用 `0` 或负数兼表「无码」。
 - `Responder::send()` 在 `headers_sent()` 为真时只写正文，`Content-Type` 也不会生效；模板已输出、`echo` 过调试信息之后别再调 `send()`。
 - 框架不设置 HTTP 状态码，成功与失败都按默认 200 输出；需要 401、404、422 等语义时由接入方调用 `http_response_code()`。
+- `extend` 恒常输出对象：`toArray()` 里统一转成对象，空数组在 JSON 侧是 `{}` 而不是 `[]`；`extend()` 方法仍返回数组。
 - `debug` 恒常输出：`toArray()` 里空数组会转成对象，保证 JSON 侧始终是 `{}` 而不是 `[]`。
 - `JsonFormatter` 走 `Fxri\Param\Json::encode()`，会追加 `JSON_THROW_ON_ERROR`：`NAN`、非法 UTF-8 等会抛 `InvalidArgumentException`，不是静默输出 `false`。
 - `Responder` 不可变，`withFormatter()` 返回新实例；拿到返回值后忘了重新赋值，用的还是旧的格式化器。
