@@ -33,6 +33,17 @@ final class XmlFormatterTest extends TestCase
     }
 
     /**
+     * 扩展位的列表归入 items，XML 仍按 item 展开。
+     */
+    public function testExtensionListUsesItems(): void
+    {
+        $xml = XmlFormatter::make()->format(Envelope::success(null, '', 200, ['a', 'b'], ['x']));
+
+        self::assertStringContainsString('<extend><items><item>a</item><item>b</item></items></extend>', $xml);
+        self::assertStringContainsString('<debug><items><item>x</item></items></debug>', $xml);
+    }
+
+    /**
      * 非法节点名被替换，数字开头补下划线。
      */
     public function testNodeName(): void

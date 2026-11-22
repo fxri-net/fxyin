@@ -11,7 +11,7 @@ HTTP 层各类的方法签名与返回值。定位、最小示例与注意事项
 ## Envelope
 
 对外固定五键：`code`、`message`、`data`、`extend`、`debug`；`success` 只在内部判断成败，不参与输出。`code` 是整数业务码，成功缺省为常量 `Envelope::SUCCESS`（值 `200`）。
-`extend` 在输出侧恒为对象（空值 `{}`），`extend()` 方法仍返回数组。
+`extend` 与 `debug` 在输出侧恒为对象：空值输出 `{}`，关联数组原样输出，列表归入保留键 `items`（如 `{"items":["a","b"]}`）；`extend()` / `debug()` 方法仍返回数组。
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ HTTP 层各类的方法签名与返回值。定位、最小示例与注意事项
 | `data(): mixed` | 取业务数据 | `mixed` |
 | `extend(): array` | 取扩展参数 | `array<array-key, mixed>` |
 | `debug(): array` | 取调试信息 | `array<array-key, mixed>` |
-| `toArray(): array` | 转为五键数组；`extend` 恒输出对象，`debug` 为空时输出空对象 | `array{code: int, message: string, data: mixed, extend: object, debug: array\|object}` |
+| `toArray(): array` | 转为五键数组；`extend` / `debug` 恒输出对象（列表归入 `items`） | `array{code: int, message: string, data: mixed, extend: object, debug: object}` |
 
 分页接口的 `data` 使用 `Fxri\Data\Page` 的四键壳（`total`、`records`、`page`、`size`），见[数据](./data)。
 

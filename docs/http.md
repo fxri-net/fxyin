@@ -65,8 +65,7 @@ echo $jar->signed('uid');   // 7
 - `code` 是整数业务码，成功缺省用 `Envelope::SUCCESS`；失败场景请给稳定的整数码，不要用 `0` 或负数兼表「无码」。
 - `Responder::send()` 在 `headers_sent()` 为真时只写正文，`Content-Type` 也不会生效；模板已输出、`echo` 过调试信息之后别再调 `send()`。
 - 框架不设置 HTTP 状态码，成功与失败都按默认 200 输出；需要 401、404、422 等语义时由接入方调用 `http_response_code()`。
-- `extend` 恒常输出对象：`toArray()` 里统一转成对象，空数组在 JSON 侧是 `{}` 而不是 `[]`；`extend()` 方法仍返回数组。
-- `debug` 恒常输出：`toArray()` 里空数组会转成对象，保证 JSON 侧始终是 `{}` 而不是 `[]`。
+- `extend` / `debug` 恒常输出对象：`toArray()` 里空值输出 `{}`、关联数组原样输出、列表归入保留键 `items`（如 `{"items":["a","b"]}`），不会出现数字键或对象 / 数组翻转；两个取值方法仍返回数组。
 - `JsonFormatter` 走 `Fxri\Param\Json::encode()`，会追加 `JSON_THROW_ON_ERROR`：`NAN`、非法 UTF-8 等会抛 `InvalidArgumentException`，不是静默输出 `false`。
 - `Responder` 不可变，`withFormatter()` 返回新实例；拿到返回值后忘了重新赋值，用的还是旧的格式化器。
 - `View::render()` 的模板名不接受 `..`，且模板文件必须已存在，越界或拼错都抛 `InvalidArgumentException`；`Renderer` 接口只收「路径 + 数据」，模板引擎的缓存与转义由实现方负责。

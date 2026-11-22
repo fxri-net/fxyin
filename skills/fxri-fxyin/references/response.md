@@ -24,7 +24,7 @@ Responder::make()->send(Envelope::success(['id' => 7], '获取成功'));
 | `success(mixed $data = null, string $message = '', int $code = 200, array $extend = [], array $debug = [])` | 构造成功响应 |
 | `failure(int $code, string $message = '', mixed $data = null, array $extend = [], array $debug = [])` | 构造失败响应 |
 | `isSuccess()` / `code()` / `message()` / `data()` / `extend()` / `debug()` | 逐项读值 |
-| `toArray()` | 转五键数组；`extend` 恒输出对象、`debug` 为空时输出 `{}` 而非 `[]` |
+| `toArray()` | 转五键数组；`extend` / `debug` 恒输出对象，空值 `{}`、列表归入 `items` |
 
 ## 分页四键
 
@@ -63,7 +63,7 @@ echo $responder->format(Envelope::failure(422, '参数不合法'));
 
 ## 调试字段
 
-- `debug` 恒常输出：空数组转成对象，保证 JSON 侧始终是 `{}`。
+- `extend` / `debug` 恒常输出对象：空值 `{}`，关联数组原样输出，列表归入保留键 `items`，不会出现对象 / 数组翻转或数字键。
 - 旧协议的 `time` 没有专门字段，需要时由项目写入 `debug.time`。
 - 框架不设置 HTTP 状态码，成功与失败都按 200 输出；需要 401、404、422 等语义时由接入方调用 `http_response_code()` 或交给宿主异常映射。
 

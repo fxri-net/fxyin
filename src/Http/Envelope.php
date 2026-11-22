@@ -107,6 +107,28 @@ final class Envelope
     }
 
     /**
+     * 扩展位归一为具名映射。
+     *
+     * 空数组输出空对象、关联数组原样输出、非空列表归入保留键 `items`，
+     * 保证 JSON 侧恒为对象，不随空 / 非空在对象与数组之间翻转。
+     *
+     * @param array<array-key, mixed> $value 扩展位取值
+     * @return object 具名映射
+     */
+    private static function map(array $value): object
+    {
+        if ([] === $value) {
+            return new \stdClass();
+        }
+        if (array_is_list($value)) {
+            // array_is_list 已保证键为连续 0..n-1，无需再 array_values 重排
+            return (object) ['items' => $value];
+        }
+
+        return (object) $value;
+    }
+
+    /**
      * 取提示语。
      *
      * @return string 提示语
@@ -135,7 +157,7 @@ final class Envelope
     /**
      * 转为数组。
      *
-     * @return array{code: int, message: string, data: mixed, extend: object, debug: array<array-key, mixed>|object} 字段固定的数组
+     * @return array{code: int, message: string, data: mixed, extend: object, debug: object} 字段固定的数组
      */
     public function toArray(): array
     {
@@ -143,10 +165,9 @@ final class Envelope
             'code' => $this->code,
             'message' => $this->message,
             'data' => $this->data instanceof Page ? $this->data->toArray() : $this->data,
-            // 扩展参数恒常输出对象，空数组经 JSON 编码为 {} 而非 []
-            'extend' => (object) $this->extend,
-            // 空调试信息输出空对象，保证外壳形态稳定
-            'debug' => [] === $this->debug ? new \stdClass() : $this->debug,
+            // 两个扩展位统一走具名映射，空值输出 {}、列表归入 items
+            'extend' => self::map($this->extend),
+            'debug' => self::map($this->debug),
         ];
     }
 }

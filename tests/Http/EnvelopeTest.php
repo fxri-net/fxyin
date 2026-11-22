@@ -40,6 +40,28 @@ final class EnvelopeTest extends TestCase
     }
 
     /**
+     * 两个扩展位恒为具名映射：空值输出空对象、关联数组原样输出、列表归入保留键 items。
+     */
+    public function testExtensionMap(): void
+    {
+        $empty = Envelope::success()->toArray();
+        self::assertInstanceOf(stdClass::class, $empty['extend']);
+        self::assertInstanceOf(stdClass::class, $empty['debug']);
+        self::assertSame([], (array) $empty['extend']);
+        self::assertSame([], (array) $empty['debug']);
+
+        $assoc = Envelope::success(null, '', 200, ['trace' => 'abc'], ['time' => 12])->toArray();
+        self::assertSame(['trace' => 'abc'], (array) $assoc['extend']);
+        self::assertSame(['time' => 12], (array) $assoc['debug']);
+
+        $list = Envelope::success(null, '', 200, ['a', 'b'], ['x', 'y'])->toArray();
+        self::assertInstanceOf(stdClass::class, $list['extend']);
+        self::assertInstanceOf(stdClass::class, $list['debug']);
+        self::assertSame(['items' => ['a', 'b']], (array) $list['extend']);
+        self::assertSame(['items' => ['x', 'y']], (array) $list['debug']);
+    }
+
+    /**
      * 失败信封保留整数业务码，并给出调试信息。
      */
     public function testFailure(): void
@@ -50,7 +72,9 @@ final class EnvelopeTest extends TestCase
         self::assertSame(1001, $envelope->code());
         self::assertSame('参数错误', $envelope->message());
         self::assertSame(['time' => 12], $envelope->debug());
-        self::assertSame(['time' => 12], $envelope->toArray()['debug']);
+        // 输出侧恒为对象，取值接口仍返回数组
+        self::assertInstanceOf(stdClass::class, $envelope->toArray()['debug']);
+        self::assertSame(['time' => 12], (array) $envelope->toArray()['debug']);
     }
 
     /**
