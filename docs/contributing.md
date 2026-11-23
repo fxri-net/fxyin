@@ -15,7 +15,7 @@
 | Composer | 2.x |
 | Node.js | 20.19 起（见 `.node-version`） |
 | pnpm | 10.x（`packageManager` 已锁定版本） |
-| toolkit | 全局 `@fxri/toolkit`，用于变更集、发版与任务记录 |
+| toolkit | 全局 `@fxri/toolkit`（>= 2.0.0），用于变更集、发版与任务记录 |
 
 首次准备全局工具：
 
