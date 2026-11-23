@@ -8,6 +8,15 @@ outline: [2, 2]
 
 历史版本：[1.x](./changelog/1.x)
 
+## 2.2.9
+
+> 2026-11-23 发布
+
+### 🔧 功能调整
+
+- 本仓 toolkit 用法由 v1 等价替换为 v2（`task` / `skill` / `release`、`task.dir` 与忽略片段）
+- 自带技能补齐 `tier` 元数据，通过 `skill lint`
+
 ## 2.2.8
 
 > 2026-11-23 发布
