@@ -4,6 +4,7 @@ description: 风音框架（fxri/fxyin）的接入与日常使用：安装、Ker
 license: Apache-2.0
 metadata:
   version: "1.1.4"
+  tier: optional
   author: fxri
   source: https://github.com/fxri-net/fxyin
 ---

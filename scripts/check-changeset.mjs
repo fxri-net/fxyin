@@ -3,7 +3,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 // 变更集规范校验：包名键必须与 package.json 的 name 一致，文件名与条目格式符合 .changeset/README.md 的约定。
-// 纳入 pnpm verify，避免「包名键写错」直到 toolkit changelog version 才暴露
+// 纳入 pnpm verify，避免「包名键写错」直到 toolkit release bump 才暴露
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const changesetDir = join(root, ".changeset")
 const packageName = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).name

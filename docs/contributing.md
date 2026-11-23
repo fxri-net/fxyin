@@ -21,7 +21,7 @@
 
 ```bash
 pnpm add -g @fxri/toolkit
-toolkit skills install
+toolkit skill install
 ```
 
 ## 本地准备
@@ -51,7 +51,7 @@ pnpm install
 | `pnpm docs:typecheck` | 只做文档配置类型检查（`tsc --noEmit`） |
 | `pnpm docs:build` | 先做 TypeScript 类型检查，再构建文档站并校验站内链接 |
 | `pnpm docs:preview` | 预览已构建的文档站产物 |
-| `pnpm sync:changelog-doc` | 用全局 `toolkit changelog doc` 把根 `CHANGELOG.md` 同步为 `docs/changelog.md` |
+| `pnpm sync:changelog-doc` | 用全局 `toolkit release mirror` 把根 `CHANGELOG.md` 同步为 `docs/changelog.md` |
 | `pnpm verify` | 聚合门禁，并发执行 `scripts/verify.mjs` 的步骤清单，输出按声明顺序回放并打印每步耗时；`--skip-code` / `--skip-docs` 可跳过代码段或文档段 |
 
 提交前跑一次 `pnpm verify`；它是本地与流水线的统一入口，步骤清单只此一份，不要只挑其中几步执行。
@@ -86,12 +86,12 @@ pnpm install
 
 ## 任务记录流程
 
-仓库用 `.tasks/` 记录任务：进行中的任务放在 `.tasks/active/年月/`，完成后按月归档到 `.tasks/archive/年月/年月日.md`。任务档案与代码改动一起提交；建档、执行、归档的判定与时间口径以全局技能 `fxri-plan-to-task` 为准。
+仓库用 `.tasks/` 记录任务：进行中的任务放在 `.tasks/active/年月/`，完成后按月归档到 `.tasks/archive/年月/年月日.md`。任务档案与代码改动一起提交；建档、执行、归档的判定与时间口径以全局技能 `fxri-plan-task` 为准。
 
 ```bash
 toolkit init             # 首次初始化任务区，幂等，已有目录不覆盖
-toolkit tasks archive    # 归档已完成任务，可加 --dry-run 预演
-toolkit tasks check      # 校验任务档案结构，必须零错误
+toolkit task archive      # 归档已完成任务，可加 --dry-run 预演
+toolkit task check        # 校验任务档案结构，必须零错误
 ```
 
 ## 发版链路
@@ -101,8 +101,8 @@ toolkit tasks check      # 校验任务档案结构，必须零错误
 - 变更集条目逐条写成 `- 类型：描述`，影响对外行为的改动必须建变更集。
 - 版本号与 `CHANGELOG.md` 的改动单独提交，不与任务收尾混批。
 - 发布前必须跑 `pnpm verify`，任一步失败即中止，不得进入提交、打标签与发布。
-- 根 `CHANGELOG.md` 是更新日志的源，`docs/changelog.md` 由全局 `toolkit changelog doc` 生成；两者不一致时 `pnpm verify` 会直接失败（未安装全局 toolkit 时该步打印跳过）。
-- ⚠️ `toolkit changelog format --history` 会连带扫描并改写 `vendor/**/CHANGELOG.md`，`vendor` 是 `composer install` 的再生产物且不入库，格式化后不要把这些变更带进提交。
+- 根 `CHANGELOG.md` 是更新日志的源，`docs/changelog.md` 由全局 `toolkit release mirror` 生成；两者不一致时 `pnpm verify` 会直接失败（未安装全局 toolkit 时该步打印跳过）。
+- ⚠️ `toolkit release changelog --history` 会连带扫描并改写 `vendor/**/CHANGELOG.md`，`vendor` 是 `composer install` 的再生产物且不入库，格式化后不要把这些变更带进提交。
 
 ### 标签规则
 

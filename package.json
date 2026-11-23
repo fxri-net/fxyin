@@ -19,10 +19,10 @@
   "homepage": "https://fxri-net.github.io/fxyin/",
   "scripts": {
     "verify": "node scripts/verify.mjs",
-    "changeset": "node scripts/toolkit.mjs changelog",
-    "changelog:version": "node scripts/toolkit.mjs changelog version && node scripts/sync-version.mjs",
+    "changeset": "node scripts/toolkit.mjs release",
+    "changelog:version": "node scripts/toolkit.mjs release bump && node scripts/sync-version.mjs",
     "sync:version": "node scripts/sync-version.mjs",
-    "sync:changelog-doc": "node scripts/toolkit.mjs changelog doc",
+    "sync:changelog-doc": "node scripts/toolkit.mjs release mirror",
     "docs:dev": "vitepress dev docs",
     "docs:typecheck": "tsc --noEmit -p docs/.vitepress",
     "docs:build": "pnpm docs:typecheck && vitepress build docs",

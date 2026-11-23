@@ -4,6 +4,7 @@ description: 风音框架 1.x 升级 2.x 的迁移指引：体检画像、旧 AP
 license: Apache-2.0
 metadata:
   version: "1.0.2"
+  tier: optional
   author: fxri
   source: https://github.com/fxri-net/fxyin
 ---
