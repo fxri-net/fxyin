@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fxri\Tests\Tooling;
 
 use Fxri\File\Filesystem;
+use Fxri\Tooling\LineEnding;
 use Fxri\Tooling\SkillInstaller;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -117,6 +118,78 @@ final class SkillInstallerTest extends TestCase
         Filesystem::write($file, str_replace(SkillInstaller::MARKER, '<!-- 旧标记 -->', Filesystem::read($file)));
 
         self::assertFalse(SkillInstaller::check($this->directory));
+    }
+
+    /**
+     * 模板正文与渲染快照一致；改模板必须抬版本并刷新快照，防文案漂移静默通过。
+     */
+    public function testRenderMatchesFixture(): void
+    {
+        $fixture = dirname(__DIR__) . '/fixtures/skill-shell.txt';
+        self::assertFileExists($fixture);
+
+        $rendered = SkillInstaller::render('demo', '示例描述', 'vendor/demo/skills/demo/SKILL.md');
+
+        self::assertSame(
+            LineEnding::normalize(Filesystem::read($fixture)),
+            LineEnding::normalize($rendered),
+            '薄壳模板已变更：请运行 node scripts/bump-skill-entry-version.mjs 抬次版本并刷新快照'
+        );
+    }
+
+    /**
+     * 旧单段标记（v1）按 v1.0 解析，校验报版本不一致。
+     */
+    public function testCheckReportsPreviousVersion(): void
+    {
+        SkillInstaller::install($this->directory);
+        $file = $this->shellPath($this->skillNames()[0]);
+        Filesystem::write(
+            $file,
+            str_replace(SkillInstaller::MARKER, '<!-- fxyin-skill-entry: v1 -->', Filesystem::read($file))
+        );
+
+        $issues = SkillInstaller::issues($this->directory);
+
+        self::assertCount(1, $issues);
+        self::assertSame('version', $issues[0]['kind']);
+        self::assertSame('v1.0', $issues[0]['found']);
+        self::assertFalse(SkillInstaller::check($this->directory));
+    }
+
+    /**
+     * 标记一致但正文被改过时报正文漂移，与版本问题分开。
+     */
+    public function testCheckReportsBodyDrift(): void
+    {
+        SkillInstaller::install($this->directory);
+        $file = $this->shellPath($this->skillNames()[0]);
+        Filesystem::write($file, Filesystem::read($file) . "\n<!-- 手工追加 -->\n");
+
+        $issues = SkillInstaller::issues($this->directory);
+
+        self::assertCount(1, $issues);
+        self::assertSame('body', $issues[0]['kind']);
+    }
+
+    /**
+     * 重跑安装把旧版本标记的壳就地重写，不当作项目自有文件跳过。
+     */
+    public function testInstallRewritesPreviousVersionShell(): void
+    {
+        $name = $this->skillNames()[0];
+        $file = $this->shellPath($name);
+        Filesystem::write(
+            $file,
+            "---\nname: {$name}\ndescription: 旧描述\n---\n\n<!-- fxyin-skill-entry: v1 -->\n旧壳\n"
+        );
+
+        $result = SkillInstaller::install($this->directory);
+
+        self::assertContains($file, $result['installed']);
+        self::assertNotContains($file, $result['skipped']);
+        self::assertStringContainsString(SkillInstaller::MARKER, Filesystem::read($file));
+        self::assertTrue(SkillInstaller::check($this->directory));
     }
 
     /**

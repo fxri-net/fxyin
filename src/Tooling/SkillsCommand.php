@@ -69,9 +69,17 @@ final class SkillsCommand
                 $out = [];
                 $failed = false;
                 foreach ($targets as $target) {
-                    $passed = SkillInstaller::check($options['root'], [$target]);
-                    $out[] = ($passed ? '通过：' : '不一致：') . $target;
-                    $failed = $failed || !$passed;
+                    $issues = SkillInstaller::issues($options['root'], [$target]);
+                    if ([] === $issues) {
+                        $out[] = '通过：' . $target;
+
+                        continue;
+                    }
+                    $failed = true;
+                    $out[] = '不一致：' . $target;
+                    foreach ($issues as $issue) {
+                        $out[] = '  ' . self::describeIssue($issue);
+                    }
                 }
                 if ($failed) {
                     return ['code' => 1, 'out' => $out, 'err' => ['薄壳与真源不一致，请重跑 php fxyin skills']];
@@ -97,6 +105,27 @@ final class SkillsCommand
     }
 
     /**
+     * 把校验明细转成一行可读文本。
+     *
+     * @param array{file: string, kind: string, found: string} $issue 明细
+     * @return string 面向用户的说明
+     */
+    private static function describeIssue(array $issue): string
+    {
+        return match ($issue['kind']) {
+            'missing' => '缺少薄壳：' . $issue['file'],
+            'marker' => '缺少本包标记：' . $issue['file'],
+            'version' => sprintf(
+                '壳标记 %s，与当前 %s 不一致：%s',
+                $issue['found'],
+                SkillInstaller::MARKER_VERSION,
+                $issue['file']
+            ),
+            default => '壳正文与模板不一致，重跑 php vendor/bin/fxyin skills 即可补齐：' . $issue['file'],
+        };
+    }
+
+    /**
      * 渲染命令帮助。
      *
      * @param string $binary 调用方看到的命令名，如 fxyin 或 vendor/bin/fxyin
@@ -109,7 +138,7 @@ final class SkillsCommand
             '',
             '选项：',
             '  --target <目录>  目标目录，相对项目根，可重复；默认 .agents/skills（Trae 用 .trae/skills）',
-            '  --check          只校验薄壳与真源是否一致，不写盘；不一致以 1 退出',
+            '  --check          只校验薄壳与真源是否一致（标记版本 + 正文），不写盘；不一致以 1 退出',
             '  --root <目录>    项目根目录，默认为当前工作目录',
             '  --help, -h       显示帮助',
         ];

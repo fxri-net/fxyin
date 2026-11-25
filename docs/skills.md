@@ -30,8 +30,9 @@ php vendor/bin/fxyin skills --check
 
 | 方法 | 说明 | 返回 |
 | --- | --- | --- |
-| `install(string $projectRoot, array $targets = ['.agents/skills'])` | 为包内每个技能在每个目标目录写一份薄壳；带本包标记的同名文件直接覆盖，不带标记的跳过 | `array{installed: list<string>, skipped: list<string>}` |
-| `check(string $projectRoot, array $targets = ['.agents/skills'])` | 逐个校验薄壳存在且内容与当前真源一致；两侧行尾按 LF 归一再比较 | `bool` |
+| `install(string $projectRoot, array $targets = ['.agents/skills'])` | 为包内每个技能在每个目标目录写一份薄壳；带本包标记（含历史 `v1`）的同名文件直接覆盖，不带标记的跳过 | `array{installed: list<string>, skipped: list<string>}` |
+| `check(string $projectRoot, array $targets = ['.agents/skills'])` | 逐个校验薄壳存在、标记版本与当前一致、正文与真源渲染结果一致（行尾按 LF 归一后比较） | `bool` |
+| `issues(string $projectRoot, array $targets = ['.agents/skills'])` | 同 `check()` 的判定，返回逐条明细；`kind` 取 `missing` / `marker` / `version` / `body` | `list<array{file: string, kind: string, found: string}>` |
 | `render(string $name, string $description, string $source)` | 渲染单个薄壳的文本，便于直接落盘 | `string` |
 
 约束：
@@ -42,6 +43,6 @@ php vendor/bin/fxyin skills --check
 
 ## 注意事项
 
-- `check()` 只认文本一致：行尾差异已抹平，但多余空行、缩进变化仍判定漂移，改完真源重新安装即可。
+- `check()` 同时看标记版本与正文：标记落后报 `version`，标记一致但正文被改过报 `body`；行尾差异已抹平，多余空行、缩进变化仍判定漂移，改完真源重新安装即可。
 - 薄壳里的 `description` 是触发匹配的原文拷贝；本包升级改了描述而项目没重跑安装时，`check()` 会报不一致，属于预期提醒。
 - 本仓库自带 `php fxyin skills`（`--target`、`--check`、`--root`），通过 Composer bin 在接入项目里对应 `php vendor/bin/fxyin skills`。本仓库自身的验收命令见[贡献指南](./contributing)。

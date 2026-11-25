@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -73,6 +73,7 @@ const steps = [
     ? [{ label: "代码门禁（composer.json scripts.check）", skip: "--skip-code" }]
     : codeSteps()),
   { label: "变更集规范（.changeset）", command: "node scripts/check-changeset.mjs" },
+  { label: "技能薄壳新鲜度（fxyin skills --check）", run: checkSkillShells },
   { label: "更新日志镜像（CHANGELOG → docs）", command: "node scripts/check-changelog-doc.mjs" },
   { label: "文档站主题一致（toolkit docs theme check）", run: checkDocsTheme },
   { label: "文档站导航规范（分类 / 命名 / 顶栏）", run: checkDocsNav },
@@ -91,6 +92,19 @@ const steps = [
 function runCommand(command, args) {
   const result = spawnSync(command, args, { cwd: root, encoding: "utf8", shell: true })
   return { code: result.status ?? 1, output: `${result.stdout ?? ""}${result.stderr ?? ""}` }
+}
+
+/**
+ * 技能薄壳新鲜度：项目已安装本包薄壳时校验标记版本与正文，未安装则跳过。
+ *
+ * @return {{code: number, output: string}} 退出码与输出
+ */
+function checkSkillShells() {
+  // 薄壳由消费项目按需安装；本包自身仓库通常没有，跳过以免误判
+  if (!existsSync(join(root, ".agents", "skills", "fxri-fxyin", "SKILL.md"))) {
+    return { code: 0, output: "跳过技能薄壳校验（项目未安装本包薄壳）" }
+  }
+  return runCommand("php", ["fxyin", "skills", "--check"])
 }
 
 /**
