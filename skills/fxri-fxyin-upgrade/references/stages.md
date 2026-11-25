@@ -49,7 +49,7 @@ PHP < 8.2 ─────────────── 是 → 先完成 PHP �
 | 6 响应与异常 | 内部用 `Envelope`，对外保持旧协议 | 新旧响应双跑一致，异常映射可用 |
 | 7 验收与清理 | 删除过渡层、旧命名空间与旧目录 | 全量验收通过，回滚路径演练完成 |
 
-各阶段的施工细节与勾选项见仓库 `docs/upgrade-2.0-checklist.md`；接入形态模板见 `docs/upgrade-2.0-runtime.md`；扩展目录逐项处置见 `docs/upgrade-2.0-extend.md`。
+各阶段的施工细节与勾选项见仓库 `docs/upgrade/checklist.md`；接入形态模板见 `docs/upgrade/runtime.md`；扩展目录逐项处置见 `docs/upgrade/extend.md`。
 
 ## 阶段要点
 

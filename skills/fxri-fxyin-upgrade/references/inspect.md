@@ -93,4 +93,4 @@ php vendor/bin/fxyin upgrade baseline --root=<项目> --check --baseline=<文件
 3. 流水线里把 `--check` 作为门禁，不在流水线里重新生成基线。
 4. 阶段 7 确认基线归零，再删除过渡层与旧目录。
 
-工具给出的是线索与计数，不替项目决定某个旧方法该替换成什么；对等矩阵与 API 对照是第二来源，见 `references/mapping.md` 与仓库 `docs/migration-2.0.md`、`docs/parity-1.6.1.md`。
+工具给出的是线索与计数，不替项目决定某个旧方法该替换成什么；对等矩阵与 API 对照是第二来源，见 `references/mapping.md` 与仓库 `docs/upgrade/api.md`、`docs/upgrade/parity.md`。
